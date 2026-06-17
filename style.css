@@ -95,6 +95,7 @@ body {
   transform: translate(-50%, -50%) scale(1.08);
   object-fit: cover;
   transition: transform 9.5s linear;
+  filter: grayscale(100%) brightness(30%) contrast(125%);
 }
 
 .video-bg-container.active .video-bg {
