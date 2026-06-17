@@ -49,6 +49,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const fileAudio = document.getElementById("file-audio");
   const hintText = document.getElementById("hint-text");
   
+  // Karaoke DOM elements
+  const karaokeDisplay = document.getElementById("karaoke-display");
+  const kPrev = karaokeDisplay ? karaokeDisplay.querySelector(".k-prev") : null;
+  const kCurrent = karaokeDisplay ? karaokeDisplay.querySelector(".k-current") : null;
+  const kNext = karaokeDisplay ? karaokeDisplay.querySelector(".k-next") : null;
+
+  const updateKaraokeDisplay = (prev, current, next) => {
+    if (!kPrev || !kCurrent || !kNext) return;
+    kPrev.textContent = prev || "";
+    kCurrent.textContent = current || "";
+    kNext.textContent = next || "";
+  };
+  
   const bgContainer = document.getElementById("bg-container");
   const bgImages = Array.from(document.querySelectorAll(".bg-image"));
   const videoBgContainer = document.getElementById("video-bg-container");
@@ -317,10 +330,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- KARAOKE WORD HIGHLIGHT ---
   const highlightWords = (pIdx, curTime) => {
-    if (pIdx < 0 || !cues) return;
+    if (pIdx < 0 || !cues) {
+      updateKaraokeDisplay("", "PŘIPRAVENO", "");
+      return;
+    }
     
     const pEl = paras[pIdx];
-    if (!pEl) return;
+    if (!pEl) {
+      updateKaraokeDisplay("", "PŘIPRAVENO", "");
+      return;
+    }
     
     const tStart = cues[pIdx];
     const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
@@ -328,14 +347,17 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (duration <= 0) return;
     
-    const progress = (curTime - tStart) / duration;
+    const progress = Math.max(0, Math.min(1, (curTime - tStart) / duration));
     const words = pEl.querySelectorAll(".word");
     const wordsCount = words.length;
     
-    if (wordsCount === 0) return;
+    if (wordsCount === 0) {
+      updateKaraokeDisplay("", "", "");
+      return;
+    }
     
     // Estimate active word index proportionally
-    const activeWordIdx = Math.floor(progress * wordsCount);
+    const activeWordIdx = Math.max(0, Math.min(wordsCount - 1, Math.floor(progress * wordsCount)));
     
     words.forEach((word, wIdx) => {
       if (wIdx <= activeWordIdx) {
@@ -344,6 +366,31 @@ document.addEventListener("DOMContentLoaded", () => {
         word.classList.remove("read");
       }
     });
+
+    // Update 3-word karaoke window
+    const currentWord = words[activeWordIdx].textContent.trim();
+    
+    let prevWord = "";
+    if (activeWordIdx > 0) {
+      prevWord = words[activeWordIdx - 1].textContent.trim();
+    } else if (pIdx > 0) {
+      const prevParagraphWords = paras[pIdx - 1].querySelectorAll(".word");
+      if (prevParagraphWords.length > 0) {
+        prevWord = prevParagraphWords[prevParagraphWords.length - 1].textContent.trim();
+      }
+    }
+    
+    let nextWord = "";
+    if (activeWordIdx < wordsCount - 1) {
+      nextWord = words[activeWordIdx + 1].textContent.trim();
+    } else if (pIdx < N - 1) {
+      const nextParagraphWords = paras[pIdx + 1].querySelectorAll(".word");
+      if (nextParagraphWords.length > 0) {
+        nextWord = nextParagraphWords[0].textContent.trim();
+      }
+    }
+    
+    updateKaraokeDisplay(prevWord, currentWord, nextWord);
   };
 
   // --- TRANSCRIPT VISUALS ---
@@ -448,7 +495,36 @@ document.addEventListener("DOMContentLoaded", () => {
   const togglePlay = () => {
     if (!audio) return;
     if (audio.paused) {
-      audio.play().catch(e => console.error("Audio playback error:", e));
+      const savedTime = audio.currentTime;
+      playerStatus.textContent = "NAČÍTÁM…";
+      playerStatus.style.color = "var(--muted)";
+      
+      audio.load();
+      
+      const playWithDelay = () => {
+        if (savedTime > 0) {
+          audio.currentTime = savedTime;
+        }
+        setTimeout(() => {
+          audio.play()
+            .then(() => {
+              updateStatus();
+            })
+            .catch(e => {
+              console.error("Audio playback error:", e);
+              updateStatus();
+            });
+        }, 1000);
+      };
+
+      if (audio.readyState >= 2) {
+        playWithDelay();
+      } else {
+        audio.addEventListener("canplay", function onCanPlay() {
+          audio.removeEventListener("canplay", onCanPlay);
+          playWithDelay();
+        });
+      }
     } else {
       audio.pause();
     }
@@ -542,6 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
     seedCues();
     state.curIdx = -1;
     highlightParagraph(-1);
+    updateKaraokeDisplay("", "PŘIPRAVENO", "");
     
     setHint("Časování bylo resetováno na proporcionální odhad.");
   };

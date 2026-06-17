@@ -28,8 +28,8 @@
   
   <!-- Background video (optional overlay) -->
   <div class="video-bg-container" id="video-bg-container">
-    <video id="bg-video-1" loop muted playsinline class="video-bg" style="opacity: 0; transition: opacity 1.5s ease;"></video>
-    <video id="bg-video-2" loop muted playsinline class="video-bg" style="opacity: 0; transition: opacity 1.5s ease;"></video>
+    <video id="bg-video-1" loop muted playsinline class="video-bg"></video>
+    <video id="bg-video-2" loop muted playsinline class="video-bg"></video>
   </div>
 
   <!-- Ambient dark overlay (veil) -->
@@ -88,6 +88,13 @@
             </div>
             
             <div id="hint-text" class="hint-text">Načítám audio soubor...</div>
+
+            <!-- Karaoke 3-Word Display -->
+            <div id="karaoke-display" class="karaoke-display">
+              <span class="k-word k-prev"></span>
+              <span class="k-word k-current">PŘIPRAVENO</span>
+              <span class="k-word k-next"></span>
+            </div>
           </div>
 
           <!-- Video Preview Window -->

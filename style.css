@@ -815,3 +815,46 @@ body {
   text-shadow: 0 0 10px rgba(65, 224, 255, 0.6), 0 0 2px rgba(65, 224, 255, 0.9);
 }
 
+/* ==========================================
+   KARAOKE 3-WORD DISPLAY
+   ========================================== */
+.karaoke-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 18px;
+  padding: 16px 20px;
+  background: rgba(4, 6, 9, 0.7);
+  border: 1px dashed rgba(65, 224, 255, 0.2);
+  border-radius: 10px;
+  min-height: 75px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+.k-word {
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.k-prev, .k-next {
+  font-size: 13px;
+  color: var(--muted);
+  opacity: 0.65;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.k-current {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--white);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.45), 0 0 4px var(--cyan);
+  padding: 0 10px;
+  letter-spacing: 1px;
+}
+
+
