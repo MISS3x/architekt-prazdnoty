@@ -256,7 +256,8 @@ body {
 
 .preview-screen {
   position: relative;
-  flex: 1;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid rgba(65, 224, 255, 0.15);

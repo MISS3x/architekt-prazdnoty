@@ -185,20 +185,12 @@ document.addEventListener("DOMContentLoaded", () => {
       state.playing = false;
       playIcon.textContent = "▶";
       updateStatus();
-      
-      // Sync video state
-      if (currentVideoEl) currentVideoEl.pause();
-      if (currentPrevEl) currentPrevEl.pause();
     });
 
     audio.addEventListener("ended", () => {
       state.playing = false;
       playIcon.textContent = "▶";
       updateStatus();
-      
-      // Stop video
-      if (currentVideoEl) currentVideoEl.pause();
-      if (currentPrevEl) currentPrevEl.pause();
     });
 
     // Check if metadata is already loaded
