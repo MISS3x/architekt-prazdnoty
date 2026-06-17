@@ -857,4 +857,71 @@ body {
   letter-spacing: 1px;
 }
 
+/* ==========================================
+   CYBER HEXAGON STYLE (PCB TRACES)
+   ========================================== */
+.cyber-hexagon-container {
+  position: relative;
+  width: 400px;
+  height: 340px;
+  margin: 4rem auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cyber-hexagon-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cyber-hexagon-image {
+  position: absolute;
+  top: 40px;
+  left: 87.4px;
+  width: 225.2px;
+  height: 260px;
+  object-fit: cover;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: 1;
+  transition: filter 0.3s ease;
+}
+
+.cyber-hexagon-container:hover .cyber-hexagon-image {
+  filter: brightness(1.15) drop-shadow(0 0 15px rgba(255, 181, 46, 0.4));
+}
+
+.cyber-hexagon-svg polygon {
+  transition: stroke 0.3s ease, filter 0.3s ease;
+}
+
+.cyber-hexagon-container:hover .cyber-hexagon-svg polygon {
+  stroke: var(--white);
+  filter: drop-shadow(0 0 12px var(--amber));
+}
+
+.cyber-hexagon-svg path {
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+.cyber-hexagon-container:hover .cyber-hexagon-svg path {
+  stroke: var(--cyan);
+  stroke-width: 2px;
+}
+
+.cyber-hexagon-svg circle {
+  transition: fill 0.3s ease, r 0.3s ease;
+}
+
+.cyber-hexagon-container:hover .cyber-hexagon-svg circle {
+  fill: var(--white);
+  r: 4px;
+}
+
+
 
