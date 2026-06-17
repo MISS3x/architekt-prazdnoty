@@ -350,14 +350,14 @@ document.addEventListener("DOMContentLoaded", () => {
     nextVideoEl.load();
     nextVideoEl.play()
       .then(() => {
-        nextVideoEl.style.opacity = 1;
+        nextVideoEl.classList.add("active");
         
         const oldVideoEl = currentVideoEl;
         if (oldVideoEl !== nextVideoEl) {
-          oldVideoEl.style.opacity = 0;
+          oldVideoEl.classList.remove("active");
           setTimeout(() => {
             oldVideoEl.pause();
-          }, 1500);
+          }, 2200); // Wait for the 2.2s CSS opacity transition
         }
         
         // Swap roles

@@ -92,14 +92,16 @@ body {
   min-height: 100%;
   width: auto;
   height: auto;
-  transform: translate(-50%, -50%) scale(1.08);
+  transform: translate(-50%, -50%) scale(1.0);
   object-fit: cover;
-  transition: transform 9.5s linear;
+  opacity: 0;
+  transition: opacity 2.2s ease, transform 9.5s linear;
   filter: grayscale(100%) brightness(30%) contrast(125%);
 }
 
-.video-bg-container.active .video-bg {
-  transform: translate(-50%, -50%) scale(1.0);
+.video-bg.active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
 /* Ambient dark veil overlay */
