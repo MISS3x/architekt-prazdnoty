@@ -753,8 +753,7 @@ body {
   
   .player-video-preview {
     display: flex;
-    max-width: 240px;
-    margin: 0 auto;
+    max-width: 100%;
     width: 100%;
   }
   
