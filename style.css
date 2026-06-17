@@ -752,7 +752,10 @@ body {
   }
   
   .player-video-preview {
-    display: none; /* Hide preview on mobile for simplicity and focus */
+    display: flex;
+    max-width: 240px;
+    margin: 0 auto;
+    width: 100%;
   }
   
   .player-panel {
