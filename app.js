@@ -293,8 +293,12 @@ document.addEventListener("DOMContentLoaded", () => {
       timeDuration.textContent = formatTime(state.duration);
     }
 
+    // Apply offset to display time (e.g. 0.4s delay) when not in calibration mode
+    // to align visual highlighting with audio playback latency
+    const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
+
     // 2. Identify active block index
-    const activeIdx = getActiveIndex(state.currentTime);
+    const activeIdx = getActiveIndex(displayTime);
     if (activeIdx !== state.curIdx) {
       state.curIdx = activeIdx;
       highlightParagraph(activeIdx);
@@ -314,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 3. Karaoke highlight inside the active paragraph
-    highlightWords(activeIdx, state.currentTime);
+    highlightWords(activeIdx, displayTime);
   };
 
   const getActiveIndex = (t) => {
@@ -499,7 +503,9 @@ document.addEventListener("DOMContentLoaded", () => {
       playerStatus.textContent = "NAČÍTÁM…";
       playerStatus.style.color = "var(--muted)";
       
-      audio.load();
+      if (savedTime === 0) {
+        audio.load();
+      }
       
       const playWithDelay = () => {
         if (savedTime > 0) {
