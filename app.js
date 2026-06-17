@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- DOM ELEMENTS ---
   const audio = document.getElementById("audio-element");
   const playBtn = document.getElementById("play-btn");
+  const playBtnWrapper = document.getElementById("play-btn-wrapper");
   const playIcon = document.getElementById("play-icon");
   const progressBar = document.getElementById("progress-bar");
   const progressFill = document.getElementById("progress-fill");
@@ -202,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("play", () => {
       state.playing = true;
       playIcon.textContent = "❚❚";
+      if (playBtnWrapper) playBtnWrapper.classList.add("playing");
       updateStatus();
       
       // Sync video state
@@ -212,12 +214,14 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("pause", () => {
       state.playing = false;
       playIcon.textContent = "▶";
+      if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
       updateStatus();
     });
 
     audio.addEventListener("ended", () => {
       state.playing = false;
       playIcon.textContent = "▶";
+      if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
       audio.currentTime = 0;
       updateStatus();
     });

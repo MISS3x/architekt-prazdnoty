@@ -327,10 +327,82 @@ body {
   margin-top: 16px;
 }
 
+/* Play Button Wrapper and click guide */
+.play-btn-wrapper {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+
+.click-arrow-guide {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--amber);
+  color: var(--bg);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  box-shadow: 0 0 20px rgba(255, 181, 46, 0.75);
+  pointer-events: none;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: guide-bounce 1.2s infinite alternate ease-in-out;
+  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s ease;
+}
+
+.click-arrow-guide::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: var(--amber) transparent transparent;
+}
+
+.guide-arrow {
+  display: inline-block;
+  animation: arrow-bounce 0.6s infinite alternate ease-in-out;
+}
+
+/* Hide guide when playing */
+.play-btn-wrapper.playing .click-arrow-guide {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+@keyframes guide-bounce {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    transform: translateX(-50%) translateY(-6px);
+  }
+}
+
+@keyframes arrow-bounce {
+  0% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(2px);
+  }
+}
+
 .play-btn {
   flex: none;
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: 1.5px solid var(--cyan);
   background: radial-gradient(circle at 50% 35%, rgba(65, 224, 255, 0.25), rgba(65, 224, 255, 0.05));
@@ -350,7 +422,7 @@ body {
 }
 
 .play-icon {
-  font-size: 22px;
+  font-size: 32px;
   line-height: 1;
 }
 
@@ -762,12 +834,12 @@ body {
   }
   
   .play-btn {
-    width: 54px;
-    height: 54px;
+    width: 74px;
+    height: 74px;
   }
   
   .play-icon {
-    font-size: 18px;
+    font-size: 26px;
   }
   
   .story-content {
