@@ -218,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("ended", () => {
       state.playing = false;
       playIcon.textContent = "▶";
+      audio.currentTime = 0;
       updateStatus();
     });
 
