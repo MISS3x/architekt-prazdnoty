@@ -178,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Sync video state
       if (currentVideoEl) currentVideoEl.play().catch(() => {});
+      if (currentPrevEl) currentPrevEl.play().catch(() => {});
     });
 
     audio.addEventListener("pause", () => {
@@ -187,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Sync video state
       if (currentVideoEl) currentVideoEl.pause();
+      if (currentPrevEl) currentPrevEl.pause();
     });
 
     audio.addEventListener("ended", () => {
@@ -196,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Stop video
       if (currentVideoEl) currentVideoEl.pause();
+      if (currentPrevEl) currentPrevEl.pause();
     });
 
     // Check if metadata is already loaded
