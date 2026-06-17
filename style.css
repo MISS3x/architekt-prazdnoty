@@ -934,8 +934,9 @@ body {
    ========================================== */
 .cyber-hexagon-container {
   position: relative;
-  width: 400px;
-  height: 340px;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 400 / 340;
   margin: 4rem auto;
   display: flex;
   justify-content: center;
@@ -954,10 +955,10 @@ body {
 
 .cyber-hexagon-image {
   position: absolute;
-  top: 40px;
-  left: 87.4px;
-  width: 225.2px;
-  height: 260px;
+  top: 11.765%;
+  left: 21.85%;
+  width: 56.3%;
+  height: 76.471%;
   object-fit: cover;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   z-index: 1;
