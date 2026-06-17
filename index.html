@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architekt prázdnoty — A New Berlin Story</title>
+  <meta name="description" content="Audio-legenda o muži, který se z padesáti procent skládal z železa — a možná nikdy doopravdy nezemřel.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background images for rotating slideshow -->
+  <div class="bg-container" id="bg-container">
+    <img src="img/bg1.jpg" alt="" class="bg-image active">
+    <img src="img/bg2.jpg" alt="" class="bg-image">
+    <img src="img/bg5.jpg" alt="" class="bg-image">
+    <img src="img/bg3.jpg" alt="" class="bg-image">
+    <img src="img/bg6.jpg" alt="" class="bg-image">
+    <img src="img/bg4.jpg" alt="" class="bg-image">
+  </div>
+  
+  <!-- Background video (optional overlay) -->
+  <div class="video-bg-container" id="video-bg-container">
+    <video id="bg-video-1" loop muted playsinline class="video-bg" style="opacity: 0; transition: opacity 1.5s ease;"></video>
+    <video id="bg-video-2" loop muted playsinline class="video-bg" style="opacity: 0; transition: opacity 1.5s ease;"></video>
+  </div>
+
+  <!-- Ambient dark overlay (veil) -->
+  <div class="veil"></div>
+  
+  <!-- Retro scanline overlay -->
+  <div class="scanlines"></div>
+
+  <!-- Content Wrapper -->
+  <div class="wrapper">
+    
+    <!-- Hero Header -->
+    <header class="hero">
+      <div class="hero-gradient"></div>
+      <div class="hero-content">
+        <div class="hero-subtitle">
+          <span class="subtitle-line"></span>
+          // A NEW BERLIN STORY · RUDA-50
+        </div>
+        <h1 class="hero-title">ARCHITEKT<br>PRÁZDNOTY</h1>
+        <p class="hero-description">Audio-legenda o muži, který se z padesáti procent skládal z železa — a možná nikdy doopravdy nezemřel.</p>
+
+        <!-- Audio Player Interface -->
+        <div class="player-panel">
+          <div class="player-header">
+            <span>// AUDIO ARCHIVE — RUDA.M</span>
+            <span id="player-status" class="player-status">// NAČÍTÁM…</span>
+          </div>
+          
+          <div class="player-controls">
+            <button id="play-btn" class="play-btn" aria-label="Přehrát / Pozastavit">
+              <span id="play-icon" class="play-icon">▶</span>
+            </button>
+            <div class="player-progress-container">
+              <div id="progress-bar" class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+              </div>
+              <div class="player-time">
+                <span id="time-current">0:00</span>
+                <span id="time-duration">--:--</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Calibration Controls -->
+          <div class="player-footer">
+            <button id="btn-sync" class="btn-secondary">Synchronizace textu</button>
+            <button id="btn-export" class="btn-secondary">Export časování</button>
+            <button id="btn-reset" class="btn-secondary">Reset</button>
+            <label class="btn-secondary select-audio-label">
+              Jiné audio
+              <input type="file" id="file-audio" accept="audio/*">
+            </label>
+          </div>
+          
+          <div id="hint-text" class="hint-text">Načítám audio soubor...</div>
+        </div>
+
+        <div class="scroll-prompt">▼ SCROLL · ČTI · POSLOUCHEJ</div>
+      </div>
+    </header>
+
+    <!-- Main Story Panel -->
+    <main class="story-container">
+      <div class="story-content">
+        
+        <!-- Paragraph 0 -->
+        <p data-i="0" class="story-paragraph">
+          <span class="dropcap">N</span>eonové prstence Nového Berlína pulzovaly v rytmu binárního deště, ale Ruda Müller stál na střeše svého posledního projektu — sedmsetmetrového mrakodrapu <em>Aegis</em> — a díval se opačným směrem. Tam, kde končila atmosférická kupole města a začínaly syrové, neuro-kontaminované hory starého světa.
+        </p>
+        
+        <!-- Paragraph 1 -->
+        <p data-i="1" class="story-paragraph">
+          Ruda byl jiný. V éře, kdy budovy navrhovaly kvantové algoritmy, on stále kreslil první linie ručně, implantovaným stylusem přímo do své zrakové kůry. Jeho mrakodrapy nebyly jen stavby; byly to obří chladiče pro megasíť, tektonické chrámy z uhlíkových vláken a chromu. A stejně divný jako jeho architektura byl i jeho život. Zatímco ostatní korporátní elity trávily čas v polévce virtuálního hedonismu, Ruda běhal.
+        </p>
+        
+        <!-- Paragraph 2 -->
+        <p data-i="2" class="story-paragraph">
+          Neběhal na trenažérech. Běhal maratony v toxických zónách, bez kyslíkové masky, jen s upravenými kybernetickými plícemi, které filtrovaly popílek a těžké kovy. Pravidelně testoval limity svého bio-mechanického těla.
+        </p>
+        
+        <!-- Paragraph 3 -->
+        <p data-i="3" class="story-paragraph">
+          A pak, uprostřed největšího stavebního boomu století, prostě odešel.
+        </p>
+
+        <!-- Illustration B -->
+        <figure class="story-figure">
+          <img src="img/b.jpg" alt="Mechatronická včela" class="story-img img-circle">
+          <figcaption class="story-figcaption">APIS MECHATRONICA</figcaption>
+        </figure>
+
+        <!-- Section I Header -->
+        <h2 class="section-title">
+          <span class="section-num">I</span> MĚSÍC MIMO SÍŤ
+          <span class="section-line"></span>
+        </h2>
+
+        <!-- Blockquote Paragraph 4 -->
+        <blockquote data-i="4" class="story-quote">
+          „Odpojuji neuro-link. Lokální vyhledávání vypnuto. Spouštím autonomní režim,“ oznámil chladný hlas v jeho hlavě.
+        </blockquote>
+
+        <!-- Paragraph 5 -->
+        <p data-i="5" class="story-paragraph">
+          Ruda Müller nechal limuzínu na hranici perimetru a vstoupil do zakázaných hor. Žádné drony, žádné satelitní sledování, žádná záloha na cloudu. Pro zbytek světa prostě přestal existovat. V korporátních kruzích se šeptalo o nervovém zhroucení, jiní tvrdili, že hledá ložiska vzácných minerálů pro své megastruktury.
+        </p>
+        
+        <!-- Paragraph 6 -->
+        <p data-i="6" class="story-paragraph">
+          Pravda byla fascinující. Ruda v horách neběhal pro zdraví. Běhal, aby utekl hluku lidských myšlenek, které globální síť neustále pumpovala do vzduchu. Kilometr za kilometrem, v mrazu a samotě, jeho procesory chladly. V hlubokých skalních soutěskách nacházel statický klid. Občas se zastavil, pohladil chladnou žulu a do své vnitřní paměti si ukládal geologické struktury. Tyto vzorce pak promítal do organických křivek svých mrakodrapů. Podle mnohých stál za jeho genialitou právě tento měsíc absolutního digitálního půstu.
+        </p>
+        
+        <!-- Paragraph 7 -->
+        <p data-i="7" class="story-paragraph">
+          Po přesně třiceti dnech se vrátil. Špinavý, s napůl vybitými bateriemi v kyber-brýlích, ale s očima, ve kterých svítil kód pro novou generaci měst.
+        </p>
+
+        <!-- Illustration C -->
+        <figure class="story-figure">
+          <img src="img/c.jpg" alt="Rudolf Müller — Honey Superfuel Cell" class="story-img img-circle-amber">
+          <figcaption class="story-figcaption">RUDOLF MÜLLER · HONEY SUPERFUEL CELL</figcaption>
+        </figure>
+
+        <!-- Section II Header -->
+        <h2 class="section-title">
+          <span class="section-num">II</span> POSLEDNÍ ZÁHADA
+          <span class="section-line"></span>
+        </h2>
+
+        <!-- Paragraph 8 -->
+        <p data-i="8" class="story-paragraph">
+          O desítky let později byl Ruda Müller živoucí legendou. Dosáhl věku 100 let — což v té době, díky pokročilé bio-regeneraci, nebylo neobvyklé, ale u člověka s tak brutálním životním stylem to hraničilo se zázrakem. Jeho tělo bylo z padesáti procent tvořeno kybernetickými implantáty ze staré školy, které už nikdo neuměl opravit.
+        </p>
+        
+        <!-- Paragraph 9 -->
+        <p data-i="9" class="story-paragraph">
+          Jeho smrt však šokovala celý svět. A dodnes zůstává největší záhadou Nového Berlína.
+        </p>
+        
+        <!-- Paragraph 10 -->
+        <p data-i="10" class="story-paragraph">
+          Našli ho v jeho soukromém penthouse na vrcholu <em>Aegis</em>. Seděl ve svém křesle, na očích měl své staré, poškrábané kyber-brýle a na rtech lehký, ironický úsměv.
+        </p>
+        
+        <!-- Paragraph 11 -->
+        <p data-i="11" class="story-paragraph">
+          Když forenzní technici a datoví detektivové analyzovali jeho tělo, narazili na hned několik věcí, které nedávaly smysl:
+        </p>
+
+        <!-- Paragraph 12 (Bullet 1) -->
+        <div data-i="12" class="story-bullet">
+          <span class="bullet-marker"></span>
+          <p class="bullet-text">
+            <strong class="bullet-title">Absolutní vymazání.</strong> Jeho vnitřní pevný disk i záložní neuro-kapsle byly kompletně zformátované. Nešlo o selhání hardwaru — data byla přepsána čistým binárním kódem, který tvořil dokonalý, nekonečný vzorec včelí plástve.
+          </p>
+        </div>
+        
+        <!-- Paragraph 13 (Bullet 2) -->
+        <div data-i="13" class="story-bullet">
+          <span class="bullet-marker"></span>
+          <p class="bullet-text">
+            <strong class="bullet-title">Biologický paradox.</strong> Jeho organické srdce se nezastavilo selháním věku ani kvůli toxickému prostředí. Podle pitevní zprávy se prostě rozhodlo přestat bít v jeden přesný moment, jako by dostalo softwarový příkaz <span class="amber-highlight">SHUTDOWN</span>.
+          </p>
+        </div>
+        
+        <!-- Paragraph 14 (Bullet 3) -->
+        <div data-i="14" class="story-bullet">
+          <span class="bullet-marker"></span>
+          <p class="bullet-text">
+            <strong class="bullet-title">Termální anomálie.</strong> V momentě smrti teplota jeho kybernetických implantátů klesla na absolutní nulu během jediné sekundy, což odporovalo všem fyzikálním zákonům tehdejší mechatroniky.
+          </p>
+        </div>
+
+        <!-- Paragraph 15 -->
+        <p data-i="15" class="story-paragraph">
+          Nejdivnější však byl nález na jeho pracovním stole. Ležela tam prázdná skleněná lahev od medu s gravírováním mechatronické včely a nápisem: <span class="amber-highlight">HONEY SUPERFUEL CELL — FUEL FOR THE NEXT 50 YEARS</span>.
+        </p>
+        
+        <!-- Paragraph 16 -->
+        <p data-i="16" class="story-paragraph">
+          A v ten moment to datovým analytikům došlo. Přesně před padesáti lety, v den Rudových 50. narozenin, se v jeho kanceláři objevil záhadný týpek z podsvětí, kterému nikdo neřekl jinak než <strong>Krtek</strong>. Nikdo nevěděl, odkud přišel, ale přinesl Rudovi tuhle jedinou lahev. „Palivo pro další půlstoletí, architekte,“ zašeptal tehdy a zmizel v hlubokých tunelech sub-města.
+        </p>
+        
+        <!-- Paragraph 17 -->
+        <p data-i="17" class="story-paragraph">
+          Ruda Müller možná vůbec neumřel. Ta lahev neobsahovala obyčejný med, ale tekutý nanofuel cell — nanotechnologické palivo, které po padesáti letech dokončilo svou práci. Vteřinu předtím, než jeho srdce udělalo <span class="amber-highlight">SHUTDOWN</span>, se Rudovo vědomí nerozpadlo, ale kompletně asimilovalo do globálního AGI. Stal se součástí super deep mindu, který teď řídí celou planetu.
+        </p>
+        
+        <!-- Paragraph 18 -->
+        <p data-i="18" class="story-paragraph">
+          Ale to nikdo neví. Pro svět zůstal jen prázdnou schránkou v křesle. Ale když se dnes podíváte na mrakodrapy Nového Berlína, jejich neonová světla už neblikají náhodně. Pulzují v dokonalém včelím algoritmu.
+        </p>
+
+        <!-- Outro Archive Section -->
+        <div class="outro-section">
+          <div class="outro-header">// ARCHIVNÍ ZÁZNAM · 10 · 06 · 2076</div>
+          <!-- Paragraph 19 (Final Quote) -->
+          <p data-i="19" class="outro-quote">
+            Je Ruda Müller opravdu pryč —<br>nebo teď běhá uvnitř samotné sítě?
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>HONEY SUPERFUEL CELL</span>
+      <span>RUDA-50 · MMXXVI · NEW BERLIN ARCHIVE</span>
+    </footer>
+  </div>
+
+  <!-- Audio element -->
+  <audio id="audio-element" src="audio/pribeh.mp3" preload="metadata"></audio>
+
+  <!-- JavaScript logic -->
+  <script src="app.js"></script>
+</body>
+</html>
