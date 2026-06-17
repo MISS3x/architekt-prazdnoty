@@ -12,7 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loaded: false,
     msg: "",
     curIdx: -1,
-    activeVideoSrc: ""
+    activeVideoSrc: "",
+    autoplayAttempted: false
   };
 
   // All video backgrounds to cycle through
@@ -153,6 +154,12 @@ document.addEventListener("DOMContentLoaded", () => {
         state.loaded = true;
         updateStatus();
         seedCues();
+
+        // Autoplay attempt
+        if (!state.autoplayAttempted) {
+          state.autoplayAttempted = true;
+          attemptAutoplay();
+        }
       } else {
         if (!state.loaded) {
           state.loaded = true;
@@ -197,6 +204,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (audio.readyState >= 1) {
       onMeta();
     }
+  };
+
+  const attemptAutoplay = () => {
+    audio.play()
+      .then(() => {
+        console.log("Autoplay successful");
+      })
+      .catch(err => {
+        console.warn("Autoplay blocked, waiting for interaction:", err);
+        setHint("Klikněte kamkoli pro spuštění audio-příběhu.");
+        
+        const startOnInteraction = () => {
+          audio.play()
+            .then(() => {
+              document.removeEventListener("click", startOnInteraction);
+              document.removeEventListener("touchstart", startOnInteraction);
+              setHint(""); // Clear helper hint
+            })
+            .catch(e => console.error("Play on interaction failed:", e));
+        };
+        
+        document.addEventListener("click", startOnInteraction);
+        document.addEventListener("touchstart", startOnInteraction);
+      });
   };
 
   const fixInfinite = () => {

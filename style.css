@@ -743,7 +743,7 @@ body {
    ========================================== */
 @media (max-width: 768px) {
   .hero-content {
-    padding: 0 20px 40px;
+    padding: 0 16px 30px;
   }
   
   .player-wrapper {
@@ -752,12 +752,11 @@ body {
   }
   
   .player-video-preview {
-    width: 100%;
-    height: 160px;
+    display: none; /* Hide preview on mobile for simplicity and focus */
   }
   
   .player-panel {
-    padding: 16px 18px;
+    padding: 16px 14px;
   }
   
   .play-btn {
@@ -770,7 +769,7 @@ body {
   }
   
   .story-content {
-    padding: 60px 24px 40px;
+    padding: 40px 16px 30px;
   }
   
   .story-paragraph {
@@ -784,7 +783,7 @@ body {
   }
   
   .section-title {
-    font-size: 28px;
+    font-size: 26px;
   }
 }
 
