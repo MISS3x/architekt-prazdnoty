@@ -325,9 +325,11 @@ document.addEventListener("DOMContentLoaded", () => {
         previewSubtitles.style.color = "var(--muted)";
       }
       
+      /* 
       if (state.playing && !state.calibMode) {
         scrollToParagraph(activeIdx);
       }
+      */
     }
 
     // 3. Karaoke highlight inside the active paragraph
