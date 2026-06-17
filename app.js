@@ -15,35 +15,23 @@ document.addEventListener("DOMContentLoaded", () => {
     activeVideoSrc: ""
   };
 
-  // Video mapping for paragraphs
-  const paragraphVideos = {
-    0: "video/01-architekt-a.mp4",
-    1: "video/01-architekt-b.mp4",
-    2: "video/02-ruda-byl-jiny-a.mp4",
-    3: "video/02-ruda-byl-jiny-b.mp4",
-    4: "video/03-nebehal-na.mp4",
-    5: "video/04-ruda-muller.mp4",
-    6: "video/04-ruda-muller.mp4",
-    7: "video/04-ruda-muller.mp4",
-    8: "video/05-nejdivnejsi.mp4",
-    9: "video/05-nejdivnejsi.mp4",
-    10: "video/05-nejdivnejsi.mp4",
-    11: "video/05-nejdivnejsi.mp4",
-    12: "video/05-nejdivnejsi.mp4",
-    13: "video/05-nejdivnejsi.mp4",
-    14: "video/05-nejdivnejsi.mp4",
-    15: "video/06-a-v-ten-moment.mp4",
-    16: "video/06-a-v-ten-moment.mp4",
-    17: "video/06-a-v-ten-moment.mp4",
-    18: "video/06-a-v-ten-moment.mp4",
-    19: "video/06-a-v-ten-moment.mp4"
-  };
+  // All video backgrounds to cycle through
+  const videos = [
+    "video/01-architekt-a.mp4",
+    "video/01-architekt-b.mp4",
+    "video/02-ruda-byl-jiny-a.mp4",
+    "video/02-ruda-byl-jiny-b.mp4",
+    "video/03-nebehal-na.mp4",
+    "video/04-ruda-muller.mp4",
+    "video/05-nejdivnejsi.mp4",
+    "video/06-a-v-ten-moment.mp4"
+  ];
+  let videoIdx = 0;
+  let videoTimer = null;
 
   let cues = null;
   let N = 0;
   let paras = [];
-  let bgTimer = null;
-  let bgIdx = 0;
 
   // --- DOM ELEMENTS ---
   const audio = document.getElementById("audio-element");
@@ -102,8 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
       p.addEventListener("click", () => onParaClick(idx));
     });
 
-    // 5. Setup slideshow timer (rotates backgrounds if video not playing/available)
-    bgTimer = setInterval(rotateBackground, 9000);
+    // 5. Setup video background rotation
+    startVideoRotation();
 
     // 6. Setup audio listeners
     setupAudioListeners();
@@ -263,7 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeIdx !== state.curIdx) {
       state.curIdx = activeIdx;
       highlightParagraph(activeIdx);
-      changeBackgroundVideo(activeIdx);
       
       if (state.playing && !state.calibMode) {
         scrollToParagraph(activeIdx);
@@ -345,42 +332,24 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- BACKGROUNDS & VIDEOS ---
-  const rotateBackground = () => {
-    if (state.activeVideoSrc || !bgImages.length) return;
-    
-    bgIdx = (bgIdx + 1) % bgImages.length;
-    bgImages.forEach((img, i) => {
-      img.classList.toggle("active", i === bgIdx);
-    });
-  };
-
-  const changeBackgroundVideo = (idx) => {
-    const targetVideo = paragraphVideos[idx];
-    if (!targetVideo) {
-      // Fade out video background if no mapping
-      if (state.activeVideoSrc) {
-        state.activeVideoSrc = "";
-        videoBgContainer.classList.remove("active");
-        if (currentVideoEl) currentVideoEl.pause();
-        if (nextVideoEl) nextVideoEl.pause();
-      }
-      return;
-    }
-
-    if (state.activeVideoSrc === targetVideo) return;
-    state.activeVideoSrc = targetVideo;
-
-    // We have a new video, crossfade it!
+  const startVideoRotation = () => {
     videoBgContainer.classList.add("active");
     
-    // Prepare next video element
-    nextVideoEl.src = targetVideo;
-    nextVideoEl.load();
+    // Play first video
+    playNextVideo(videos[videoIdx]);
     
-    // Play video
+    // Set timer to change video every 12 seconds
+    videoTimer = setInterval(() => {
+      videoIdx = (videoIdx + 1) % videos.length;
+      playNextVideo(videos[videoIdx]);
+    }, 12000);
+  };
+
+  const playNextVideo = (src) => {
+    nextVideoEl.src = src;
+    nextVideoEl.load();
     nextVideoEl.play()
       .then(() => {
-        // Transition: fade in next, fade out current
         nextVideoEl.style.opacity = 1;
         
         const oldVideoEl = currentVideoEl;
@@ -390,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
             oldVideoEl.pause();
           }, 1500);
         }
-
+        
         // Swap roles
         const temp = currentVideoEl;
         currentVideoEl = nextVideoEl;
