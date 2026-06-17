@@ -212,17 +212,95 @@ body {
 }
 
 /* ==========================================
-   AUDIO PLAYER
+   AUDIO PLAYER & PREVIEW WRAPPER
    ========================================== */
-.player-panel {
+.player-wrapper {
   margin-top: 32px;
-  max-width: 660px;
+  display: flex;
+  gap: 20px;
+  max-width: 940px;
+  width: 100%;
+}
+
+.player-panel {
+  flex: 1;
   background: linear-gradient(180deg, rgba(16, 21, 30, 0.92), rgba(10, 13, 18, 0.94));
   border: 1px solid rgba(65, 224, 255, 0.22);
   border-radius: 14px;
   padding: 20px 22px;
   backdrop-filter: blur(8px);
   box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.player-video-preview {
+  width: 260px;
+  background: linear-gradient(180deg, rgba(16, 21, 30, 0.92), rgba(10, 13, 18, 0.94));
+  border: 1px solid rgba(65, 224, 255, 0.22);
+  border-radius: 14px;
+  padding: 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.preview-screen {
+  position: relative;
+  flex: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(65, 224, 255, 0.15);
+  background: #000;
+}
+
+.prev-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.prev-video.active {
+  opacity: 0.85; /* Slightly see-through to blend with backing and grid */
+}
+
+.preview-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 1px, rgba(0, 0, 0, 0.3) 2px, rgba(0, 0, 0, 0) 3px);
+  opacity: 0.7;
+}
+
+.preview-subtitles {
+  border-top: 1px dashed rgba(65, 224, 255, 0.2);
+  margin-top: 12px;
+  padding-top: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--cyan);
+  text-shadow: 0 0 4px rgba(65, 224, 255, 0.4);
+  text-align: center;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
 }
 
 .player-header {
@@ -665,6 +743,16 @@ body {
 @media (max-width: 768px) {
   .hero-content {
     padding: 0 20px 40px;
+  }
+  
+  .player-wrapper {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .player-video-preview {
+    width: 100%;
+    height: 160px;
   }
   
   .player-panel {

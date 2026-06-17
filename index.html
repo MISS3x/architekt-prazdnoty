@@ -52,40 +52,55 @@
         <h1 class="hero-title">ARCHITEKT<br>PRÁZDNOTY</h1>
         <p class="hero-description">Audio-legenda o muži, který se z padesáti procent skládal z železa — a možná nikdy doopravdy nezemřel.</p>
 
-        <!-- Audio Player Interface -->
-        <div class="player-panel">
-          <div class="player-header">
-            <span>// AUDIO ARCHIVE — RUDA.M</span>
-            <span id="player-status" class="player-status">// NAČÍTÁM…</span>
-          </div>
-          
-          <div class="player-controls">
-            <button id="play-btn" class="play-btn" aria-label="Přehrát / Pozastavit">
-              <span id="play-icon" class="play-icon">▶</span>
-            </button>
-            <div class="player-progress-container">
-              <div id="progress-bar" class="progress-bar">
-                <div id="progress-fill" class="progress-fill"></div>
-              </div>
-              <div class="player-time">
-                <span id="time-current">0:00</span>
-                <span id="time-duration">--:--</span>
+        <!-- Audio Player and Preview Interface -->
+        <div class="player-wrapper">
+          <!-- Audio Player Interface -->
+          <div class="player-panel">
+            <div class="player-header">
+              <span>// AUDIO ARCHIVE — RUDA.M</span>
+              <span id="player-status" class="player-status">// NAČÍTÁM…</span>
+            </div>
+            
+            <div class="player-controls">
+              <button id="play-btn" class="play-btn" aria-label="Přehrát / Pozastavit">
+                <span id="play-icon" class="play-icon">▶</span>
+              </button>
+              <div class="player-progress-container">
+                <div id="progress-bar" class="progress-bar">
+                  <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="player-time">
+                  <span id="time-current">0:00</span>
+                  <span id="time-duration">--:--</span>
+                </div>
               </div>
             </div>
+            
+            <!-- Calibration Controls -->
+            <div class="player-footer">
+              <button id="btn-sync" class="btn-secondary">Synchronizace textu</button>
+              <button id="btn-export" class="btn-secondary">Export časování</button>
+              <button id="btn-reset" class="btn-secondary">Reset</button>
+              <label class="btn-secondary select-audio-label">
+                Jiné audio
+                <input type="file" id="file-audio" accept="audio/*">
+              </label>
+            </div>
+            
+            <div id="hint-text" class="hint-text">Načítám audio soubor...</div>
           </div>
-          
-          <!-- Calibration Controls -->
-          <div class="player-footer">
-            <button id="btn-sync" class="btn-secondary">Synchronizace textu</button>
-            <button id="btn-export" class="btn-secondary">Export časování</button>
-            <button id="btn-reset" class="btn-secondary">Reset</button>
-            <label class="btn-secondary select-audio-label">
-              Jiné audio
-              <input type="file" id="file-audio" accept="audio/*">
-            </label>
+
+          <!-- Video Preview Window -->
+          <div class="player-video-preview">
+            <div class="preview-header">// HUD MONITOR — LIVE FEED</div>
+            <div class="preview-screen">
+              <video id="prev-video-1" loop muted playsinline class="prev-video"></video>
+              <video id="prev-video-2" loop muted playsinline class="prev-video"></video>
+              <div class="preview-scanlines"></div>
+            </div>
+            <!-- HUD Subtitles -->
+            <div id="preview-subtitles" class="preview-subtitles">// SYSTEM STANDBY</div>
           </div>
-          
-          <div id="hint-text" class="hint-text">Načítám audio soubor...</div>
         </div>
 
         <div class="scroll-prompt">▼ SCROLL · ČTI · POSLOUCHEJ</div>

@@ -56,8 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const bgVideo1 = document.getElementById("bg-video-1") || document.getElementById("bg-video");
   const bgVideo2 = document.getElementById("bg-video-2");
   
+  // Dual video preview elements
+  const prevVideo1 = document.getElementById("prev-video-1");
+  const prevVideo2 = document.getElementById("prev-video-2");
+  const previewSubtitles = document.getElementById("preview-subtitles");
+  
   let currentVideoEl = bgVideo1;
   let nextVideoEl = bgVideo2 || bgVideo1;
+
+  let currentPrevEl = prevVideo1;
+  let nextPrevEl = prevVideo2 || prevVideo1;
 
   // --- INITIALIZATION ---
   const init = () => {
@@ -252,6 +260,15 @@ document.addEventListener("DOMContentLoaded", () => {
       state.curIdx = activeIdx;
       highlightParagraph(activeIdx);
       
+      // Update preview subtitles
+      if (activeIdx !== -1 && paras[activeIdx]) {
+        previewSubtitles.textContent = paras[activeIdx].textContent.trim();
+        previewSubtitles.style.color = "var(--cyan)";
+      } else {
+        previewSubtitles.textContent = state.playing ? "// FEED ACTIVE" : "// SYSTEM STANDBY";
+        previewSubtitles.style.color = "var(--muted)";
+      }
+      
       if (state.playing && !state.calibMode) {
         scrollToParagraph(activeIdx);
       }
@@ -348,26 +365,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const playNextVideo = (src) => {
     nextVideoEl.src = src;
     nextVideoEl.load();
-    nextVideoEl.play()
-      .then(() => {
-        nextVideoEl.classList.add("active");
-        
-        const oldVideoEl = currentVideoEl;
-        if (oldVideoEl !== nextVideoEl) {
-          oldVideoEl.classList.remove("active");
-          setTimeout(() => {
-            oldVideoEl.pause();
-          }, 2200); // Wait for the 2.2s CSS opacity transition
-        }
-        
-        // Swap roles
-        const temp = currentVideoEl;
-        currentVideoEl = nextVideoEl;
-        nextVideoEl = temp;
-      })
-      .catch((e) => {
-        console.error("Video play failed:", e);
-      });
+    nextVideoEl.play().catch(e => console.error("BG video play failed:", e));
+
+    if (nextPrevEl) {
+      nextPrevEl.src = src;
+      nextPrevEl.load();
+      nextPrevEl.play().catch(e => console.error("Prev video play failed:", e));
+    }
+
+    nextVideoEl.classList.add("active");
+    if (nextPrevEl) nextPrevEl.classList.add("active");
+    
+    const oldVideoEl = currentVideoEl;
+    const oldPrevEl = currentPrevEl;
+
+    if (oldVideoEl !== nextVideoEl) {
+      oldVideoEl.classList.remove("active");
+      if (oldPrevEl) oldPrevEl.classList.remove("active");
+      setTimeout(() => {
+        oldVideoEl.pause();
+        if (oldPrevEl) oldPrevEl.pause();
+      }, 2200); // Wait for the 2.2s CSS opacity transition
+    }
+    
+    // Swap roles
+    const temp = currentVideoEl;
+    currentVideoEl = nextVideoEl;
+    nextVideoEl = temp;
+
+    const tempPrev = currentPrevEl;
+    currentPrevEl = nextPrevEl;
+    nextPrevEl = tempPrev;
   };
 
   // --- UI LISTENERS & CONTROL handlers ---
