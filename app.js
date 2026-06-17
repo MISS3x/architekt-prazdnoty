@@ -30,6 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let videoIdx = 0;
   let videoTimer = null;
 
+  const DEFAULT_CUES = [
+    6.42, 28.88, 62.02, 77.58, 86.52, 95.84, 119.68, 161.62, 175.68, 200.24,
+    207.66, 220.26, 229.26, 247.66, 265.06, 279.7, 295.56, 324.58, 354.1, 377.06
+  ];
+
   let cues = null;
   let N = 0;
   let paras = [];
@@ -105,6 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (stored && stored.length === N && stored.some(x => typeof x === "number")) {
       cues = stored;
       setHint("Časování načteno z lokální paměti.");
+    } else {
+      cues = [...DEFAULT_CUES];
+      setHint("Načteno přesné výchozí časování.");
     }
 
     // 4. Attach paragraph click listeners (for calibration)
@@ -616,17 +624,16 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const resetCues = () => {
-    cues = null;
+    cues = [...DEFAULT_CUES];
     try {
-      localStorage.setItem("ruda_cues_v2", "null");
+      localStorage.setItem("ruda_cues_v2", JSON.stringify(cues));
     } catch (e) {}
     
-    seedCues();
     state.curIdx = -1;
     highlightParagraph(-1);
     updateKaraokeDisplay("", "PŘIPRAVENO", "");
     
-    setHint("Časování bylo resetováno na proporcionální odhad.");
+    setHint("Časování bylo resetováno na výchozí přesné hodnoty.");
   };
 
   const loadAudioFile = (e) => {
