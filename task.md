@@ -6,21 +6,29 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **2 / 2 done (100%)**
+## 📊 Progress: **3 / 4 done (75%)**
 
 ```
-#################################################################################################### 100%
+###########################################################################-------------------------  75%
 ```
 
 | Section | Done | Total | % |
 |---|---|---|---|
-| Responsivita | 1 | 1 | 100% |
-| Obsah a design | 1 | 1 | 100% |
+| HTML | 1 | 1 | 100% |
+| CSS | 1 | 1 | 100% |
+| JS | 1 | 1 | 100% |
+| Git | 0 | 1 | 0% |
 
 ---
 
-## Responsivita
-- [x] **#1** — Fix cyber hexagon container responsiveness (convert to percentages & max-width) ✅ completed
+## HTML
+- [x] **#1** — Add Part II elements and tabs to `index.html` ✅ completed
 
-## Obsah a design
-- [x] **#2** — Add missing illustration a.jpg (New Berlin panorama) to the story ✅ completed
+## CSS
+- [x] **#2** — Add style rules for the Future Leak Terminal and fuchsia theme in `style.css` ✅ completed
+
+## JS
+- [x] **#3** — Update `app.js` with Part II logic, audio switching, and decryption animation ✅ completed
+
+## Git
+- [ ] **#4** — Push changes and create version tag

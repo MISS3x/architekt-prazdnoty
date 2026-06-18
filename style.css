@@ -996,5 +996,266 @@ body {
   r: 4px;
 }
 
+/* ==========================================
+   TABS FOR SWITCHING PARTS
+   ========================================== */
+.player-parts-tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 8px;
+}
 
+.tab-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
 
+.tab-btn:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn.active {
+  color: var(--cyan);
+  border-color: rgba(65, 224, 255, 0.22);
+  background: rgba(65, 224, 255, 0.08);
+  text-shadow: 0 0 5px rgba(65, 224, 255, 0.4);
+}
+
+/* Part 2 Specific Active Styling */
+.tab-btn.active.part2-active {
+  color: #d946ef;
+  border-color: rgba(217, 70, 239, 0.22);
+  background: rgba(217, 70, 239, 0.08);
+  text-shadow: 0 0 5px rgba(217, 70, 239, 0.4);
+}
+
+/* Fuchsia variables and classes for Part 2 */
+body.part2-active {
+  --cyan: #d946ef;
+  --cyan-glow: rgba(217, 70, 239, 0.35);
+  --cyan-glow-intense: rgba(217, 70, 239, 0.7);
+}
+
+/* ==========================================
+   FUTURE LEAK TERMINAL STYLE (PART II)
+   ========================================== */
+.future-leak-panel {
+  --neon-leak: #d946ef;
+  --neon-leak-glow: rgba(217, 70, 239, 0.35);
+  border: 1px solid rgba(217, 70, 239, 0.22);
+  background: rgba(14, 10, 18, 0.88);
+  padding: 30px;
+  border-radius: 14px;
+  margin-top: 60px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(217, 70, 239, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.leak-border-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-leak), transparent);
+}
+
+.leak-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(217, 70, 239, 0.15);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.glitch-text {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--neon-leak);
+  text-shadow: 0 0 10px var(--neon-leak-glow);
+  letter-spacing: 2px;
+}
+
+.leak-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #ef4444;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+}
+
+.leak-status.active {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  animation: pulse-green 2s infinite alternate;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 4px rgba(34, 197, 94, 0.2); }
+  100% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.5); }
+}
+
+.leak-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.leak-meta .meta-item span:first-child {
+  margin-right: 6px;
+}
+
+.leak-meta .meta-item span:last-child {
+  color: var(--text);
+}
+
+.leak-terminal-screen {
+  position: relative;
+  background: #050307;
+  border: 1px solid rgba(217, 70, 239, 0.15);
+  border-radius: 8px;
+  padding: 30px;
+  min-height: 250px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+.terminal-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 1px, rgba(217, 70, 239, 0.05) 2px, rgba(0, 0, 0, 0) 3px);
+  opacity: 0.8;
+  z-index: 10;
+}
+
+.btn-decrypt-pulse {
+  background: transparent;
+  border: 1.5px solid var(--neon-leak);
+  color: var(--neon-leak);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 14px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 15px var(--neon-leak-glow);
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  outline: none;
+}
+
+.btn-decrypt-pulse:hover {
+  background: var(--neon-leak);
+  color: #000;
+  box-shadow: 0 0 25px var(--neon-leak);
+  text-shadow: none;
+}
+
+.terminal-alert {
+  color: var(--amber);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 0 8px var(--amber-glow);
+}
+
+.binary-glitch {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  color: var(--neon-leak);
+  text-shadow: 0 0 6px var(--neon-leak-glow);
+  opacity: 0.85;
+}
+
+.terminal-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 15px;
+  font-family: 'Newsreader', serif;
+  font-size: 19px;
+  color: #b3a2be;
+  min-height: 200px;
+}
+
+.leak-story-content {
+  font-family: 'Newsreader', serif;
+  font-size: 21px;
+  line-height: 1.72;
+}
+
+.leak-story-content h3.leak-title {
+  font-family: 'Chakra Petch', sans-serif;
+  color: var(--white);
+  font-size: 24px;
+  margin-top: 35px;
+  margin-bottom: 15px;
+  border-bottom: 1px dashed rgba(217, 70, 239, 0.2);
+  padding-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.story-paragraph.leak-p {
+  opacity: 0.3;
+  transition: opacity 0.35s ease, border-color 0.35s ease;
+  border-left: 2px solid transparent;
+  padding-left: 15px;
+  margin-left: -17px;
+  text-align: justify;
+}
+
+.story-paragraph.leak-p.active {
+  opacity: 1;
+  border-left-color: var(--neon-leak);
+}
+
+.story-bullet.leak-p {
+  opacity: 0.3;
+  transition: opacity 0.35s ease, border-color 0.35s ease;
+  border-left: 2px solid transparent;
+  padding-left: 15px;
+  margin-left: -17px;
+}
+
+.story-bullet.leak-p.active {
+  opacity: 1;
+  border-left-color: var(--neon-leak);
+}
+
+.marker-amber {
+  background: var(--amber) !important;
+  box-shadow: 0 0 10px var(--amber) !important;
+}
+
+.hidden {
+  display: none !important;
+}

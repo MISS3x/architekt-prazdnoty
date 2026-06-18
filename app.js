@@ -13,7 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     msg: "",
     curIdx: -1,
     activeVideoSrc: "",
-    autoplayAttempted: false
+    autoplayAttempted: false,
+    activePart: 1
   };
 
   // All video backgrounds to cycle through
@@ -30,9 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let videoIdx = 0;
   let videoTimer = null;
 
-  const DEFAULT_CUES = [
+  const PART1_CUES = [
     6.42, 28.88, 62.02, 77.58, 86.52, 95.84, 119.68, 161.62, 175.68, 200.24,
     207.66, 220.26, 229.26, 247.66, 265.06, 279.7, 295.56, 324.58, 354.1, 377.06
+  ];
+
+  const PART2_CUES = [
+    0.0, 41.44, 65.76, 102.72, 130.28, 161.56
   ];
 
   let cues = null;
@@ -87,38 +92,109 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPrevEl = prevVideo1;
   let nextPrevEl = prevVideo2 || prevVideo1;
 
-  // --- INITIALIZATION ---
-  const init = () => {
-    // 1. Gather paragraph elements
-    paras = Array.from(document.querySelectorAll("[data-i]"));
-    paras.sort((a, b) => parseInt(a.dataset.i) - parseInt(b.dataset.i));
+  let allParas = [];
+  const tabPart1 = document.getElementById("tab-part1");
+  const tabPart2 = document.getElementById("tab-part2");
+  const btnDecryptLeak = document.getElementById("btn-decrypt-leak");
+
+  const setPart = (partNum, startPlaying = false) => {
+    state.activePart = partNum;
+    
+    if (partNum === 1) {
+      document.body.classList.remove("part2-active");
+      tabPart1.classList.add("active");
+      tabPart1.classList.remove("part2-active");
+      tabPart2.classList.remove("active");
+      tabPart2.classList.remove("part2-active");
+      document.getElementById("player-archive-title").textContent = "// AUDIO ARCHIVE — RUDA.M";
+      
+      paras = allParas.filter(p => parseInt(p.dataset.i) < 20);
+      audio.src = "audio/pribeh.mp3";
+    } else {
+      document.body.classList.add("part2-active");
+      tabPart1.classList.remove("active");
+      tabPart2.classList.add("active");
+      tabPart2.classList.add("part2-active");
+      document.getElementById("player-archive-title").textContent = "// DECRYPTED FEED — MIA.M";
+      
+      paras = allParas.filter(p => parseInt(p.dataset.i) >= 20);
+      audio.src = "audio/druhy_dil.mp3";
+      
+      // Show decrypted text container in the terminal
+      document.getElementById("terminal-intro").classList.add("hidden");
+      document.getElementById("leak-story-content").classList.remove("hidden");
+      document.getElementById("leak-status").textContent = "AKTIVNÍ / DEKRYPTOVÁNO";
+      document.getElementById("leak-status").classList.add("active");
+      document.getElementById("decrypt-progress").textContent = "100%";
+    }
+    
     N = paras.length;
+    state.curIdx = -1;
+    state.duration = 0;
+    state.loaded = false;
+    audio.load();
+    updateStatus();
 
-    // 2. Wrap words in paragraphs for karaoke
-    paras.forEach(p => {
-      wrapWords(p);
-    });
+    // Load cues for this part
+    loadCues(partNum);
+    
+    if (startPlaying) {
+      const playOnCanPlay = () => {
+        audio.removeEventListener("canplay", playOnCanPlay);
+        setTimeout(() => {
+          audio.play()
+            .then(() => updateStatus())
+            .catch(e => console.warn("Autoplay after swap failed:", e));
+        }, 300);
+      };
+      audio.addEventListener("canplay", playOnCanPlay);
+    }
+  };
 
-    // 3. Load stored cues if any
+  const loadCues = (partNum) => {
     let stored = null;
     try {
-      const s = localStorage.getItem("ruda_cues_v2");
+      const s = localStorage.getItem(`ruda_cues_v2_part${partNum}`);
       if (s) stored = JSON.parse(s);
     } catch (e) {
       console.warn("Could not parse cues from localStorage", e);
     }
 
-    if (stored && stored.length === N && stored.some(x => typeof x === "number")) {
+    const defaultCues = partNum === 1 ? PART1_CUES : PART2_CUES;
+    const partLength = partNum === 1 ? 20 : 6;
+
+    if (stored && stored.length === partLength && stored.some(x => typeof x === "number")) {
       cues = stored;
       setHint("Časování načteno z lokální paměti.");
     } else {
-      cues = [...DEFAULT_CUES];
+      cues = [...defaultCues];
       setHint("Načteno přesné výchozí časování.");
     }
+  };
+
+  // --- INITIALIZATION ---
+  const init = () => {
+    // 1. Gather paragraph elements
+    allParas = Array.from(document.querySelectorAll("[data-i]"));
+    allParas.sort((a, b) => parseInt(a.dataset.i) - parseInt(b.dataset.i));
+
+    // 2. Wrap words in paragraphs for karaoke
+    allParas.forEach(p => {
+      wrapWords(p);
+    });
+
+    // Initialize Part 1
+    setPart(1, false);
 
     // 4. Attach paragraph click listeners (for calibration)
-    paras.forEach((p, idx) => {
-      p.addEventListener("click", () => onParaClick(idx));
+    allParas.forEach(p => {
+      p.addEventListener("click", () => {
+        // Find current paragraph index in active part
+        const activeIdx = paras.indexOf(p);
+        if (activeIdx !== -1) {
+          onParaClick(activeIdx);
+        }
+      });
     });
 
     // 5. Setup video background rotation
@@ -509,6 +585,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load custom audio
     fileAudio.addEventListener("change", loadAudioFile);
+
+    // Part switching tabs
+    if (tabPart1) {
+      tabPart1.addEventListener("click", () => setPart(1));
+    }
+    if (tabPart2) {
+      tabPart2.addEventListener("click", () => {
+        // If Part 2 is not decrypted yet, trigger animation, otherwise just switch
+        if (state.activePart !== 2) {
+          const intro = document.getElementById("terminal-intro");
+          if (intro && !intro.classList.contains("hidden")) {
+            runDecryptionAnimation();
+          } else {
+            setPart(2);
+          }
+        }
+      });
+    }
+
+    // Decryption button in terminal
+    if (btnDecryptLeak) {
+      btnDecryptLeak.addEventListener("click", runDecryptionAnimation);
+    }
+  };
+
+  const runDecryptionAnimation = () => {
+    const btn = document.getElementById("btn-decrypt-leak");
+    const progressEl = document.getElementById("decrypt-progress");
+    const statusEl = document.getElementById("leak-status");
+    
+    if (btn) btn.disabled = true;
+    if (btn) btn.textContent = "DEKRYPTUJI...";
+    if (statusEl) {
+      statusEl.textContent = "DEKRYPTUJI...";
+      statusEl.style.color = "var(--amber)";
+      statusEl.style.borderColor = "var(--amber)";
+      statusEl.style.background = "rgba(255, 181, 46, 0.1)";
+    }
+    
+    let pct = 0;
+    const interval = setInterval(() => {
+      pct += 5;
+      if (progressEl) progressEl.textContent = `${pct}%`;
+      
+      if (pct >= 100) {
+        clearInterval(interval);
+        setPart(2, true); // Swap to Part 2 and play!
+      }
+    }, 80);
   };
 
   const togglePlay = () => {
@@ -583,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Persist
     try {
-      localStorage.setItem("ruda_cues_v2", JSON.stringify(cues));
+      localStorage.setItem(`ruda_cues_v2_part${state.activePart}`, JSON.stringify(cues));
     } catch (e) {
       console.warn("Could not save cues", e);
     }
@@ -620,20 +745,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "ruda_cues.json";
+      a.download = `ruda_cues_part${state.activePart}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Export failed", e);
     }
 
-    setHint("Časování bylo staženo jako ruda_cues.json a uloženo do schránky.");
+    setHint("Časování bylo staženo a uloženo do schránky.");
   };
 
   const resetCues = () => {
-    cues = [...DEFAULT_CUES];
+    const defaultCues = state.activePart === 1 ? PART1_CUES : PART2_CUES;
+    cues = [...defaultCues];
     try {
-      localStorage.setItem("ruda_cues_v2", JSON.stringify(cues));
+      localStorage.setItem(`ruda_cues_v2_part${state.activePart}`, JSON.stringify(cues));
     } catch (e) {}
     
     state.curIdx = -1;

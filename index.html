@@ -57,8 +57,12 @@
           <!-- Audio Player Interface -->
           <div class="player-panel">
             <div class="player-header">
-              <span>// AUDIO ARCHIVE — RUDA.M</span>
+              <span id="player-archive-title">// AUDIO ARCHIVE — RUDA.M</span>
               <span id="player-status" class="player-status">// NAČÍTÁM…</span>
+            </div>
+            <div class="player-parts-tabs">
+              <button id="tab-part1" class="tab-btn active">// DÍL I: ARCHITEKT</button>
+              <button id="tab-part2" class="tab-btn">// DÍL II: VČELÍ MOR</button>
             </div>
             
             <div class="player-controls">
@@ -318,6 +322,77 @@
           <p data-i="19" class="outro-quote">
             Je Ruda Müller opravdu pryč —<br>nebo teď běhá uvnitř samotné sítě?
           </p>
+        </div>
+
+        <!-- Future Leak Section (Part II) -->
+        <div class="future-leak-panel" id="future-leak-panel">
+          <div class="leak-border-top"></div>
+          <div class="leak-header">
+            <span class="glitch-text" data-text="[CORRUPTED FILE DETECTED]">// DEKRYPTOVANÝ ARTEFAKT Z BUDOUCNOSTI</span>
+            <span class="leak-status" id="leak-status">NEAKTIVNÍ / BLOKOVÁNO</span>
+          </div>
+          
+          <div class="leak-meta">
+            <div class="meta-item"><span>ARTEFAKT:</span> <span>RUDA-50_PART2_TEMP</span></div>
+            <div class="meta-item"><span>ČASOVÁ ANOMÁLIE:</span> <span class="amber-highlight">+25 LET</span></div>
+            <div class="meta-item"><span>DEKRYPCE:</span> <span id="decrypt-progress">0%</span></div>
+          </div>
+
+          <div class="leak-terminal-screen">
+            <div class="terminal-grid"></div>
+            <div class="terminal-scanlines"></div>
+            
+            <div class="terminal-intro" id="terminal-intro">
+              <p class="terminal-alert">⚠️ NALEZEN ROZPADLÝ DATOVÝ PROUD Z ROKU 2101.</p>
+              <p>Ztracená data obsahují záznamy o Mii Müllerové, včelím moru a kolapsu chladicích systémů chrámu Aegis.</p>
+              <button id="btn-decrypt-leak" class="btn-decrypt-pulse">SPUSTIT DEKRYPCI A AUDIO</button>
+            </div>
+
+            <!-- Glitchy Story Content for Part II (initially hidden) -->
+            <div class="leak-story-content hidden" id="leak-story-content">
+              <h3 class="leak-title">DÍL II: VČELÍ MOR</h3>
+              
+              <!-- Paragraph 20 -->
+              <p data-i="20" class="story-paragraph leak-p">
+                <strong>Kapitola I: Koroze na 700. patře.</strong><br>
+                Mia Millerová visela v magnetickém postroji na plášti <em>Aegis</em>, 700metrového chrámu z uhlíkových vláken. Kolem ní bičoval binární déšť, těžké kapky nasycené křemíkovým prachem a chladicí emulzí, kterou město odpařovalo do atmosféry. Pod ní zela čtyřsetmetrová propast. Neonové prstence Nového Berlína neměly svou obvyklou jantarovou barvu. Trhaly se v ostrých fialových zákmitech.
+              </p>
+
+              <!-- Paragraph 21 -->
+              <p data-i="21" class="story-paragraph leak-p">
+                Mia otevřela panel čtrnácté chladicí větve. Místo čistých skleněných vláken narazila na cosi organického. Nano ASIC procesory. Vypadaly jako dokonale symetrické včelí plástve, které Ruda Müller před padesáti lety tajně nasadil. Srostly s křemíkovým základem budovy a živily se jejím odpadním teplem.
+              </p>
+
+              <!-- Paragraph 22 -->
+              <p data-i="22" class="story-paragraph leak-p">
+                Jenže dnes tyhle plástve umíraly. Zlaté světlo v nich pohasínalo, nahrazeno matnou černotou. Mor. Digitální nekróza způsobená genetickou degradací nano-sond, které se bez nového evolučního kódu replikovaly s fatálními chybami. Černé plástve se drolily pod prsty, páchly spálenou mědí a ozonem. Celá stěna <em>Aegis</em> ztuhla. Obří chladicí turbíny vynechaly jeden cyklus a budovou projela seismická křeč, jak se přehřáté nosníky ve vteřině roztáhly.
+              </p>
+
+              <h3 class="leak-title">Kapitola II: Únik ze záhrobí sítě</h3>
+
+              <!-- Paragraph 23 -->
+              <p data-i="23" class="story-paragraph leak-p">
+                Mia se k uzlu připojila přes nouzový datový kabel. Její kyber-brýle zaplavil masivní šum. Neurolink, normálně izolovaný, začal nekontrolovatelně glitchovat. Kód se přepisoval sám přes sebe, až se v zorném poli formoval hrubý datový úník. Leak, obcházející korporátní firewally.
+              </p>
+
+              <!-- Paragraph 24 (Glitch / Binary) -->
+              <div data-i="24" class="story-bullet leak-p">
+                <span class="bullet-marker"></span>
+                <p class="bullet-text">
+                  <strong class="bullet-title amber-highlight">DEŠIFROVANÝ HLAS:</strong><br>
+                  „Mnoho... hladoví... dělnice zapomněly... kód královny...<br>
+                  <span class="binary-glitch">01110011 01101111 01110011</span> (SOS)<br>
+                  Oni přicházejí... Vypni mě... Vypni mě...“
+                </p>
+              </div>
+
+              <!-- Paragraph 25 -->
+              <p data-i="25" class="story-paragraph leak-p">
+                Byl to hlas jejího dědy, respektive to, co z něj v té chladnoucí síti zbylo. Glitče tvořily přesný frekvenční vzorec včelího tance, kterým signalizují nebezpečí.
+              </p>
+            </div>
+
+          </div>
         </div>
       </div>
     </main>
