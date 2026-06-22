@@ -742,11 +742,13 @@
 
     function loadCaptureVideo(panel) {
       const baseName = panel.filename.replace(/\.[^/.]+$/, ""); // get name without extension
-      let partFolder = 'dil_1';
-      if (baseName.startsWith('02_')) partFolder = 'dil_2';
-      if (baseName.startsWith('03_')) partFolder = 'dil_3';
+      const videoBaseName = baseName.replace(/(_s\d+|_custom)+$/, ""); // strip sentence suffixes and custom markers
       
-      const videoSrc = `/video/${partFolder}/${baseName}.mp4`;
+      let partFolder = 'dil_1';
+      if (videoBaseName.startsWith('02_')) partFolder = 'dil_2';
+      if (videoBaseName.startsWith('03_')) partFolder = 'dil_3';
+      
+      const videoSrc = `/video/${partFolder}/${videoBaseName}.mp4`;
       const video = document.getElementById('capture-video');
       const errorMsg = document.getElementById('video-error-msg');
       const captureBtn = document.getElementById('btn-capture-frame');
