@@ -202,7 +202,7 @@ app.get('/api/panels', (req, res) => {
     }
 
     // Parse HTML panels using a regex to capture relevant attributes
-    const panelRegex = /<div\s+class="comic-panel[^"]*"([^>]*?)>[\s\S]*?<img\s+src="([^"]+)"/g;
+    const panelRegex = /<div\s+class="comic-panel(?:\s+[^"]*)?"([^>]*?)>[\s\S]*?<img\s+src="([^"]+)"/g;
     
     const panels = [];
     let match;
@@ -443,7 +443,7 @@ app.post('/api/save-mask', (req, res) => {
       // Group 1: The start of the comic-panel div tag
       // Group 2: The current attributes inside that opening div tag
       // Group 3: The closing angle bracket and the immediate img child tag containing our filename
-      const panelRegex = new RegExp(`(<div\\s+class="comic-panel[^"]*")([^>]*?)(>\\s*<img\\s+src="[^"]*${escapedFilename}"[^>]*>)`, 'g');
+      const panelRegex = new RegExp(`(<div\\s+class="comic-panel(?:\\s+[^"]*)?")([^>]*?)(>\\s*<img\\s+src="[^"]*${escapedFilename}"[^>]*>)`, 'g');
 
       if (panelRegex.test(htmlContent)) {
         htmlContent = htmlContent.replace(panelRegex, (match, p1, p2, p3) => {
