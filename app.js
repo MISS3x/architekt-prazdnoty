@@ -1866,25 +1866,34 @@ document.addEventListener("DOMContentLoaded", () => {
   // okno) i komiks (horizontálně/vertikálně, strip) na pozici odpovídající
   // aktuálnímu času audia (timeToPos). Běží jen při přehrávání a mimo
   // cooldown po ručním scrollu, takže se s ručním seekem nepere.
-  // Komiks: okamžitý hard-snap na střed aktivního panelu (bez animace).
+  // Komiks: ease-in tween 200ms (pomalý start → rychlý konec).
+  const COMIC_GLIDE_MS = 200;
+  let comicTween = { from: 0, target: null, start: 0 };
 
   const syncScrollTick = () => {
     comicRAF = requestAnimationFrame(syncScrollTick);
     if (!state.playing || state.calibMode || state.fullscreenMode || state.audioMode) return;
-    // Respect manual scrolling — pause the auto-glide for a while after interaction.
     if (Date.now() - lastUserScrollTime < AUTO_SCROLL_INACTIVITY_MS) return;
 
     const displayTime = Math.max(0, state.currentTime - 0.4);
 
     if (state.comicMode) {
-      // Hard-snap: okamžitě vycentruj aktivní panel bez efektu.
       const grid = document.querySelector(`#comic-content-part${state.activePart} .comic-grid`);
       if (!grid) return;
       const active = grid.querySelector(".comic-panel.active");
       if (!active) return;
       const vertical = isComicVertical();
       const desired = centerOffsetFor(grid, active);
-      if (vertical) grid.scrollTop = desired; else grid.scrollLeft = desired;
+      // Spusť nový tween vždy, když se cíl změní
+      if (comicTween.target == null || Math.abs(desired - comicTween.target) > 1) {
+        comicTween.from  = vertical ? grid.scrollTop : grid.scrollLeft;
+        comicTween.target = desired;
+        comicTween.start  = Date.now();
+      }
+      const p = Math.min(1, (Date.now() - comicTween.start) / COMIC_GLIDE_MS);
+      const eased = p * p * p; // ease-in: pomalý start, rychlý konec
+      const pos = comicTween.from + (comicTween.target - comicTween.from) * eased;
+      if (vertical) grid.scrollTop = pos; else grid.scrollLeft = pos;
     } else {
       const target = timeToPos(displayTime, syncAnchors.text);
       if (target == null) return;
