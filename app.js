@@ -248,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
       '<h2 class="ap-atitle" id="audio-title"></h2><span class="ap-anarr" id="audio-narr"></span></div>' +
       '<div class="ap-matrixwrap"><canvas class="ap-matrix"></canvas>' +
       '<span class="ap-draghint">⟲ táhni — vodorovně otáčí, svisle naklání</span></div>' +
+      '<div class="ap-words" id="audio-words"></div>' +
       '<div class="ap-actrls">' +
       '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span>' +
       '<span id="audio-status">Připraveno k přehrání</span></div></div>';
@@ -538,7 +539,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const kCurrent = karaokeDisplay ? karaokeDisplay.querySelector(".k-current") : _dummy;
   const kNext = karaokeDisplay ? karaokeDisplay.querySelector(".k-next") : _dummy;
 
+  // 3D karusel slov v audio rezimu: kazde nove slovo prileti zepredu a odpluje dozadu.
+  let lastAudioWord = "";
+  const pushAudioWord = (w) => {
+    const cont = audioStageEl && audioStageEl.querySelector(".ap-words");
+    if (!cont) return;
+    const el = document.createElement("span");
+    el.className = "ap-word";
+    el.textContent = w;
+    cont.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+    while (cont.children.length > 16) cont.removeChild(cont.firstChild);
+  };
   const updateKaraokeDisplay = (prev, current, next) => {
+    if (state.audioMode && current && current !== lastAudioWord && current !== "PŘIPRAVENO") {
+      lastAudioWord = current;
+      pushAudioWord(current);
+    }
     if (!kPrev || !kCurrent || !kNext) return;
     kPrev.textContent = prev || "";
     kCurrent.textContent = current || "";
@@ -2153,8 +2170,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update teaser video
     const teaserVid = document.getElementById("fullscreen-teaser-video");
     if (teaserVid) {
-      teaserVid.src = getVideoPath(`video/teaser_${partNum}.mp4`);
-      teaserVid.play().catch(e => console.log("Teaser autoplay prevented", e));
+      teaserVid.src = getVideoPath(`video/teaser_${state.activePart}.mp4`);
+      teaserVid.play().catch(e => {
+        if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
+          console.log("Teaser autoplay prevented", e);
+        }
+      });
     }
     
 

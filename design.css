@@ -123,12 +123,13 @@ body::after {
   box-shadow:inset 0 0 0 1px rgba(45,226,255,.4); transition:.15s; border-radius:0; }
 .ap-tb svg{ width:14px; height:14px; }
 .ap-tb:hover{ color:#fff; background:rgba(45,226,255,.14); box-shadow:inset 0 0 0 1px var(--cyan), 0 0 14px -4px var(--cyan); }
-.ap-play{ cursor:pointer; border:0; width:40px; height:40px; display:grid; place-items:center;
-  background:linear-gradient(180deg,var(--cyan-hi),var(--cyan-deep)); color:#02121a;
-  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
-  box-shadow:0 0 20px -3px var(--cyan), inset 0 0 0 1px var(--cyan-hi); transition:.15s; border-radius:0; }
-.ap-play svg{ width:16px; height:16px; }
-.ap-play:hover{ transform:translateY(-1px); box-shadow:0 0 30px -2px var(--cyan), inset 0 0 0 1px var(--cyan-hi); }
+.ap-play{ cursor:pointer; border:0; width:52px; height:52px; display:grid; place-items:center;
+  background:linear-gradient(180deg,var(--amber-hi),var(--amber)) !important; color:#02121a;
+  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%) !important;
+  box-shadow:0 0 25px rgba(255, 178, 46, 0.4), inset 0 0 0 1px var(--amber-hi) !important;
+  transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.2s ease; border-radius:0; }
+.ap-play svg{ width:22px; height:22px; transition: transform 0.15s ease; }
+.ap-play:hover{ transform:scale(1.08) translateY(-1px); box-shadow:0 0 35px rgba(255, 178, 46, 0.75), inset 0 0 0 1.5px #fff !important; }
 .ap-scrub{ flex:1; min-width:60px; position:relative; height:16px; display:flex; align-items:center; cursor:pointer; }
 .ap-track{ position:absolute; left:0; right:0; top:50%; height:2px; transform:translateY(-50%); background:rgba(45,226,255,.18); }
 .ap-fill{ position:absolute; left:0; top:50%; height:3px; transform:translateY(-50%); width:0;
@@ -625,6 +626,23 @@ body.comic-fs .comic-grid { height: 100% !important; }
   image-rendering:pixelated; touch-action:none; user-select:none; -webkit-user-select:none; }
 .ap-mcorner{ display:none; }
 
+/* 3D karusel slov v audio rezimu — slova prileti zepredu a odplují dozadu (mizí). */
+.ap-words { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  z-index:6; width:min(92%,640px); height:240px; pointer-events:none;
+  perspective:640px; transform-style:preserve-3d; }
+.ap-word { position:absolute; left:50%; top:50%; white-space:nowrap;
+  font-family:"Orbitron",sans-serif; font-weight:800; font-size:clamp(20px,5.2vw,40px);
+  letter-spacing:.02em; color:#eafcff;
+  text-shadow:0 0 26px rgba(45,226,255,.7), 0 2px 8px rgba(0,0,0,.6);
+  will-change:transform,opacity;
+  animation:ap-wordfly 2.8s cubic-bezier(.2,.6,.3,1) forwards; }
+@keyframes ap-wordfly {
+  0%   { opacity:0; transform:translate(-50%,-50%) translateZ(240px) scale(1.15); }
+  12%  { opacity:1; }
+  60%  { opacity:1; }
+  100% { opacity:0; transform:translate(-50%,-50%) translateY(-150px) translateZ(-420px) rotateX(40deg) scale(.45); }
+}
+
 .ap-audio2 .ap-audioinfo{ position:absolute; left:50%; transform:translateX(-50%); width:min(100%, 900px); top:5%; z-index:5; text-align:center; pointer-events:none; padding:0 20px; }
 .ap-akick{ font-family:'Share Tech Mono',monospace; font-size:12px; letter-spacing:.28em; text-transform:uppercase;
   color:var(--cyan); text-shadow:0 0 14px rgba(45,226,255,.6); }
@@ -648,9 +666,10 @@ body.comic-fs .comic-grid { height: 100% !important; }
 .ap-micdot{ width:9px; height:9px; border-radius:50%; background:#6b5a3a; }
 .ap-micbtn.on{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber)); box-shadow:0 0 22px -3px var(--amber); }
 .ap-micbtn.on .ap-micdot{ background:#1a1102; animation:ap-blink 1s infinite; }
-.ap-draghint{ position:absolute; left:50%; top:18%; transform:translateX(-50%); z-index:6;
+/* hint dole nad statusem — nikdy nekoliduje s (i 2řádkovým) titulem */
+.ap-draghint{ position:absolute; left:50%; top:auto; bottom:58px; transform:translateX(-50%); z-index:6;
   font-family:'Share Tech Mono',monospace; font-size:9.5px; letter-spacing:.18em; text-transform:uppercase;
-  color:rgba(45,226,255,.4); pointer-events:none; }
+  color:rgba(45,226,255,.4); pointer-events:none; white-space:nowrap; }
 .ap-aled{ width:9px; height:9px; transform:rotate(45deg); background:#3a4a52; }
 .ap-aled.on{ background:var(--cyan); box-shadow:0 0 12px var(--cyan); animation:ap-blink 1.3s infinite; }
 @keyframes ap-blink{ 0%,100%{ opacity:1 } 50%{ opacity:.3 } }
