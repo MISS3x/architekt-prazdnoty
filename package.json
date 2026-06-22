@@ -1,0 +1,26 @@
+{
+  "name": "architekt_prazdnoty",
+  "version": "1.0.0",
+  "description": "Jednostránkový tmavý cyberpunkový web s interaktivním audio-příběhem, karaoke efektem pro odstavce a slova a dynamickým černobílým video pozadím.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MISS3x/architekt-prazdnoty.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MISS3x/architekt-prazdnoty/issues"
+  },
+  "homepage": "https://github.com/MISS3x/architekt-prazdnoty#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "open": "^11.0.0"
+  }
+}

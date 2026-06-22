@@ -6,10 +6,10 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **41 / 41 done (100%)**
+## 📊 Progress: **43 / 46 done (93%)**
 
 ```
-#################################################################################################### 100%
+#############################################################################################------- 93%
 ```
 
 | Section | Done | Total | % |
@@ -20,6 +20,7 @@
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
+| Comic Editor | 2 | 5 | 40% |
 
 ---
 
@@ -41,6 +42,7 @@
 - [x] **#27** — Move `.sticky-mode-switcher` to top, style the new Part switcher, and implement fully mobile responsive styles ✅ completed
 - [x] **#39** — Udelej texty na desktop verzi komiks 2x mensi ✅ completed (2x smaller font, padding and pointers on desktop)
 - [x] **#40** — Zrušit rámeček kolem titulků ve videu všude ✅ completed
+
 ## JS
 - [x] **#8** — Implement decryption state tracking (`decryptedPart2`, `decryptedPart3`) in `app.js` ✅ completed
 - [x] **#9** — Connect tab switches to show/hide the corresponding dedicated part wrapper ✅ completed
@@ -73,3 +75,10 @@
 - [x] **#36** — Bind ArrowLeft / ArrowRight keys to scrub audio by sentence (scrubByCue) ✅ completed
 - [x] **#37** — Hide footer in fullscreen comic mode (body.comic-fs) to prevent overlapping on mobile ✅ completed
 - [x] **#38** — Show sentence navigation buttons (◀ and ▶) on desktop by changing .ap-step from display: none to grid ✅ completed
+
+## Comic Editor
+- [x] **#42** — Vytvořit Express backend server (`editor_server.js`) pro operace se soubory a API endpoints ✅ completed
+- [x] **#43** — Vytvořit uživatelské rozhraní editoru (`comic_editor.html`) pro review panelů, vět a promptů ✅ completed
+- [ ] **#44** — Implementovat Kling AI generování a ffmpeg extrakci snímků (prvního frejmu z videa)
+- [ ] **#45** — Přidat mechanismus zálohování původních souborů do `img/screenshots/backup`
+- [ ] **#46** — Otestovat kompletní tok generování, schválení, přepsání a zobrazení v komiksu
