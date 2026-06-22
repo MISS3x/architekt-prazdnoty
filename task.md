@@ -6,7 +6,7 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **46 / 47 done (98%)**
+## 📊 Progress: **47 / 48 done (98%)**
 
 ```
 ##################################################################################################-- 98%
@@ -20,7 +20,7 @@
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
-| Comic Editor | 5 | 6 | 83% |
+| Comic Editor | 6 | 7 | 86% |
 
 ---
 
@@ -83,3 +83,4 @@
 - [x] **#45** — Přidat mechanismus zálohování původních souborů do `img/screenshots/backup` ✅ completed
 - [ ] **#46** — Otestovat kompletní tok generování, schválení, přepsání a zobrazení v komiksu
 - [x] **#47** — Přidat funkci ořezu obrázků (16:9, 4:3, 1:1, 3:4, 9:16) s posunem a přepisem původního souboru ✅ completed
+- [x] **#48** — Přidat do editoru přepínač zdrojů (Obrázek, Video capture se sliderem, Generování) s možností ořezu zachyceného snímku ✅ completed
