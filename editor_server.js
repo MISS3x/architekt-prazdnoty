@@ -173,13 +173,32 @@ async function generateImagenImage(prompt) {
   return base64Image;
 }
 
+// Helper to get Part number from global paragraph index
+function getPartFromGlobalI(globalI) {
+  const g = parseInt(globalI);
+  if (g < 20) return 1;
+  if (g < 32) return 2;
+  return 3;
+}
+
+// Helper to find comic image path by looking up folders
+function findComicImagePath(filename) {
+  for (let part = 1; part <= 3; part++) {
+    const p = path.join(__dirname, 'img', 'comic', `dil_${part}`, filename);
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  // Fallback to prefix-based check if file does not exist yet
+  let partFolder = 'dil_1';
+  if (filename.startsWith('02_')) partFolder = 'dil_2';
+  if (filename.startsWith('03_')) partFolder = 'dil_3';
+  return path.join(__dirname, 'img', 'comic', partFolder, filename);
+}
+
 // Helper to resolve comic image path (dil_1, dil_2, dil_3)
 function getComicImagePath(filename) {
-  const baseName = path.basename(filename);
-  let partFolder = 'dil_1';
-  if (baseName.startsWith('02_')) partFolder = 'dil_2';
-  if (baseName.startsWith('03_')) partFolder = 'dil_3';
-  return path.join(__dirname, 'img', 'comic', partFolder, filename);
+  return findComicImagePath(filename);
 }
 
 // 4. API endpoint to list all panels by parsing index_v2.html
@@ -220,6 +239,17 @@ app.get('/api/panels', (req, res) => {
       const aMatch = attrs.match(/data-aspect="([^"]*)"/);
       const aspect = aMatch ? aMatch[1] : "";
       
+      const vMatch = attrs.match(/data-video="([^"]*)"/);
+      let video = vMatch ? vMatch[1] : "";
+      
+      if (!video && globalI !== -1 && sentenceIdx !== -1) {
+        const part = getPartFromGlobalI(globalI);
+        const partStr = String(part).padStart(2, '0');
+        const paraStr = String(parseInt(globalI) + 1).padStart(2, '0');
+        const subStr = String(parseInt(sentenceIdx) + 1).padStart(2, '0');
+        video = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+      }
+      
       // Get the correct sentence text from the paragraph mapping
       const paraText = paragraphs[globalI] || "";
       let text = "";
@@ -250,7 +280,8 @@ app.get('/api/panels', (req, res) => {
         text,
         filename,
         defaultPrompt,
-        aspect
+        aspect,
+        video
       });
     }
 
@@ -468,6 +499,167 @@ app.post('/api/save-mask', (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 12. Inject Video for Film version
+app.post('/api/inject-video', (req, res) => {
+  const { filename, globalI, sentenceIdx, videoData, video } = req.body;
+  if (globalI == null || sentenceIdx == null || !videoData) {
+    return res.status(400).json({ error: 'Missing parameters or videoData' });
+  }
+
+  try {
+    const part = getPartFromGlobalI(globalI);
+    const partStr = String(part).padStart(2, '0');
+    const paraStr = String(parseInt(globalI) + 1).padStart(2, '0');
+    const subStr = String(parseInt(sentenceIdx) + 1).padStart(2, '0');
+
+    let targetVideoPath;
+    let targetMobileVideoPath;
+    let videoFilename;
+    let partFolder;
+    
+    if (video) {
+      targetVideoPath = path.join(__dirname, video);
+      partFolder = video.split('/')[1] || `dil_${part}`;
+      videoFilename = path.basename(video);
+      
+      const ext = path.extname(videoFilename);
+      const base = path.basename(videoFilename, ext);
+      targetMobileVideoPath = path.join(__dirname, 'video', partFolder, `${base}_mobile${ext}`);
+    } else {
+      partFolder = `dil_${part}`;
+      videoFilename = `${partStr}_${paraStr}_${subStr}.mp4`;
+      const mobileVideoFilename = `${partStr}_${paraStr}_${subStr}_mobile.mp4`;
+      
+      targetVideoPath = path.join(__dirname, 'video', partFolder, videoFilename);
+      targetMobileVideoPath = path.join(__dirname, 'video', partFolder, mobileVideoFilename);
+    }
+
+    // Decode base64
+    const base64Data = videoData.replace(/^data:video\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Back up existing video if it exists
+    if (fs.existsSync(targetVideoPath)) {
+      const backupVideoPath = path.join(BACKUP_DIR, `${path.basename(videoFilename, '.mp4')}_backup_${Date.now()}.mp4`);
+      fs.copyFileSync(targetVideoPath, backupVideoPath);
+      console.log(`Backed up original movie video to ${backupVideoPath}`);
+    }
+
+    if (fs.existsSync(targetMobileVideoPath)) {
+      const backupMobileVideoPath = path.join(BACKUP_DIR, `${path.basename(targetMobileVideoPath, '.mp4')}_backup_${Date.now()}.mp4`);
+      fs.copyFileSync(targetMobileVideoPath, backupMobileVideoPath);
+      console.log(`Backed up original mobile movie video to ${backupMobileVideoPath}`);
+    }
+
+    // Write to standard video
+    fs.writeFileSync(targetVideoPath, buffer);
+    console.log(`Injected video saved: ${targetVideoPath}`);
+
+    // Write to mobile video (simplest fallback to ensure both are updated)
+    fs.writeFileSync(targetMobileVideoPath, buffer);
+    console.log(`Injected mobile video saved: ${targetMobileVideoPath}`);
+
+    res.json({ success: true, targetPath: `/video/${partFolder}/${videoFilename}` });
+  } catch (error) {
+    console.error('Video injection failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 13. Rename panel image and/or video files and update index files
+app.post('/api/rename-panel-files', (req, res) => {
+  const { globalI, sentenceIdx, oldImageName, newImageName, oldVideoName, newVideoName } = req.body;
+  
+  if (globalI == null || sentenceIdx == null || !oldImageName || !newImageName || !oldVideoName || !newVideoName) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
+
+  try {
+    const part = getPartFromGlobalI(globalI);
+    const partFolder = `dil_${part}`;
+    
+    // 1. Rename Image File if changed
+    if (oldImageName !== newImageName) {
+      const oldImagePath = findComicImagePath(oldImageName);
+      if (fs.existsSync(oldImagePath)) {
+        const newImagePath = path.join(path.dirname(oldImagePath), newImageName);
+        fs.renameSync(oldImagePath, newImagePath);
+        console.log(`Renamed image: ${oldImagePath} -> ${newImagePath}`);
+      }
+    }
+    
+    // 2. Rename Video File if changed
+    if (oldVideoName !== newVideoName) {
+      const oldVideoPath = path.join(__dirname, 'video', partFolder, oldVideoName);
+      const newVideoPath = path.join(__dirname, 'video', partFolder, newVideoName);
+      if (fs.existsSync(oldVideoPath)) {
+        fs.renameSync(oldVideoPath, newVideoPath);
+        console.log(`Renamed video: ${oldVideoPath} -> ${newVideoPath}`);
+      }
+      
+      // Mobile version
+      const oldMobileName = oldVideoName.replace('.mp4', '_mobile.mp4');
+      const newMobileName = newVideoName.replace('.mp4', '_mobile.mp4');
+      const oldMobilePath = path.join(__dirname, 'video', partFolder, oldMobileName);
+      const newMobilePath = path.join(__dirname, 'video', partFolder, newMobileName);
+      if (fs.existsSync(oldMobilePath)) {
+        fs.renameSync(oldMobilePath, newMobilePath);
+        console.log(`Renamed mobile video: ${oldMobilePath} -> ${newMobilePath}`);
+      }
+    }
+    
+    // 3. Update HTML files
+    const indexPaths = [
+      path.join(__dirname, 'index_v2.html'),
+      path.join(__dirname, 'index.html')
+    ];
+    
+    indexPaths.forEach(indexPath => {
+      if (!fs.existsSync(indexPath)) return;
+      let htmlContent = fs.readFileSync(indexPath, 'utf8');
+      
+      // Update image references
+      if (oldImageName !== newImageName) {
+        const oldRef = `img/comic/${partFolder}/${oldImageName}`;
+        const newRef = `img/comic/${partFolder}/${newImageName}`;
+        
+        htmlContent = htmlContent.split(oldRef).join(newRef);
+        console.log(`Updated image references from ${oldRef} to ${newRef} in ${path.basename(indexPath)}`);
+      }
+      
+      // Update video references and add data-video attribute
+      if (oldVideoName !== newVideoName) {
+        htmlContent = htmlContent.replace(/<div\s+([^>]*?class="comic-panel[^"]*"[^>]*?)>/g, (match, attrs) => {
+          const iMatch = attrs.match(/data-i="(\d+)"/);
+          const sMatch = attrs.match(/data-sentence="(\d+)"/);
+          if (iMatch && parseInt(iMatch[1]) === parseInt(globalI) && 
+              sMatch && parseInt(sMatch[1]) === parseInt(sentenceIdx)) {
+            
+            let newAttrs = attrs;
+            const videoAttrValue = `video/${partFolder}/${newVideoName}`;
+            
+            if (attrs.includes('data-video=')) {
+              newAttrs = attrs.replace(/data-video="[^"]*"/, `data-video="${videoAttrValue}"`);
+            } else {
+              newAttrs = attrs + ` data-video="${videoAttrValue}"`;
+            }
+            return `<div ${newAttrs}>`;
+          }
+          return match;
+        });
+        console.log(`Updated data-video attribute in ${path.basename(indexPath)}`);
+      }
+      
+      fs.writeFileSync(indexPath, htmlContent, 'utf8');
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('File renaming failed:', error);
     res.status(500).json({ error: error.message });
   }
 });

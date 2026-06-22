@@ -17,8 +17,8 @@
 ### Agent 1 — Antigravity IDE (Claude Sonnet 4.6 in chat)
 **Role:** Coordination, planning, complex logic, review
 **Primary files:** `task.md`, `AGENTS.md`, `app.js`, `design.css`, `comic_editor.html`, `editor_server.js`
-**Current task:** Standby / All tasks completed
-**Status:** 🔵 STANDBY
+**Current task:** Implementing Film Video Injection Feature
+**Status:** 🟢 ACTIVE
 
 ### Agent 2 — Claude CLI (terminal)
 **Role:** Fast file edits, CSS tweaks, refactoring, git operations
@@ -39,13 +39,13 @@
 
 | File | Locked by | Since | Note |
 |------|-----------|-------|------|
-| `app.js` | — | — | — |
+| `app.js` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | Custom video attribute support |
 | `index.html` | — | — | — |
 | `style.css` | — | — | — |
 | `design.css` | — | — | — |
-| `task.md` | — | — | — |
-| `editor_server.js` | — | — | — |
-| `comic_editor.html` | — | — | — |
+| `task.md` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | Update tasks list |
+| `editor_server.js` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | ffmpeg cropping, rename & data-video endpoints |
+| `comic_editor.html` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | Renaming inputs and logic |
 
 
 ---

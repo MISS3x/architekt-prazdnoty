@@ -8,7 +8,7 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **59 / 59 done (100%)**
+## 📊 Progress: **70 / 70 done (100%)**
 
 ```
 ####################################################################################################  100%
@@ -24,6 +24,8 @@
 | State & UI | 7 | 7 | 100% |
 | Comic Editor | 10 | 10 | 100% |
 | HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
 
 ---
 
@@ -100,3 +102,19 @@
 - [x] **#57** — Parse and return `aspect` in `/api/panels` in `editor_server.js` ✅ completed
 - [x] **#58** — Implement `/api/save-mask` POST endpoint in `editor_server.js` ✅ completed
 - [x] **#59** — Commit and push changes to git origin ✅ completed
+
+## Video Injection to Film
+- [x] **#60** — Add the 5th tab button and container in `comic_editor.html` ✅ completed
+- [x] **#61** — Implement drag-and-drop file upload, file reading, and POST logic in `comic_editor.html` ✅ completed
+- [x] **#62** — Implement `/api/inject-video` POST endpoint in `editor_server.js` with backups and file writing ✅ completed
+- [x] **#63** — Verify video injection locally by uploading a video and playing it in the film section ✅ completed
+- [x] **#64** — Commit and push changes to git origin ✅ completed
+
+## File Renaming
+- [x] **#65** — Add Rename inputs and button in `comic_editor.html` ZDROJ PANELU pane ✅ completed
+- [x] **#66** — Implement `/api/rename-panel-files` in `editor_server.js` ✅ completed
+- [x] **#67** — Update `app.js` to support the `data-video` attribute for custom video playback ✅ completed
+- [x] **#68** — Update `/api/panels` in `editor_server.js` to parse and return `data-video` ✅ completed
+- [x] **#69** — Verify file renaming works (image & video renamed, HTML updated, plays in Movie mode) ✅ verified by subagent
+- [x] **#70** — Git commit and push all changes ✅ completed
+

@@ -2231,17 +2231,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (previewPoster) previewPoster.classList.add("active");
       if (fullscreenPoster) fullscreenPoster.classList.add("active");
     
-    // Update teaser video
-    const teaserVid = document.getElementById("fullscreen-teaser-video");
-    if (teaserVid) {
-      teaserVid.src = getVideoPath(`video/teaser_${state.activePart}.mp4`);
-      teaserVid.play().catch(e => {
-        if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
-          console.log("Teaser autoplay prevented", e);
-        }
-      });
-    }
-    
+      // Update teaser video
+      const teaserVid = document.getElementById("fullscreen-teaser-video");
+      if (teaserVid) {
+        teaserVid.src = getVideoPath(`video/teaser_${state.activePart}.mp4`);
+        teaserVid.play().catch(e => {
+          if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
+            console.log("Teaser autoplay prevented", e);
+          }
+        });
+      }
 
       // Deactivate any active video element transitions
       if (currentPrevEl) currentPrevEl.classList.remove("active");
@@ -2262,12 +2261,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadAndPlayPreview = (videoEl, part, paraIdx, subIdx) => {
     // paraIdx je LOKÁLNÍ index odstavce (0-based) — stejně jako startParagraphVideoChain.
     const paraNum = parseInt(paraIdx) + 1; // 1-based číslo odstavce v názvu souboru
+    const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
+    const panel = matchingPanels[subIdx - 1];
 
-    const partStr = String(part).padStart(2, '0');
-    const paraStr = String(paraNum).padStart(2, '0');
-    const subStr = String(subIdx).padStart(2, '0');
-    const src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
-    const shotId = `[${partStr}_${paraStr}_${subStr}]`;
+    let src;
+    let shotId;
+    if (panel && panel.dataset.video) {
+      src = panel.dataset.video;
+      const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
+      shotId = `[${base}]`;
+    } else {
+      const partStr = String(part).padStart(2, '0');
+      const paraStr = String(paraNum).padStart(2, '0');
+      const subStr = String(subIdx).padStart(2, '0');
+      src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+      shotId = `[${partStr}_${paraStr}_${subStr}]`;
+    }
     
     if (previewShotId) {
       previewShotId.textContent = shotId;
@@ -2312,18 +2322,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const startParagraphVideoChain = (part, paraIdx) => {
     activeParaIdx = paraIdx;
     subVideoIdx = 1;
-
-
-
     isPlayingCustom = true;
 
     // Use nextPrevEl to load and transition
     const paraNum = parseInt(paraIdx) + 1;
+    const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
+    const firstPanel = matchingPanels[0];
 
-    const partStr = String(part).padStart(2, '0');
-    const paraStr = String(paraNum).padStart(2, '0');
-    const src = `video/dil_${part}/${partStr}_${paraStr}_01.mp4`;
-    const shotId = `[${partStr}_${paraStr}_01]`;
+    let src;
+    let shotId;
+    if (firstPanel && firstPanel.dataset.video) {
+      src = firstPanel.dataset.video;
+      const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
+      shotId = `[${base}]`;
+    } else {
+      const partStr = String(part).padStart(2, '0');
+      const paraStr = String(paraNum).padStart(2, '0');
+      src = `video/dil_${part}/${partStr}_${paraStr}_01.mp4`;
+      shotId = `[${partStr}_${paraStr}_01]`;
+    }
 
     if (previewShotId) {
       previewShotId.textContent = shotId;
@@ -2710,11 +2728,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const loadAndPlayFullscreenMirror = (videoEl, part, paraIdx, subIdx) => {
     const paraNum = parseInt(paraIdx) + 1;
+    const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
+    const panel = matchingPanels[subIdx - 1];
 
-    const partStr = String(part).padStart(2, '0');
-    const paraStr = String(paraNum).padStart(2, '0');
-    const subStr = String(subIdx).padStart(2, '0');
-    const src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+    let src;
+    if (panel && panel.dataset.video) {
+      src = panel.dataset.video;
+    } else {
+      const partStr = String(part).padStart(2, '0');
+      const paraStr = String(paraNum).padStart(2, '0');
+      const subStr = String(subIdx).padStart(2, '0');
+      src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+    }
     
     videoEl.src = getVideoPath(src);
     videoEl.load();

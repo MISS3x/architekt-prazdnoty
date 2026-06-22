@@ -533,11 +533,12 @@
         </div>
 
         <!-- Tab switcher -->
-        <div style="display: flex; gap: 8px; margin-top: 5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <div style="display: flex; gap: 8px; margin-top: 5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; flex-wrap: wrap;">
           <button class="btn-filter" id="tab-btn-image" onclick="switchSourceTab('image')" style="font-size: 11px;" disabled>1. Obrázek</button>
           <button class="btn-filter" id="tab-btn-video" onclick="switchSourceTab('video')" style="font-size: 11px;" disabled>2. Video Capture</button>
           <button class="btn-filter" id="tab-btn-generate" onclick="switchSourceTab('generate')" style="font-size: 11px;" disabled>3. Generování (Gemini)</button>
           <button class="btn-filter" id="tab-btn-mask" onclick="switchSourceTab('mask')" style="font-size: 11px;" disabled>4. Maska (Zobrazení)</button>
+          <button class="btn-filter" id="tab-btn-inject" onclick="switchSourceTab('inject')" style="font-size: 11px;" disabled>5. Vložit video (Film)</button>
         </div>
 
         <!-- Tab Content 1: Image & Crop -->
@@ -665,6 +666,51 @@
             </button>
           </div>
         </div>
+
+        <!-- Tab Content 5: Inject Video for Film -->
+        <div id="tab-content-inject" class="tab-content hidden" style="display: flex; flex-direction: column; gap: 15px;">
+          <label>Vložit video do sekce FILM</label>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+            Nahraje soubor videa (.mp4) a přiřadí ho do sekce FILM k této konkrétní větě. Tímto dojde k přepsání původního videa pro daný moment příběhu.
+          </div>
+
+          <div style="border: 2px dashed var(--border-color); border-radius: 6px; padding: 25px; text-align: center; background: rgba(1, 4, 8, 0.4); display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; position: relative;" id="video-dropzone" onclick="document.getElementById('video-upload-input').click()">
+            <span style="font-size: 28px;">🎬</span>
+            <span id="video-upload-label" style="font-size: 13px; font-family: 'Share Tech Mono', monospace; color: var(--text-muted);">Vyberte nebo přetáhněte .mp4 soubor</span>
+            <input type="file" id="video-upload-input" accept="video/mp4" style="display: none;" onchange="handleInjectVideoFileSelect(this)">
+          </div>
+
+          <div id="inject-video-info" class="hidden" style="background: rgba(45, 226, 255, 0.05); border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px;">
+            <div>Název: <span id="inject-video-name" style="color: var(--cyan);">---</span></div>
+            <div>Velikost: <span id="inject-video-size" style="color: var(--amber);">---</span></div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button class="btn btn-primary" id="btn-inject-video" onclick="injectVideoToFilm()" style="padding: 10px 20px; font-size: 12px;" disabled>
+              ⚡ Vložit video do filmu
+            </button>
+          </div>
+        </div>
+
+        <!-- Section: Přejmenování souborů -->
+        <div class="control-box" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+          <label>Přejmenovat soubory panelu</label>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 5px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="font-size: 11px; width: 60px; color: var(--text-muted); font-family: 'Share Tech Mono', monospace; text-transform: uppercase;">Obrázek:</span>
+              <input type="text" id="rename-image-input" placeholder="novy_nazev.jpg" style="padding: 8px 12px; font-size: 12px;">
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="font-size: 11px; width: 60px; color: var(--text-muted); font-family: 'Share Tech Mono', monospace; text-transform: uppercase;">Video:</span>
+              <input type="text" id="rename-video-input" placeholder="novy_nazev.mp4" style="padding: 8px 12px; font-size: 12px;">
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button class="btn btn-secondary" id="btn-rename-files" onclick="renamePanelFiles()" style="padding: 8px 16px; font-size: 11px;" disabled>
+                💾 Uložit nové názvy
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Right Pane: New Generation Preview -->
@@ -769,6 +815,7 @@
       document.getElementById('tab-btn-video').disabled = false;
       document.getElementById('tab-btn-generate').disabled = false;
       document.getElementById('tab-btn-mask').disabled = false;
+      document.getElementById('tab-btn-inject').disabled = false;
 
       // Update original pane contents
       document.getElementById('orig-filename-label').textContent = panel.filename;
@@ -808,8 +855,24 @@
       // Set style preset to comic by default
       setStylePreset('comic');
 
+      // Reset inject video tab upload state
+      const fileInput = document.getElementById('video-upload-input');
+      if (fileInput) fileInput.value = '';
+      const label = document.getElementById('video-upload-label');
+      if (label) label.textContent = 'Vyberte nebo přetáhněte .mp4 soubor';
+      const info = document.getElementById('inject-video-info');
+      if (info) info.classList.add('hidden');
+      const injectBtn = document.getElementById('btn-inject-video');
+      if (injectBtn) injectBtn.disabled = true;
+
       // Reset preview pane
       resetPreviewPane();
+
+      // Populate rename inputs
+      document.getElementById('rename-image-input').value = panel.filename;
+      const videoFilename = panel.video ? panel.video.substring(panel.video.lastIndexOf('/') + 1) : '';
+      document.getElementById('rename-video-input').value = videoFilename;
+      document.getElementById('btn-rename-files').disabled = false;
     }
 
     function switchSourceTab(tabName) {
@@ -845,14 +908,25 @@
     }
 
     function loadCaptureVideo(panel) {
-      const baseName = panel.filename.replace(/\.[^/.]+$/, ""); // get name without extension
-      const videoBaseName = baseName.replace(/(_s\d+|_custom)+$/, ""); // strip sentence suffixes and custom markers
+      let videoSrc = panel.video;
+      if (!videoSrc) {
+        const baseName = panel.filename.replace(/\.[^/.]+$/, ""); // get name without extension
+        const videoBaseName = baseName.replace(/(_s\d+|_custom)+$/, ""); // strip sentence suffixes and custom markers
+        
+        let partFolder = 'dil_1';
+        if (videoBaseName.startsWith('02_')) partFolder = 'dil_2';
+        if (videoBaseName.startsWith('03_')) partFolder = 'dil_3';
+        
+        videoSrc = `/video/${partFolder}/${videoBaseName}.mp4`;
+      } else {
+        if (!videoSrc.startsWith('/')) {
+          videoSrc = '/' + videoSrc;
+        }
+      }
       
-      let partFolder = 'dil_1';
-      if (videoBaseName.startsWith('02_')) partFolder = 'dil_2';
-      if (videoBaseName.startsWith('03_')) partFolder = 'dil_3';
+      // Cache buster
+      videoSrc += (videoSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
       
-      const videoSrc = `/video/${partFolder}/${videoBaseName}.mp4`;
       const video = document.getElementById('capture-video');
       const errorMsg = document.getElementById('video-error-msg');
       const captureBtn = document.getElementById('btn-capture-frame');
@@ -1440,7 +1514,158 @@
       }
     }
 
+    // Video Injection helper functions
+    function handleInjectVideoFileSelect(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        document.getElementById('video-upload-label').textContent = 'Soubor připraven';
+        document.getElementById('inject-video-name').textContent = file.name;
+        document.getElementById('inject-video-size').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        document.getElementById('inject-video-info').classList.remove('hidden');
+        document.getElementById('btn-inject-video').disabled = false;
+      }
+    }
+
+    async function injectVideoToFilm() {
+      if (!currentPanel) return;
+      const input = document.getElementById('video-upload-input');
+      if (!input || !input.files || !input.files[0]) return;
+
+      const file = input.files[0];
+      
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Data = e.target.result;
+        
+        showOverlay(true, 'Nahrávám a injektuji video...', 'Zálohování a přepisování cílového videosouboru');
+        
+        try {
+          const response = await fetch('/api/inject-video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: currentPanel.filename,
+              globalI: currentPanel.globalI,
+              sentenceIdx: currentPanel.sentenceIdx,
+              videoData: base64Data,
+              video: currentPanel.video
+            })
+          });
+
+          const resData = await response.json();
+          if (!response.ok) throw new Error(resData.error || 'Server error');
+
+          showOverlay(false);
+          showToast('Video bylo úspěšně vloženo do filmu!', true);
+          
+          // Reset tab upload
+          input.value = '';
+          document.getElementById('video-upload-label').textContent = 'Vyberte nebo přetáhněte .mp4 soubor';
+          document.getElementById('inject-video-info').classList.add('hidden');
+          document.getElementById('btn-inject-video').disabled = true;
+
+          // Reload video capture preview player
+          loadCaptureVideo(currentPanel);
+        } catch (err) {
+          showOverlay(false);
+          showToast('Chyba při vkládání videa: ' + err.message, false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function renamePanelFiles() {
+      if (!currentPanel) return;
+      
+      const newImageName = document.getElementById('rename-image-input').value.trim();
+      const newVideoName = document.getElementById('rename-video-input').value.trim();
+      
+      if (!newImageName || !newVideoName) {
+        showToast('Názvs souborů nesmí být prázdné.', false);
+        return;
+      }
+      
+      const oldImageName = currentPanel.filename;
+      const oldVideoName = currentPanel.video ? currentPanel.video.substring(currentPanel.video.lastIndexOf('/') + 1) : '';
+      
+      if (newImageName === oldImageName && newVideoName === oldVideoName) {
+        showToast('Názvy souborů jsou stejné.', false);
+        return;
+      }
+      
+      showOverlay(true, 'Přejmenovávám soubory...', 'Aktualizuji soubory na disku a reference v HTML');
+      
+      try {
+        const response = await fetch('/api/rename-panel-files', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            globalI: currentPanel.globalI,
+            sentenceIdx: currentPanel.sentenceIdx,
+            oldImageName,
+            newImageName,
+            oldVideoName,
+            newVideoName
+          })
+        });
+        
+        const resData = await response.json();
+        if (!response.ok) throw new Error(resData.error || 'Server error');
+        
+        showOverlay(false);
+        showToast('Soubory byly úspěšně přejmenovány!', true);
+        
+        // Reload all panels from the server
+        await loadPanels();
+        
+        // Select the renamed panel
+        const updated = panels.find(p => p.filename === newImageName);
+        if (updated) {
+          selectPanel(updated);
+        }
+      } catch (err) {
+        showOverlay(false);
+        showToast('Chyba při přejmenovávání: ' + err.message, false);
+      }
+    }
+
+    // Set up drag and drop for the video dropzone
+    function setupVideoDropzone() {
+      const dropzone = document.getElementById('video-dropzone');
+      if (dropzone) {
+        dropzone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropzone.style.borderColor = 'var(--cyan)';
+          dropzone.style.background = 'rgba(45, 226, 255, 0.05)';
+        });
+        dropzone.addEventListener('dragleave', () => {
+          dropzone.style.borderColor = 'var(--border-color)';
+          dropzone.style.background = 'rgba(1, 4, 8, 0.4)';
+        });
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.style.borderColor = 'var(--border-color)';
+          dropzone.style.background = 'rgba(1, 4, 8, 0.4)';
+          if (e.dataTransfer.files.length) {
+            const file = e.dataTransfer.files[0];
+            if (file.type === 'video/mp4' || file.name.endsWith('.mp4')) {
+              const input = document.getElementById('video-upload-input');
+              if (input) {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                input.files = dataTransfer.files;
+                handleInjectVideoFileSelect(input);
+              }
+            } else {
+              showToast('Pouze .mp4 soubory jsou podporovány.', false);
+            }
+          }
+        });
+      }
+    }
+
     // Init
+    setupVideoDropzone();
     loadPanels();
   </script>
 </body>
