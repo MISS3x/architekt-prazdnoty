@@ -464,6 +464,62 @@ body::after {
 .comic-panel-img { filter: grayscale(1) brightness(.42) contrast(.95) !important; transition: filter .35s ease !important; }
 .comic-panel.active .comic-panel-img { filter: grayscale(0) contrast(1.12) brightness(1.06) saturate(1.1) !important; }
 .comic-panel-number, .comic-caption { font-family: 'Share Tech Mono', monospace; }
+
+/* All panels are displayed as squares in comic fullscreen mode */
+body.comic-fs .comic-panel {
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Base style for the aspect ratio mask overlay */
+body.comic-fs .comic-panel[data-aspect]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: background 0.3s ease;
+}
+
+/* 16:9 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="16-9"]::after {
+  background: linear-gradient(to bottom, 
+    rgba(0,0,0,0.5) 0% 21.875%, 
+    transparent 21.875% 78.125%, 
+    rgba(0,0,0,0.5) 78.125% 100%
+  ) !important;
+}
+
+/* 4:3 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="4-3"]::after {
+  background: linear-gradient(to bottom, 
+    rgba(0,0,0,0.5) 0% 12.5%, 
+    transparent 12.5% 87.5%, 
+    rgba(0,0,0,0.5) 87.5% 100%
+  ) !important;
+}
+
+/* 3:4 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="3-4"]::after {
+  background: linear-gradient(to right, 
+    rgba(0,0,0,0.5) 0% 12.5%, 
+    transparent 12.5% 87.5%, 
+    rgba(0,0,0,0.5) 87.5% 100%
+  ) !important;
+}
+
+/* 9:16 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="9-16"]::after {
+  background: linear-gradient(to right, 
+    rgba(0,0,0,0.5) 0% 21.875%, 
+    transparent 21.875% 78.125%, 
+    rgba(0,0,0,0.5) 78.125% 100%
+  ) !important;
+}
+
+/* 1:1 aspect ratio mask (explicit) */
+body.comic-fs .comic-panel[data-aspect="1-1"]::after {
+  background: transparent !important;
+}
 .comic-caption { border-left: 3px solid var(--cyan) !important; }
 .comic-caption p { font-family: 'Chakra Petch', sans-serif !important; }
 .speech-bubble { background: #f4f7f8 !important; border: 0 !important; box-shadow: 0 4px 16px rgba(0, 0, 0, .5), 0 0 0 2px rgba(10, 15, 20, .9) !important; }
@@ -643,12 +699,22 @@ body.comic-fs .comic-grid { height: 100% !important; }
 .gpp .ic-pause{ display:none; }
 .gpp:hover{ transform:translate(-50%,-50%) scale(1.06);
   box-shadow:0 0 64px 0 rgba(255,178,46,.85); }
+.gpp-text {
+  position: absolute;
+  top: 108%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--amber);
+  text-shadow: 0 0 8px rgba(255, 181, 46, 0.6);
+  white-space: nowrap;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
 /* viditelnost */
-body:not(.is-playing) .gpp,
-body.is-playing.ui-active .gpp{ opacity:1; pointer-events:auto; }
-/* ikona dle stavu */
-body.is-playing .gpp .ic-play{ display:none; }
-body.is-playing .gpp .ic-pause{ display:block; }
+body:not(.is-playing) .gpp { opacity:1; pointer-events:auto; }
+body.is-playing .gpp { opacity:0; pointer-events:none; display:none !important; }
 /* skryj v galerii */
 body.gallery-open .gpp{ display:none; }
 

@@ -16,21 +16,21 @@
 
 ### Agent 1 — Antigravity IDE (Claude Sonnet 4.6 in chat)
 **Role:** Coordination, planning, complex logic, review
-**Primary files:** `task.md`, `AGENTS.md`, `app.js` (logic only)
-**Current task:** Multi-agent coordination setup / Standby
+**Primary files:** `task.md`, `AGENTS.md`, `app.js`, `design.css`, `comic_editor.html`, `editor_server.js`
+**Current task:** Implementing Play/Pause overlay & Editor Mask Mode
 **Status:** 🟢 ACTIVE
 
 ### Agent 2 — Claude CLI (terminal)
 **Role:** Fast file edits, CSS tweaks, refactoring, git operations
 **Primary files:** `style.css`, `design.css`, `index.html`
 **Current task:** ✅ Fáze 5 — AUDIO equalizer sladěn s designem (HUD rámec, rohové závorky, scanlines, telemetrický status) v `design.css`
-**Status:** 🔵 RUNNING
+**Status:** 🔵 STANDBY
 
 ### Agent 3 — Claude Chat (web/desktop)
 **Role:** Feature implementation, Fáze 1–7 refactor
 **Primary files:** See Fáze plan below
-**Current task:** Working through Fáze 1–7 refactor plan
-**Status:** 🟡 WORKING
+**Current task:** Standby
+**Status:** 🔵 STANDBY
 
 ---
 
@@ -39,13 +39,13 @@
 
 | File | Locked by | Since | Note |
 |------|-----------|-------|------|
-| `app.js` | Agent 1 (Antigravity IDE) | 2026-06-22 16:59 | Fix comic scrolling delay |
-| `index.html` | — | — | — |
-| `style.css` | Agent 1 (Antigravity IDE) | 2026-06-22 16:59 | Desktop comic speech text font size |
-| `design.css` | — | — | — |
+| `app.js` | Agent 1 (Antigravity IDE) | 2026-06-22 21:00 | Play/pause touch controls & gpp text |
+| `index.html` | Agent 1 (Antigravity IDE) | 2026-06-22 21:00 | Aspect ratio masks |
+| `style.css` | Agent 1 (Antigravity IDE) | 2026-06-22 21:00 | Aspect ratio override |
+| `design.css` | Agent 1 (Antigravity IDE) | 2026-06-22 21:00 | Play/pause overlay & aspect masks |
 | `task.md` | — | — | — |
-| `editor_server.js` | — | — | — |
-| `comic_editor.html` | — | — | — |
+| `editor_server.js` | Agent 1 (Antigravity IDE) | 2026-06-22 21:00 | Save mask API & aspect parsing |
+| `comic_editor.html` | Agent 1 (Antigravity IDE) | 2026-06-22 21:00 | Tab 4 Mask selector UI |
 
 
 ---

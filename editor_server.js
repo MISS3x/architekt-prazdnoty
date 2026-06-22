@@ -202,15 +202,23 @@ app.get('/api/panels', (req, res) => {
     }
 
     // Parse HTML panels using a regex to capture relevant attributes
-    const panelRegex = /<div\s+class="comic-panel[^"]*"\s+data-i="(\d+)"\s+data-sentence="(\d+)">[\s\S]*?<img\s+src="([^"]+)"[\s\S]*?<\/div>/g;
+    const panelRegex = /<div\s+class="comic-panel[^"]*"([^>]*?)>[\s\S]*?<img\s+src="([^"]+)"/g;
     
     const panels = [];
     let match;
     
     while ((match = panelRegex.exec(htmlContent)) !== null) {
-      const globalI = parseInt(match[1]);
-      const sentenceIdx = parseInt(match[2]);
-      const imgSrc = match[3];
+      const attrs = match[1];
+      const imgSrc = match[2];
+      
+      const iMatch = attrs.match(/data-i="(\d+)"/);
+      const globalI = iMatch ? parseInt(iMatch[1]) : -1;
+      
+      const sMatch = attrs.match(/data-sentence="(\d+)"/);
+      const sentenceIdx = sMatch ? parseInt(sMatch[1]) : -1;
+      
+      const aMatch = attrs.match(/data-aspect="([^"]*)"/);
+      const aspect = aMatch ? aMatch[1] : "";
       
       // Get the correct sentence text from the paragraph mapping
       const paraText = paragraphs[globalI] || "";
@@ -241,7 +249,8 @@ app.get('/api/panels', (req, res) => {
         imgSrc,
         text,
         filename,
-        defaultPrompt
+        defaultPrompt,
+        aspect
       });
     }
 
@@ -404,6 +413,58 @@ app.post('/api/crop', (req, res) => {
     // Overwrite target image with cropped image
     fs.writeFileSync(targetImagePath, buffer);
     console.log(`Saved cropped image: ${targetImagePath}`);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 11. Save panel mask aspect ratio
+app.post('/api/save-mask', (req, res) => {
+  const { filename, aspect } = req.body;
+  if (!filename) {
+    return res.status(400).json({ error: 'Missing filename' });
+  }
+
+  try {
+    const indexPaths = [
+      path.join(__dirname, 'index_v2.html'),
+      path.join(__dirname, 'index.html')
+    ];
+
+    indexPaths.forEach(indexPath => {
+      if (!fs.existsSync(indexPath)) return;
+      let htmlContent = fs.readFileSync(indexPath, 'utf8');
+
+      // Escaping filename for regexp safety
+      const escapedFilename = filename.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      // RegExp to capture:
+      // Group 1: The start of the comic-panel div tag
+      // Group 2: The current attributes inside that opening div tag
+      // Group 3: The closing angle bracket and the immediate img child tag containing our filename
+      const panelRegex = new RegExp(`(<div\\s+class="comic-panel[^"]*")([^>]*?)(>\\s*<img\\s+src="[^"]*${escapedFilename}"[^>]*>)`, 'g');
+
+      if (panelRegex.test(htmlContent)) {
+        htmlContent = htmlContent.replace(panelRegex, (match, p1, p2, p3) => {
+          let newP2 = p2;
+          if (p2.includes('data-aspect=')) {
+            // Replace existing data-aspect
+            newP2 = p2.replace(/data-aspect="[^"]*"/, aspect ? `data-aspect="${aspect}"` : '');
+          } else if (aspect) {
+            // Append data-aspect
+            newP2 = p2 + ` data-aspect="${aspect}"`;
+          }
+          // Clean up whitespaces
+          newP2 = newP2.replace(/\s+/g, ' ').trim();
+          if (newP2) newP2 = ' ' + newP2;
+          return p1 + newP2 + p3;
+        });
+        
+        fs.writeFileSync(indexPath, htmlContent, 'utf8');
+        console.log(`Successfully saved data-aspect="${aspect}" to ${path.basename(indexPath)}`);
+      }
+    });
 
     res.json({ success: true });
   } catch (error) {

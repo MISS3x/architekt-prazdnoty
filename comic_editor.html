@@ -232,6 +232,52 @@
       object-fit: cover;
     }
 
+    /* Aspect ratio mask preview inside the editor */
+    .image-container[data-aspect]::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      transition: background 0.3s ease;
+    }
+
+    .image-container[data-aspect="16-9"]::after {
+      background: linear-gradient(to bottom, 
+        rgba(0,0,0,0.5) 0% 21.875%, 
+        transparent 21.875% 78.125%, 
+        rgba(0,0,0,0.5) 78.125% 100%
+      ) !important;
+    }
+
+    .image-container[data-aspect="4-3"]::after {
+      background: linear-gradient(to bottom, 
+        rgba(0,0,0,0.5) 0% 12.5%, 
+        transparent 12.5% 87.5%, 
+        rgba(0,0,0,0.5) 87.5% 100%
+      ) !important;
+    }
+
+    .image-container[data-aspect="3-4"]::after {
+      background: linear-gradient(to right, 
+        rgba(0,0,0,0.5) 0% 12.5%, 
+        transparent 12.5% 87.5%, 
+        rgba(0,0,0,0.5) 87.5% 100%
+      ) !important;
+    }
+
+    .image-container[data-aspect="9-16"]::after {
+      background: linear-gradient(to right, 
+        rgba(0,0,0,0.5) 0% 21.875%, 
+        transparent 21.875% 78.125%, 
+        rgba(0,0,0,0.5) 78.125% 100%
+      ) !important;
+    }
+
+    .image-container[data-aspect="1-1"]::after {
+      background: transparent !important;
+    }
+
     .sentence-box {
       background: rgba(2, 8, 14, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -491,6 +537,7 @@
           <button class="btn-filter" id="tab-btn-image" onclick="switchSourceTab('image')" style="font-size: 11px;" disabled>1. Obrázek</button>
           <button class="btn-filter" id="tab-btn-video" onclick="switchSourceTab('video')" style="font-size: 11px;" disabled>2. Video Capture</button>
           <button class="btn-filter" id="tab-btn-generate" onclick="switchSourceTab('generate')" style="font-size: 11px;" disabled>3. Generování (Gemini)</button>
+          <button class="btn-filter" id="tab-btn-mask" onclick="switchSourceTab('mask')" style="font-size: 11px;" disabled>4. Maska (Zobrazení)</button>
         </div>
 
         <!-- Tab Content 1: Image & Crop -->
@@ -588,6 +635,33 @@
             </button>
             <button class="btn btn-secondary" id="btn-cartoonize" onclick="triggerCartoonize()" style="flex: 1; border-color: var(--amber); color: var(--amber); box-shadow: 0 0 10px rgba(255, 181, 46, 0.1);" disabled>
               🎨 UDĚLAT CARTOON
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content 4: Comic Panel Mask aspect ratio -->
+        <div id="tab-content-mask" class="tab-content hidden" style="display: flex; flex-direction: column; gap: 15px;">
+          <label>Maska zobrazení panelu v komiksu</label>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+            Zvolte pevný poměr stran pro zobrazení panelu. Tento poměr přepíše výchozí náhodné řazení a zajistí, že kompozice vašeho ořezu bude zachována.
+          </div>
+          
+          <div class="image-container" id="mask-image-container" data-aspect="" style="aspect-ratio: 1/1; position: relative;">
+            <img id="mask-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2306111c'/><text x='50' y='55' font-family='sans-serif' font-size='8' fill='%237aa5b0' text-anchor='middle'>VYBERTE PANEL</text></svg>" alt="Mask preview">
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-filter" id="mask-aspect-16-9" onclick="setPanelMask('16-9')">16:9</button>
+            <button class="btn-filter" id="mask-aspect-4-3" onclick="setPanelMask('4-3')">4:3</button>
+            <button class="btn-filter" id="mask-aspect-1-1" onclick="setPanelMask('1-1')">1:1</button>
+            <button class="btn-filter" id="mask-aspect-3-4" onclick="setPanelMask('3-4')">3:4</button>
+            <button class="btn-filter" id="mask-aspect-9-16" onclick="setPanelMask('9-16')">9:16</button>
+            <button class="btn-filter active" id="mask-aspect-default" onclick="setPanelMask('')">Výchozí (Náhodná)</button>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+            <button class="btn btn-success" id="btn-save-mask" onclick="savePanelMask()" style="padding: 10px 20px; font-size: 12px;">
+              💾 Uložit masku
             </button>
           </div>
         </div>
@@ -694,16 +768,26 @@
       document.getElementById('tab-btn-image').disabled = false;
       document.getElementById('tab-btn-video').disabled = false;
       document.getElementById('tab-btn-generate').disabled = false;
+      document.getElementById('tab-btn-mask').disabled = false;
 
       // Update original pane contents
       document.getElementById('orig-filename-label').textContent = panel.filename;
       document.getElementById('orig-image').src = panel.imgSrc + '?t=' + Date.now();
+      
+      const maskImage = document.getElementById('mask-image');
+      if (maskImage) {
+        maskImage.src = panel.imgSrc + '?t=' + Date.now();
+      }
+      
       document.getElementById('sentence-text').textContent = panel.text || "[Tento panel nemá žádný přidělený text v caption]";
       document.getElementById('btn-copy-sentence').disabled = !panel.text;
       document.getElementById('custom-detail').value = '';
       document.getElementById('btn-generate').disabled = false;
       document.getElementById('btn-cartoonize').disabled = false;
       document.getElementById('btn-crop-toggle').disabled = false;
+
+      // Set panel mask to current panel's aspect value
+      setPanelMask(panel.aspect || '');
 
       // Load corresponding video
       loadCaptureVideo(panel);
@@ -752,6 +836,11 @@
       
       if (tabName !== 'image') {
         cancelCrop();
+      }
+
+      // Handle mask aspect ratio preview reset or init
+      if (tabName === 'mask') {
+        setPanelMask(currentPanel ? (currentPanel.aspect || '') : '');
       }
     }
 
@@ -1294,6 +1383,61 @@
       }).catch(err => {
         showToast('Chyba při kopírování: ' + err.message, false);
       });
+    }
+
+    let currentPanelMask = '';
+
+    function setPanelMask(mask) {
+      currentPanelMask = mask;
+      
+      // Update UI active states for mask buttons
+      document.querySelectorAll('#tab-content-mask button').forEach(btn => {
+        if (btn.id && btn.id.startsWith('mask-aspect-')) {
+          btn.classList.remove('active');
+        }
+      });
+      
+      const activeBtn = document.getElementById('mask-aspect-' + (mask || 'default'));
+      if (activeBtn) activeBtn.classList.add('active');
+      
+      // Set the data-aspect attribute on the mask preview container to apply the CSS overlay
+      const container = document.getElementById('mask-image-container');
+      if (container) {
+        container.setAttribute('data-aspect', mask || '');
+      }
+    }
+
+    async function savePanelMask() {
+      if (!currentPanel) return;
+      
+      showOverlay(true, 'Ukládám masku panelu...', 'Přepisuji atribut data-aspect v HTML souborech');
+      
+      try {
+        const response = await fetch('/api/save-mask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: currentPanel.filename,
+            aspect: currentPanelMask
+          })
+        });
+        
+        const resData = await response.json();
+        if (!response.ok) throw new Error(resData.error || 'Server error');
+        
+        showOverlay(false);
+        showToast('Maska panelu byla úspěšně uložena a zapsána!', true);
+        
+        // Update panel object in local list
+        currentPanel.aspect = currentPanelMask;
+        const panelIdx = panels.findIndex(p => p.filename === currentPanel.filename);
+        if (panelIdx !== -1) {
+          panels[panelIdx].aspect = currentPanelMask;
+        }
+      } catch (err) {
+        showOverlay(false);
+        showToast('Chyba při ukládání masky: ' + err.message, false);
+      }
     }
 
     // Init

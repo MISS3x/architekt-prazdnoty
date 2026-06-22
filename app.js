@@ -272,7 +272,8 @@ document.addEventListener("DOMContentLoaded", () => {
     gpp.id = "gpp"; gpp.className = "gpp"; gpp.title = "Přehrát / Pauza / Znovu";
     gpp.innerHTML =
       '<svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
-      '<svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
+      '<svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>' +
+      '<span class="gpp-text">PŘEHRÁT / CLICK TO PLAY</span>';
     document.body.appendChild(gpp);
     gpp.addEventListener("click", () => {
       if (audio && state.duration && audio.currentTime >= state.duration - 0.3) {
@@ -287,6 +288,25 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     ["mousemove", "touchstart", "pointerdown", "wheel", "keydown"].forEach(ev =>
       window.addEventListener(ev, ping, { passive: true }));
+
+    // Click/touch screen to play/pause in comic & film modes
+    const handleScreenTapToggle = (e) => {
+      if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input") || 
+          e.target.closest(".speech-bubble") || e.target.closest(".player-wrapper") || 
+          e.target.closest(".sticky-mode-switcher") || e.target.closest(".drag-grip") ||
+          e.target.closest(".ap-actrls") || e.target.closest(".ap-words")) {
+        return;
+      }
+      togglePlay();
+    };
+
+    const fsOverlay = document.getElementById("fullscreen-overlay");
+    if (fsOverlay) fsOverlay.addEventListener("click", handleScreenTapToggle);
+
+    [1, 2, 3].forEach(p => {
+      const grid = document.querySelector(`#comic-content-part${p} .comic-grid`);
+      if (grid) grid.addEventListener("click", handleScreenTapToggle);
+    });
   };
 
   const updateAudioStage = (partNum) => {
