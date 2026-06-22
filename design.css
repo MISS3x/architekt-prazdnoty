@@ -340,7 +340,9 @@ body::after {
 /* comic fullscreen sits below the bar too */
 body.comic-fs .comic-content { top: var(--ap-barH) !important; }
 body.comic-fs .comic-grid { height: 100% !important; }
-.fs-video { object-fit: contain !important; filter: grayscale(.25) contrast(1.06) brightness(.96); }
+/* Film: video VŽDY plná barva, nikdy potlačené (ani při loopu). */
+.fs-video { object-fit: contain !important; filter: none !important; }
+.fs-video.active { opacity: 1 !important; }
 /* film grain */
 .preview-scanlines {
   opacity: .28 !important;
@@ -349,7 +351,7 @@ body.comic-fs .comic-grid { height: 100% !important; }
 /* subtitle = velký kinotitulek bez boxu (nový design ap-sub) */
 .fullscreen-subtitles {
   position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
-  bottom: 78px !important; z-index: 10 !important; max-width: 62% !important; width: auto !important;
+  bottom: 78px !important; z-index: 10 !important; max-width: min(800px, 90vw) !important; width: auto !important;
   margin: 0 !important; min-height: 0 !important;
   background: none !important; color: #f6f8fa !important;
   padding: 0 18px !important; border-radius: 0 !important;
@@ -385,6 +387,11 @@ body.comic-fs .comic-grid { height: 100% !important; }
   font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important;
   border: 1px solid rgba(45, 226, 255, .3) !important; background: rgba(45, 226, 255, .06) !important; z-index: 11;
 }
+
+/* FILM: titulky zůstávají klasicky dole PŘES video, ale vždy NAD ním
+   (dřív se schovávaly pod video — chyba vrstvení). Stačí zvednout z-index. */
+.fullscreen-screen { z-index: 1 !important; }
+.fullscreen-subtitles, .fullscreen-shot-id, .ap-filmtop { z-index: 20 !important; }
 
 /* ===================== AUDIO · PIXELOVÁ LED MATRIX (canvas plástev) ===================== */
 .ap-audio2{ position:fixed; left:0; right:0; top:var(--ap-barH); bottom:0; z-index:1000; overflow:hidden;
@@ -490,7 +497,7 @@ body.gallery-open .gallery-section { display: block; }
   .story-container { padding-top: calc(var(--ap-barH) + 16px) !important; }
   .story-content { padding: 10px 18px 72px !important; }
   .story-img.img-circle, .story-img.img-circle-amber { width: min(78vw, 300px); height: min(78vw, 300px); }
-  .fullscreen-subtitles { max-width: 88% !important; font-size: 15px !important; bottom: 58px !important; }
+  .fullscreen-subtitles { max-width: min(800px, 90vw) !important; font-size: 15px !important; bottom: 58px !important; }
 }
 @media (max-width: 430px) {
   .nav-modes .nav-btn { font-size: 11px; letter-spacing: .04em; padding: 11px 4px; }

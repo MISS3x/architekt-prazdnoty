@@ -176,8 +176,27 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   let audioStageEl = null;
   const audioFx = { analyser: null, data: null, ctx: null, stream: null };
+  const mediaFx = { analyser: null, data: null, source: null };
   let audioMicOn = false;
   let audioMatrixStop = null;
+
+  // Analyzér nad PŘEHRÁVANÝM <audio> (MP3) — plástev reaguje na reálné audio bez mikrofonu.
+  // createMediaElementSource lze volat jen jednou; audio pak teče přes analyser → destination.
+  const ensureMediaAnalyser = () => {
+    if (mediaFx.analyser || !audio) return;
+    try {
+      if (!audioFx.ctx) audioFx.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audioFx.ctx;
+      const src = ctx.createMediaElementSource(audio);
+      const an = ctx.createAnalyser();
+      an.fftSize = 128; an.smoothingTimeConstant = 0.8;
+      src.connect(an); an.connect(ctx.destination); // jinak by audio ztichlo
+      mediaFx.analyser = an; mediaFx.data = new Uint8Array(an.frequencyBinCount); mediaFx.source = src;
+    } catch (e) { console.warn("Media-element analyser nelze vytvořit:", e); }
+  };
+  const resumeAudioCtx = () => {
+    if (audioFx.ctx && audioFx.ctx.state === "suspended") audioFx.ctx.resume().catch(() => {});
+  };
 
   const buildAudioStage = () => {
     if (audioStageEl) return audioStageEl;
@@ -313,8 +332,11 @@ document.addEventListener("DOMContentLoaded", () => {
       else { angle += vel + (play ? 0.0042 : 0.0011); vel *= 0.92; }
       t += play ? 0.03 : 0.014;
 
-      const fx = audioFx;
-      const real = fx && fx.analyser && audioMicOn;
+      // Zdroj spektra: mikrofon (má-li přednost) → jinak reálné audio z MP3
+      // (media-element analyser) při přehrávání → jinak simulace.
+      const fx = (audioMicOn && audioFx.analyser) ? audioFx
+        : ((mediaFx.analyser && state.playing) ? mediaFx : null);
+      const real = !!fx;
       let bins = 0;
       if (real) { fx.analyser.getByteFrequencyData(fx.data); bins = fx.data.length; }
       const maxR = maxRad;
@@ -443,6 +465,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const el = buildAudioStage();
     el.style.display = show ? "block" : "none";
     if (show) {
+      ensureMediaAnalyser();   // plástev reaguje na reálné MP3 (bez mikrofonu)
+      resumeAudioCtx();
       updateAudioStage(state.activePart);
       setAudioPlaying(state.playing);
       requestAnimationFrame(startAudioMatrix);
@@ -883,16 +907,8 @@ document.addEventListener("DOMContentLoaded", () => {
         grid.insertBefore(card, grid.firstChild);
       }
 
-      // Desktop only: let a normal mouse wheel move the horizontal strip left↔right.
-      // On mobile the strip scrolls vertically, so leave native scrolling alone.
-      grid.addEventListener("wheel", (e) => {
-        if (!state.comicMode) return;
-        if (window.matchMedia("(max-width: 768px)").matches) return; // vertical layout
-        if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; // let native horizontal scroll pass
-        e.preventDefault();
-        grid.scrollLeft += e.deltaY;
-        lastUserScrollTime = Date.now();
-      }, { passive: false });
+      // Pozn.: kolečko myši v komiksu řeší globální wheel handler (scrub po větách),
+      // strip se pak dorovná na aktivní panel (centerActiveContent).
     });
   };
 
@@ -976,11 +992,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Obousměrný sdílený timeline: ruční scroll seekuje audio (text = okno,
-    // komiks = strip). Seek se provede jen po user-intent (INTERACTION_WINDOW).
-    window.addEventListener("scroll", handleUserScrollSeek, { passive: true });
-    document.querySelectorAll(".comic-grid").forEach(g =>
-      g.addEventListener("scroll", handleUserScrollSeek, { passive: true }));
+    // Pozn.: scroll→seek (handleUserScrollSeek) je vypnuté — kolidovalo s
+    // posunem po větách kolečkem. Obsah teď sleduje audio JEN jednosměrně
+    // (čas → pozice): auto-follow při hře + centerActiveContent po seeku/scrubu.
 
     // Kolečko myši = posun audio stopy po VĚTÁCH ve VŠECH režimech
     // (text/komiks/film/audio). Po skoku se příslušný obsah dorovná na aktuální čas.
@@ -1248,6 +1262,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     audio.addEventListener("play", () => {
       state.playing = true;
+      resumeAudioCtx();   // po přepojení přes Web Audio drž kontext běžící (jinak ticho)
       playIcon.textContent = "❚❚";
       setBarPlayIcon(true);
       setAudioPlaying(true);
@@ -1383,7 +1398,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const updateCinemaSubtitle = (pIdx, displayTime) => {
     if (pIdx < 0 || !paras[pIdx] || !cues) {
       if (previewSubtitles) previewSubtitles.style.color = "var(--muted)";
-      setSubtitles(state.playing ? "// FEED ACTIVE" : "// SYSTEM STANDBY", false);
+      // Při přehrávání bez aktivního odstavce nech titulek prázdný (nikdy „FEED ACTIVE").
+      setSubtitles(state.playing ? "" : "// SYSTEM STANDBY", false);
       return;
     }
     if (previewSubtitles) previewSubtitles.style.color = "var(--cyan)";
@@ -1392,6 +1408,13 @@ document.addEventListener("DOMContentLoaded", () => {
       .map(w => w.textContent.trim())
       .filter(Boolean);
     if (!words.length) { setSubtitles(paras[pIdx].textContent.trim(), false); return; }
+    // První písmeno odstavce je v textové verzi barevný dropcap (mimo .word spany) —
+    // doplň ho zpět na začátek prvního slova, ať titulek není „eonové" místo „Neonové".
+    const dropcap = paras[pIdx].querySelector(".dropcap");
+    if (dropcap) {
+      const d = (dropcap.textContent || "").trim();
+      if (d) words[0] = d + words[0];
+    }
 
     // Progress within the paragraph → active word index
     const tStart = cues[pIdx];
@@ -1504,8 +1527,43 @@ document.addEventListener("DOMContentLoaded", () => {
     return out;
   };
 
+  // Po skoku dorovnej zobrazený obsah daného režimu na aktuální čas:
+  // text → vycentruj aktivní odstavec, komiks → aktivní panel. (Film/audio = overlay.)
+  const centerActiveContent = (smooth = true) => {
+    if (state.fullscreenMode || state.audioMode) return;
+    const behavior = smooth ? "smooth" : "auto";
+    if (state.comicMode) {
+      const grid = document.querySelector(`#comic-content-part${state.activePart} .comic-grid`);
+      const panel = grid ? grid.querySelector(".comic-panel.active") : null;
+      if (grid && panel) {
+        const off = centerOffsetFor(grid, panel);
+        if (isComicVertical()) grid.scrollTo({ top: off, behavior });
+        else grid.scrollTo({ left: off, behavior });
+      }
+    } else {
+      const p = paras[state.curIdx];
+      if (p) {
+        const rect = p.getBoundingClientRect();
+        const target = Math.max(0, rect.top + window.scrollY + p.offsetHeight / 2 - window.innerHeight / 2);
+        window.scrollTo({ top: target, behavior });
+      }
+    }
+  };
+
+  // Jednotný seek: nastaví audio na zlomek (0–1), okamžitě sync highlight/scénu/titulek
+  // a dorovná obsah (komiks/text) na danou pozici. Funguje i při pauze, ve všech režimech.
+  const seekToFraction = (f) => {
+    if (!audio || !state.duration) return;
+    const frac = Math.max(0, Math.min(1, f));
+    audio.currentTime = frac * state.duration;
+    state.curIdx = -1;
+    state.currentTime = audio.currentTime;
+    onTimeUpdate();
+    centerActiveContent(false); // instant — obsah sleduje slider plynule i při tažení
+  };
+
   // Posun audio časové osy o jednu VĚTU kolečkem myši (dir: +1 vpřed, -1 zpět).
-  // FILM + AUDIO režim jedou z audio času, takže nastavíme audio.currentTime.
+  // Funguje ve VŠECH režimech; po skoku dorovná obsah na aktuální čas.
   const scrubByCue = (dir) => {
     if (!cues || !(state.duration > 0)) return;
     const times = buildSentenceTimes();
@@ -1516,14 +1574,15 @@ document.addEventListener("DOMContentLoaded", () => {
       target = times.find(x => x > t + 0.05);
       if (target == null) target = state.duration;
     } else {
-      // back: restart the current sentence if we're well into it, else go prev
+      // zpět: restartuj aktuální větu, pokud jsme v ní hluboko, jinak na předchozí
       const prev = [...times].reverse().find(x => x < t - 0.4);
       target = prev != null ? prev : 0;
     }
     audio.currentTime = Math.max(0, Math.min(state.duration, target));
-    state.curIdx = -1;          // force re-highlight on next frame
+    state.curIdx = -1;          // vynuť re-highlight
     state.currentTime = audio.currentTime;
-    onTimeUpdate();             // sync slider/scene immediately (works while paused)
+    onTimeUpdate();             // okamžitá synchronizace slideru/scény/titulku (i při pauze)
+    centerActiveContent();      // dorovnej text/komiks na aktuální čas
   };
 
   // --- KARAOKE WORD HIGHLIGHT ---
@@ -1781,6 +1840,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // okno) i komiks (horizontálně/vertikálně, strip) na pozici odpovídající
   // aktuálnímu času audia (timeToPos). Běží jen při přehrávání a mimo
   // cooldown po ručním scrollu, takže se s ručním seekem nepere.
+  // Komiks: krok + dojezd (ease-out ~0,5 s) na aktivní panel místo spojitého driftu.
+  const COMIC_GLIDE_MS = 500;
+  let comicTween = { from: 0, target: null, start: 0 };
+
   const syncScrollTick = () => {
     comicRAF = requestAnimationFrame(syncScrollTick);
     if (!state.playing || state.calibMode || state.fullscreenMode || state.audioMode) return;
@@ -1790,19 +1853,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayTime = Math.max(0, state.currentTime - 0.4);
 
     if (state.comicMode) {
+      // Drž aktivní panel vycentrovaný; když se aktivuje další (vpravo/dolů),
+      // přecentruj na něj za ~0,5 s s ease-out (dojezd) — žádný spojitý drift.
       const grid = document.querySelector(`#comic-content-part${state.activePart} .comic-grid`);
       if (!grid) return;
-      const target = timeToPos(displayTime, syncAnchors.comic);
-      if (target == null) return;
+      const active = grid.querySelector(".comic-panel.active");
+      if (!active) return;
       const vertical = isComicVertical();
-      const current = vertical ? grid.scrollTop : grid.scrollLeft;
-      const delta = target - current;
-      if (Math.abs(delta) < 0.5) {
-        if (vertical) grid.scrollTop = target; else grid.scrollLeft = target;
-        return;
+      const desired = centerOffsetFor(grid, active);
+      if (comicTween.target == null || Math.abs(desired - comicTween.target) > 1) {
+        comicTween.from = vertical ? grid.scrollTop : grid.scrollLeft; // odkud dojezd začíná
+        comicTween.target = desired;
+        comicTween.start = Date.now();
       }
-      const next = current + delta * 0.2;
-      if (vertical) grid.scrollTop = next; else grid.scrollLeft = next;
+      const p = Math.min(1, (Date.now() - comicTween.start) / COMIC_GLIDE_MS);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out → dojezd na konci
+      const pos = comicTween.from + (comicTween.target - comicTween.from) * eased;
+      if (vertical) grid.scrollTop = pos; else grid.scrollLeft = pos;
     } else {
       const target = timeToPos(displayTime, syncAnchors.text);
       if (target == null) return;
@@ -2130,13 +2197,23 @@ document.addEventListener("DOMContentLoaded", () => {
       try { audio.currentTime = 0; } catch (e) {}
       state.curIdx = -1;
     });
-    if (barScrub) barScrub.addEventListener("click", (e) => {
-      if (!state.duration) return;
-      const r = barScrub.getBoundingClientRect();
-      const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-      audio.currentTime = f * state.duration;
-      state.curIdx = -1;
-    });
+    if (barScrub) {
+      const fracFromEvent = (e) => {
+        const r = barScrub.getBoundingClientRect();
+        const cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+        return (cx - r.left) / r.width;
+      };
+      let scrubbing = false;
+      barScrub.addEventListener("pointerdown", (e) => {
+        scrubbing = true;
+        try { barScrub.setPointerCapture(e.pointerId); } catch (err) {}
+        seekToFraction(fracFromEvent(e)); // seek + obsah (komiks/text) se dorovná
+      });
+      barScrub.addEventListener("pointermove", (e) => { if (scrubbing) seekToFraction(fracFromEvent(e)); });
+      const endScrub = () => { scrubbing = false; };
+      barScrub.addEventListener("pointerup", endScrub);
+      barScrub.addEventListener("pointercancel", endScrub);
+    }
 
     // Sync Mode Toggle
     if (btnSync) btnSync.addEventListener("click", toggleCalibration);
@@ -2453,10 +2530,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const seek = (e) => {
     if (!audio || !state.duration) return;
     const rect = progressBar.getBoundingClientRect();
-    const fraction = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = Math.max(0, Math.min(1, fraction)) * state.duration;
-    // Force preview video to restart on seek
-    state.curIdx = -1;
+    seekToFraction((e.clientX - rect.left) / rect.width); // seek + dorovnání obsahu
   };
 
   const toggleCalibration = () => {
