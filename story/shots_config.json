@@ -1,0 +1,27 @@
+[
+  {
+    "id": "shot_1_mia_aegis",
+    "prompt": "A detailed black and white woodcut engraving, high contrast, cyberpunk style. A female engineer Mia Müller wearing a magnetic harness is hanging on the massive carbon fiber facade of a skyscraper. Soft purple neon rain drops and glowing purple UI lines on her visor. 400 meters drop below, highly detailed textures, video in Style of @Image.",
+    "duration": 5
+  },
+  {
+    "id": "shot_2_nano_beehive",
+    "prompt": "A detailed black and white woodcut engraving, high contrast, cybernetic biology. Close-up of nano-ASIC processors shaped like perfect hexagonal beehives embedded in a silicon wall. Hexagonal cells glow with warm amber light, while some are decayed, dead and matte black, video in Style of @Image.",
+    "duration": 5
+  },
+  {
+    "id": "shot_3_hornets",
+    "prompt": "A detailed black and white woodcut engraving, high contrast. A squad of corporate elite soldiers called Hornets descending slowly from above. Matte black armor with mechanical gears. Their hexagonal helmet visors glow with an intense amber light, video in Style of @Image.",
+    "duration": 5
+  },
+  {
+    "id": "shot_4_mia_escape",
+    "prompt": "A detailed black and white woodcut engraving, high contrast, action shot. Mia sliding down a thick emergency elevator cable in a dark raw concrete shaft. Sparks from her boots fly and glow with white-hot light. Intense, fast motion, dramatic shading, video in Style of @Image.",
+    "duration": 5
+  },
+  {
+    "id": "shot_5_subcity_krtek",
+    "prompt": "A detailed black and white woodcut engraving, high contrast. Cyberpunk sewer system with decayed neon tubes glowing faintly. An old cyborg man Krtek sits at a cluttered workshop table. His mechanical brass eyes are glowing amber, highly detailed mechatronic parts, video in Style of @Image.",
+    "duration": 5
+  }
+]

@@ -1,0 +1,1536 @@
+/**
+ * Architekt prázdnoty - Application logic
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  // --- STATE ---
+  const state = {
+    playing: false,
+    currentTime: 0,
+    duration: 0,
+    calibMode: false,
+    loaded: false,
+    msg: "",
+    curIdx: -1,
+    activeVideoSrc: "",
+    autoplayAttempted: false,
+    activePart: 1,
+    decryptedPart2: localStorage.getItem("decrypted_part2") === "true",
+    decryptedPart3: localStorage.getItem("decrypted_part3") === "true",
+    fullscreenMode: false,
+    comicMode: false
+  };
+
+  // All video backgrounds to cycle through (using valid Part 1 generated clips as base)
+  const videos = [
+    "video/dil_1/01_01_01.mp4",
+    "video/dil_1/01_01_02.mp4",
+    "video/dil_1/01_02_01.mp4",
+    "video/dil_1/01_03_01.mp4",
+    "video/dil_1/01_04_01.mp4",
+    "video/dil_1/01_05_01.mp4",
+    "video/dil_1/01_06_01.mp4",
+    "video/dil_1/01_07_01.mp4"
+  ];
+  let videoIdx = 0;
+  let videoTimer = null;
+
+  const PART1_CUES = [
+    6.40, 29.00, 62.00, 78.00, 86.00, 95.00, 119.00, 162.00, 175.00, 200.00,
+    207.00, 220.00, 229.00, 247.00, 265.00, 279.00, 295.00, 324.00, 353.00, 376.00
+  ];
+
+  const PART2_CUES = [
+    10.0, 39.0, 64.0, 106.0, 130.0, 150.0, 163.0, 185.0, 224.0, 257.0, 293.0, 301.0
+  ];
+
+  const PART3_CUES = [
+    10.34, 47.64, 86.44, 126.94, 131.64, 146.04, 182.24, 217.34, 247.94, 259.54, 265.14, 298.04, 319.44, 347.64, 372.94
+  ];
+
+  let cues = null;
+  let N = 0;
+  let paras = [];
+  let lastUserScrollTime = 0;
+  let pendingPlayHandler = null;
+
+  // --- DOM ELEMENTS ---
+  const audio = document.getElementById("audio-element");
+  const playBtn = document.getElementById("play-btn");
+  const playBtnWrapper = document.getElementById("play-btn-wrapper");
+  const playIcon = document.getElementById("play-icon");
+  const progressBar = document.getElementById("progress-bar");
+  const progressFill = document.getElementById("progress-fill");
+  const timeCurrent = document.getElementById("time-current");
+  const timeDuration = document.getElementById("time-duration");
+  const playerStatus = document.getElementById("player-status");
+  const btnSync = document.getElementById("btn-sync");
+  const btnExport = document.getElementById("btn-export");
+  const btnReset = document.getElementById("btn-reset");
+  const fileAudio = document.getElementById("file-audio");
+  const hintText = document.getElementById("hint-text");
+  
+  // Karaoke DOM elements
+  const karaokeDisplay = document.getElementById("karaoke-display");
+  const kPrev = karaokeDisplay ? karaokeDisplay.querySelector(".k-prev") : null;
+  const kCurrent = karaokeDisplay ? karaokeDisplay.querySelector(".k-current") : null;
+  const kNext = karaokeDisplay ? karaokeDisplay.querySelector(".k-next") : null;
+
+  const updateKaraokeDisplay = (prev, current, next) => {
+    if (!kPrev || !kCurrent || !kNext) return;
+    kPrev.textContent = prev || "";
+    kCurrent.textContent = current || "";
+    kNext.textContent = next || "";
+  };
+  
+  const bgContainer = document.getElementById("bg-container");
+  const bgImages = Array.from(document.querySelectorAll(".bg-image"));
+  const videoBgContainer = document.getElementById("video-bg-container");
+
+  // Dual video elements for crossfading
+  const bgVideo1 = document.getElementById("bg-video-1") || document.getElementById("bg-video");
+  const bgVideo2 = document.getElementById("bg-video-2");
+  
+  // Dual video preview elements
+  const prevVideo1 = document.getElementById("prev-video-1");
+  const prevVideo2 = document.getElementById("prev-video-2");
+  const previewSubtitles = document.getElementById("preview-subtitles");
+  const previewShotId = document.getElementById("preview-shot-id");
+  
+  // Fullscreen video overlay elements
+  const fullscreenOverlay = document.getElementById("fullscreen-overlay");
+  const fullscreenCloseBtn = document.getElementById("fullscreen-close-btn");
+  const fsVideo1 = document.getElementById("fs-video-1");
+  const fsVideo2 = document.getElementById("fs-video-2");
+  const fullscreenSubtitles = document.getElementById("fullscreen-subtitles");
+  const fullscreenShotId = document.getElementById("fullscreen-shot-id");
+  const playerVideoPreview = document.getElementById("player-video-preview");
+
+  let currentVideoEl = bgVideo1;
+  let nextVideoEl = bgVideo2 || bgVideo1;
+
+  let currentPrevEl = prevVideo1;
+  let nextPrevEl = prevVideo2 || prevVideo1;
+
+  let currentFsEl = fsVideo1;
+  let nextFsEl = fsVideo2 || fsVideo1;
+
+  let allParas = [];
+  const tabPart1 = document.getElementById("tab-part1");
+  const tabPart2 = document.getElementById("tab-part2");
+  const tabPart3 = document.getElementById("tab-part3");
+
+  const storyPart1 = document.getElementById("story-content-part1");
+  const storyPart2 = document.getElementById("story-content-part2");
+  const storyPart3 = document.getElementById("story-content-part3");
+
+  const updateModeVisibility = () => {
+    // Hide all story and comic content elements
+    const contents = [
+      storyPart1, storyPart2, storyPart3,
+      document.getElementById("comic-content-part1"),
+      document.getElementById("comic-content-part2"),
+      document.getElementById("comic-content-part3")
+    ];
+    
+    contents.forEach(el => {
+      if (el) el.classList.add("hidden");
+    });
+    
+    if (state.comicMode) {
+      const activeComic = document.getElementById(`comic-content-part${state.activePart}`);
+      if (activeComic) activeComic.classList.remove("hidden");
+    } else {
+      const activeStory = document.getElementById(`story-content-part${state.activePart}`);
+      if (activeStory) activeStory.classList.remove("hidden");
+    }
+  };
+
+  const setPart = (partNum, startPlaying = false) => {
+    state.activePart = partNum;
+    
+    // Reset all tabs active states
+    tabPart1.classList.remove("active", "part2-active", "part3-active");
+    tabPart2.classList.remove("active", "part2-active", "part3-active");
+    tabPart3.classList.remove("active", "part2-active", "part3-active");
+    
+    // Highlight character card in hero section
+    document.querySelectorAll(".character-card").forEach(card => {
+      card.classList.remove("active");
+      if (parseInt(card.dataset.part) === partNum) {
+        card.classList.add("active");
+      }
+    });
+
+    // Toggle visibility between text & comic modes
+    updateModeVisibility();
+
+    // Select appropriate poster, image, and titles based on part
+    const previewPoster = document.getElementById("preview-poster");
+    const previewPosterImg = document.getElementById("preview-poster-img");
+    const previewPosterTitle = document.getElementById("preview-poster-title");
+    const fullscreenPoster = document.getElementById("fullscreen-poster");
+    const fullscreenPosterImg = document.getElementById("fullscreen-poster-img");
+    const fullscreenPosterTitle = document.getElementById("fullscreen-poster-title");
+
+    if (previewPoster) previewPoster.classList.add("active");
+    if (fullscreenPoster) fullscreenPoster.classList.add("active");
+
+    if (partNum === 1) {
+      document.body.classList.remove("part2-active", "part3-active");
+      tabPart1.classList.add("active");
+      document.getElementById("player-archive-title").textContent = "// AUDIO ARCHIVE — RUDA.M";
+      
+      if (previewPosterTitle) previewPosterTitle.textContent = "DÍL I: ARCHITEKT PRÁZDNOTY";
+      if (fullscreenPosterTitle) fullscreenPosterTitle.textContent = "DÍL I: ARCHITEKT PRÁZDNOTY";
+      if (previewPosterImg) previewPosterImg.src = "avatar/ruda/ruda.png";
+      if (fullscreenPosterImg) fullscreenPosterImg.src = "avatar/ruda/ruda.png";
+      
+      paras = allParas.filter(p => parseInt(p.dataset.i) < 20);
+      audio.src = "audio/dil_1.mp3";
+    } else if (partNum === 2) {
+      document.body.classList.remove("part3-active");
+      document.body.classList.add("part2-active");
+      tabPart2.classList.add("active", "part2-active");
+      document.getElementById("player-archive-title").textContent = "// DECRYPTED FEED — MIA.M";
+      
+      if (previewPosterTitle) previewPosterTitle.textContent = "DÍL II: VČELÍ MOR A NEURO-NEKRÓZA";
+      if (fullscreenPosterTitle) fullscreenPosterTitle.textContent = "DÍL II: VČELÍ MOR A NEURO-NEKRÓZA";
+      if (previewPosterImg) previewPosterImg.src = "avatar/mia/mia.png";
+      if (fullscreenPosterImg) fullscreenPosterImg.src = "avatar/mia/mia.png";
+      
+      paras = allParas.filter(p => parseInt(p.dataset.i) >= 20 && parseInt(p.dataset.i) < 32);
+      audio.src = "audio/dil_2.mp3";
+      
+      // Show decrypted or gate
+      const panel = document.getElementById("leak-panel-part2");
+      const flow = document.getElementById("decrypted-flow-part2");
+      if (state.decryptedPart2) {
+        if (panel) panel.classList.add("hidden");
+        if (flow) flow.classList.remove("hidden");
+      } else {
+        if (panel) panel.classList.remove("hidden");
+        if (flow) flow.classList.add("hidden");
+      }
+    } else {
+      if (storyPart3) storyPart3.classList.remove("hidden");
+      document.body.classList.remove("part2-active");
+      document.body.classList.add("part3-active");
+      tabPart3.classList.add("active", "part3-active");
+      document.getElementById("player-archive-title").textContent = "// DECRYPTED FEED — MIA.M";
+      
+      if (previewPosterTitle) previewPosterTitle.textContent = "DÍL III: MATEŘÍ KAŠIČKA 2.0";
+      if (fullscreenPosterTitle) fullscreenPosterTitle.textContent = "DÍL III: MATEŘÍ KAŠIČKA 2.0";
+      if (previewPosterImg) previewPosterImg.src = "avatar/krtek/krtek.png";
+      if (fullscreenPosterImg) fullscreenPosterImg.src = "avatar/krtek/krtek.png";
+      
+      paras = allParas.filter(p => parseInt(p.dataset.i) >= 32);
+      audio.src = "audio/dil_3.mp3";
+      
+      // Show decrypted or gate
+      const panel = document.getElementById("leak-panel-part3");
+      const flow = document.getElementById("decrypted-flow-part3");
+      if (state.decryptedPart3) {
+        if (panel) panel.classList.add("hidden");
+        if (flow) flow.classList.remove("hidden");
+      } else {
+        if (panel) panel.classList.remove("hidden");
+        if (flow) flow.classList.add("hidden");
+      }
+    }
+    
+    N = paras.length;
+    state.curIdx = -1;
+    state.duration = 0;
+    state.loaded = false;
+    isPlayingCustom = false;
+    activeParaIdx = -1;
+    subVideoIdx = 1;
+    if (audio.src) {
+      try {
+        audio.currentTime = 0;
+      } catch (e) {}
+      audio.load();
+    } else {
+      audio.pause();
+    }
+    updateStatus();
+
+    // Load cues for this part
+    loadCues(partNum);
+    
+    if (startPlaying && audio.src) {
+      // Remove any pending play handler from a previous (rapid) part switch
+      if (pendingPlayHandler) {
+        audio.removeEventListener("canplay", pendingPlayHandler);
+        pendingPlayHandler = null;
+      }
+
+      const startFromBeginning = () => {
+        try {
+          audio.currentTime = 0;
+        } catch (e) {}
+        audio.play()
+          .then(() => updateStatus())
+          .catch(e => console.warn("Autoplay after swap failed:", e));
+      };
+
+      // If the audio is already buffered enough (e.g. cached), play immediately;
+      // otherwise wait for canplay. Avoids the race where canplay fires before
+      // the listener is attached and playback never starts.
+      if (audio.readyState >= 2 /* HAVE_CURRENT_DATA */) {
+        startFromBeginning();
+      } else {
+        pendingPlayHandler = () => {
+          audio.removeEventListener("canplay", pendingPlayHandler);
+          pendingPlayHandler = null;
+          startFromBeginning();
+        };
+        audio.addEventListener("canplay", pendingPlayHandler);
+      }
+    }
+  };
+
+  const loadCues = (partNum) => {
+    let stored = null;
+    try {
+      const s = localStorage.getItem(`ruda_cues_v2_part${partNum}`);
+      if (s) stored = JSON.parse(s);
+    } catch (e) {
+      console.warn("Could not parse cues from localStorage", e);
+    }
+
+    const defaultCues = partNum === 1 ? PART1_CUES : (partNum === 2 ? PART2_CUES : PART3_CUES);
+    const partLength = partNum === 1 ? 20 : (partNum === 2 ? 12 : 15);
+
+    if (stored && stored.length === partLength && stored.some(x => typeof x === "number")) {
+      cues = stored;
+      setHint("Časování načteno z lokální paměti.");
+    } else {
+      cues = [...defaultCues];
+      setHint("Načteno přesné výchozí časování.");
+    }
+  };
+
+  const initDraggablePlayer = () => {
+    const playerWrapper = document.querySelector(".player-wrapper");
+    const playerHeader = document.querySelector(".player-header");
+    if (!playerWrapper || !playerHeader) return;
+
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    // Add drag grip
+    const grip = document.createElement("span");
+    grip.className = "drag-grip";
+    grip.textContent = "▤";
+    grip.title = "Přetáhněte přehrávač";
+    playerHeader.insertBefore(grip, playerHeader.firstChild);
+
+    const dragMouseDown = (e) => {
+      // Don't drag if clicking buttons or elements inside header
+      if (e.target.closest("button") || e.target.closest("a") || e.target.closest("label") || e.target.closest("input")) return;
+      
+      e = e || window.event;
+      if (e.button !== 0 && e.type !== 'touchstart') return;
+
+      // Disable default text selection/scrolling during drag
+      e.preventDefault();
+
+      pos3 = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      pos4 = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+      if (!playerWrapper.classList.contains("floating-player")) {
+        const rect = playerWrapper.getBoundingClientRect();
+        playerWrapper.style.width = `${rect.width}px`;
+        playerWrapper.style.position = "fixed";
+        playerWrapper.style.top = `${rect.top}px`;
+        playerWrapper.style.left = `${rect.left}px`;
+        playerWrapper.style.margin = "0";
+        playerWrapper.classList.add("floating-player");
+      }
+
+      document.addEventListener("pointermove", elementDrag, { passive: false });
+      document.addEventListener("pointerup", closeDragElement);
+    };
+
+    const elementDrag = (e) => {
+      e = e || window.event;
+      e.preventDefault();
+
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+      pos1 = pos3 - clientX;
+      pos2 = pos4 - clientY;
+      pos3 = clientX;
+      pos4 = clientY;
+
+      const newTop = playerWrapper.offsetTop - pos2;
+      const newLeft = playerWrapper.offsetLeft - pos1;
+
+      const margin = 10;
+      const maxTop = window.innerHeight - playerWrapper.offsetHeight - margin;
+      const maxLeft = window.innerWidth - playerWrapper.offsetWidth - margin;
+
+      playerWrapper.style.top = `${Math.max(margin, Math.min(maxTop, newTop))}px`;
+      playerWrapper.style.left = `${Math.max(margin, Math.min(maxLeft, newLeft))}px`;
+    };
+
+    const closeDragElement = () => {
+      document.removeEventListener("pointermove", elementDrag);
+      document.removeEventListener("pointerup", closeDragElement);
+    };
+
+    playerHeader.addEventListener("pointerdown", dragMouseDown);
+  };
+
+  // --- INITIALIZATION ---
+  const init = () => {
+    // 1. Gather paragraph elements
+    allParas = Array.from(document.querySelectorAll(".story-content [data-i]"));
+    allParas.sort((a, b) => parseInt(a.dataset.i) - parseInt(b.dataset.i));
+
+    // 2. Wrap words in paragraphs for karaoke
+    allParas.forEach(p => {
+      wrapWords(p);
+    });
+
+    // Initialize Part 1
+    setPart(1, false);
+
+    // 4. Attach paragraph click listeners (for calibration)
+    allParas.forEach(p => {
+      p.addEventListener("click", () => {
+        // Find current paragraph index in active part
+        const activeIdx = paras.indexOf(p);
+        if (activeIdx !== -1) {
+          onParaClick(activeIdx);
+        }
+      });
+    });
+
+    // 5. Setup video background rotation (DISABLED - BG rotation removed)
+    // startVideoRotation();
+
+    // 6. Setup audio listeners
+    setupAudioListeners();
+
+    // 7. Setup UI controls listeners
+    setupUIListeners();
+
+    // 8. Setup characters cards click switch
+    document.querySelectorAll(".character-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const partNum = parseInt(card.dataset.part);
+        
+        // Check decryption status and run decryption animation automatically if locked
+        if (partNum === 2 && !state.decryptedPart2) {
+          const panel = document.getElementById("leak-panel-part2");
+          if (panel) panel.scrollIntoView({ behavior: "smooth" });
+          runDecryptionAnimation(2);
+          return;
+        }
+        if (partNum === 3 && !state.decryptedPart3) {
+          const panel = document.getElementById("leak-panel-part3");
+          if (panel) panel.scrollIntoView({ behavior: "smooth" });
+          runDecryptionAnimation(3);
+          return;
+        }
+        
+        setPart(partNum, true);
+      });
+    });
+
+    // Setup manual scroll override listeners
+    const registerUserInteraction = () => {
+      lastUserScrollTime = Date.now();
+    };
+    window.addEventListener("wheel", registerUserInteraction, { passive: true });
+    window.addEventListener("touchmove", registerUserInteraction, { passive: true });
+    window.addEventListener("mousedown", registerUserInteraction, { passive: true });
+    window.addEventListener("keydown", (e) => {
+      const scrollKeys = ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Space", "Home", "End"];
+      if (scrollKeys.includes(e.key)) {
+        registerUserInteraction();
+      }
+    });
+
+    // Setup mode switcher listeners
+    const btnModeText = document.getElementById("btn-mode-text");
+    const btnModeComic = document.getElementById("btn-mode-comic");
+    const btnModeMovie = document.getElementById("btn-mode-movie");
+
+    const setActiveModeUI = (mode) => {
+      if (mode === "text") {
+        state.comicMode = false;
+        btnModeText?.classList.add("active");
+        btnModeComic?.classList.remove("active");
+        btnModeMovie?.classList.remove("active");
+        updateModeVisibility();
+        highlightParagraph(state.curIdx);
+      } else if (mode === "comic") {
+        state.comicMode = true;
+        btnModeComic?.classList.add("active");
+        btnModeText?.classList.remove("active");
+        btnModeMovie?.classList.remove("active");
+        updateModeVisibility();
+        highlightParagraph(state.curIdx);
+      } else if (mode === "movie") {
+        btnModeMovie?.classList.add("active");
+        btnModeText?.classList.remove("active");
+        btnModeComic?.classList.remove("active");
+        openFullscreenOverlay();
+      }
+    };
+
+    if (btnModeText) btnModeText.addEventListener("click", () => setActiveModeUI("text"));
+    if (btnModeComic) btnModeComic.addEventListener("click", () => setActiveModeUI("comic"));
+    if (btnModeMovie) btnModeMovie.addEventListener("click", () => setActiveModeUI("movie"));
+
+    // Close fullscreen with Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.fullscreenMode) {
+        closeFullscreenOverlay();
+      }
+    });
+
+    // 9. Initialize Draggable player panel
+    initDraggablePlayer();
+  };
+
+  // --- DOM WORD WRAPPING ---
+  const wrapWords = (element) => {
+    const walk = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.nodeValue;
+        // Split text by whitespace, keeping spaces
+        const words = text.split(/(\s+)/);
+        const fragment = document.createDocumentFragment();
+        
+        words.forEach(word => {
+          if (word.trim().length > 0) {
+            const span = document.createElement("span");
+            span.className = "word";
+            span.textContent = word;
+            fragment.appendChild(span);
+          } else {
+            fragment.appendChild(document.createTextNode(word));
+          }
+        });
+        
+        node.parentNode.replaceChild(fragment, node);
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.classList.contains("dropcap") || node.classList.contains("bullet-marker")) {
+          return;
+        }
+        const children = Array.from(node.childNodes);
+        children.forEach(walk);
+      }
+    };
+    
+    const children = Array.from(element.childNodes);
+    children.forEach(walk);
+  };
+
+  // --- AUDIO LOGIC ---
+  const setupAudioListeners = () => {
+    if (!audio) return;
+
+    const onMeta = () => {
+      const d = audio.duration;
+      if (isFinite(d) && d > 0) {
+        state.duration = d;
+        state.loaded = true;
+        updateStatus();
+        seedCues();
+
+        // Autoplay attempt
+        if (!state.autoplayAttempted) {
+          state.autoplayAttempted = true;
+          attemptAutoplay();
+        }
+      } else {
+        if (!state.loaded) {
+          state.loaded = true;
+          updateStatus();
+        }
+        fixInfinite();
+      }
+    };
+
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("durationchange", onMeta);
+    audio.addEventListener("canplay", onMeta);
+    
+    audio.addEventListener("timeupdate", () => {
+      state.currentTime = audio.currentTime;
+      onTimeUpdate();
+    });
+
+    audio.addEventListener("play", () => {
+      state.playing = true;
+      playIcon.textContent = "❚❚";
+      if (playBtnWrapper) playBtnWrapper.classList.add("playing");
+      updateStatus();
+      
+      // Sync video state
+      if (currentVideoEl) currentVideoEl.play().catch(() => {});
+      if (currentPrevEl) currentPrevEl.play().catch(() => {});
+    });
+
+    audio.addEventListener("pause", () => {
+      state.playing = false;
+      playIcon.textContent = "▶";
+      if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
+      updateStatus();
+    });
+
+    audio.addEventListener("ended", () => {
+      // Automatic progression to next part
+      if (state.activePart === 1) {
+        console.log("Díl I ended, decrypting/switching to Díl II");
+        state.decryptedPart2 = true;
+        localStorage.setItem("decrypted_part2", "true");
+        setPart(2, true);
+      } else if (state.activePart === 2) {
+        console.log("Díl II ended, decrypting/switching to Díl III");
+        state.decryptedPart3 = true;
+        localStorage.setItem("decrypted_part3", "true");
+        setPart(3, true);
+      } else {
+        // Last part finished, reset to standby
+        state.playing = false;
+        playIcon.textContent = "▶";
+        if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
+        audio.currentTime = 0;
+        updateStatus();
+      }
+    });
+
+    // Check if metadata is already loaded
+    if (audio.readyState >= 1) {
+      onMeta();
+    }
+  };
+
+  const attemptAutoplay = () => {
+    audio.play()
+      .then(() => {
+        console.log("Autoplay successful");
+      })
+      .catch(err => {
+        console.warn("Autoplay blocked, waiting for interaction:", err);
+        setHint("Klikněte kamkoli pro spuštění audio-příběhu.");
+        
+        const startOnInteraction = () => {
+          audio.play()
+            .then(() => {
+              document.removeEventListener("click", startOnInteraction);
+              document.removeEventListener("touchstart", startOnInteraction);
+              setHint(""); // Clear helper hint
+            })
+            .catch(e => console.error("Play on interaction failed:", e));
+        };
+        
+        document.addEventListener("click", startOnInteraction);
+        document.addEventListener("touchstart", startOnInteraction);
+      });
+  };
+
+  const fixInfinite = () => {
+    if (audio._fixing) return;
+    audio._fixing = true;
+    
+    const onDurationChange = () => {
+      if (isFinite(audio.duration) && audio.duration > 0) {
+        audio.removeEventListener("durationchange", onDurationChange);
+        try {
+          audio.currentTime = 0;
+        } catch (e) {}
+        state.duration = audio.duration;
+        state.loaded = true;
+        updateStatus();
+        seedCues();
+      }
+    };
+    
+    audio.addEventListener("durationchange", onDurationChange);
+    try {
+      audio.currentTime = 1e7;
+    } catch (e) {}
+  };
+
+  const seedCues = () => {
+    if (cues || !(state.duration > 0)) return;
+    
+    const lens = paras.map(p => Math.max(10, (p.textContent || "").trim().length));
+    const totalLength = lens.reduce((sum, len) => sum + len, 0);
+    
+    const newCues = [];
+    let acc = 0;
+    
+    for (let i = 0; i < N; i++) {
+      newCues.push(parseFloat((state.duration * (acc / totalLength)).toFixed(2)));
+      acc += lens[i];
+    }
+    
+    cues = newCues;
+    setHint("Vytvořen automatický odhad časování podle délky odstavců.");
+  };
+
+  const onTimeUpdate = () => {
+    // 1. Update progress bar
+    if (state.duration) {
+      const pct = (state.currentTime / state.duration) * 100;
+      progressFill.style.width = `${pct}%`;
+      timeCurrent.textContent = formatTime(state.currentTime);
+      timeDuration.textContent = formatTime(state.duration);
+    }
+
+    // Apply offset to display time (e.g. 0.4s delay) when not in calibration mode
+    // to align visual highlighting with audio playback latency
+    const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
+
+    // 2. Identify active block index
+    const activeIdx = getActiveIndex(displayTime);
+    if (activeIdx !== state.curIdx) {
+      state.curIdx = activeIdx;
+      
+      // Trigger custom paragraph preview video loading
+      if (activeIdx !== -1) {
+        // Hide initial poster overlays when video playback sync begins (only for parts with videos: 1 and 2)
+        const previewPoster = document.getElementById("preview-poster");
+        const fullscreenPoster = document.getElementById("fullscreen-poster");
+        if (previewPoster) previewPoster.classList.remove("active");
+        if (fullscreenPoster) fullscreenPoster.classList.remove("active");
+
+        startParagraphVideoChain(state.activePart, activeIdx);
+      } else {
+        isPlayingCustom = false;
+      }
+      
+      // Update preview subtitles
+      if (activeIdx !== -1 && paras[activeIdx]) {
+        const txt = paras[activeIdx].textContent.trim();
+        previewSubtitles.textContent = txt;
+        previewSubtitles.style.color = "var(--cyan)";
+        if (fullscreenSubtitles) {
+          fullscreenSubtitles.textContent = txt;
+        }
+      } else {
+        const standbyTxt = state.playing ? "// FEED ACTIVE" : "// SYSTEM STANDBY";
+        previewSubtitles.textContent = standbyTxt;
+        previewSubtitles.style.color = "var(--muted)";
+        if (fullscreenSubtitles) {
+          fullscreenSubtitles.textContent = standbyTxt;
+        }
+      }
+    }
+
+    // Always run highlight update (including comic panels inside paragraphs)
+    highlightParagraph(activeIdx);
+
+    // 3. Karaoke highlight inside the active paragraph
+    highlightWords(activeIdx, displayTime);
+  };
+
+  const getActiveIndex = (t) => {
+    if (!cues) return -1;
+    let idx = -1;
+    for (let i = 0; i < N; i++) {
+      if (cues[i] != null && t >= cues[i] - 0.02) {
+        idx = i;
+      }
+    }
+    return idx;
+  };
+
+  // --- KARAOKE WORD HIGHLIGHT ---
+  const highlightWords = (pIdx, curTime) => {
+    if (pIdx < 0 || !cues) {
+      updateKaraokeDisplay("", "PŘIPRAVENO", "");
+      return;
+    }
+    
+    const pEl = paras[pIdx];
+    if (!pEl) {
+      updateKaraokeDisplay("", "PŘIPRAVENO", "");
+      return;
+    }
+    
+    const tStart = cues[pIdx];
+    const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
+    const duration = tEnd - tStart;
+    
+    if (duration <= 0) return;
+    
+    const progress = Math.max(0, Math.min(1, (curTime - tStart) / duration));
+    const words = pEl.querySelectorAll(".word");
+    const wordsCount = words.length;
+    
+    if (wordsCount === 0) {
+      updateKaraokeDisplay("", "", "");
+      return;
+    }
+    
+    // Estimate active word index proportionally
+    const activeWordIdx = Math.max(0, Math.min(wordsCount - 1, Math.floor(progress * wordsCount)));
+    
+    words.forEach((word, wIdx) => {
+      if (wIdx <= activeWordIdx) {
+        word.classList.add("read");
+      } else {
+        word.classList.remove("read");
+      }
+    });
+
+    // Update 3-word karaoke window
+    const currentWord = words[activeWordIdx].textContent.trim();
+    
+    let prevWord = "";
+    if (activeWordIdx > 0) {
+      prevWord = words[activeWordIdx - 1].textContent.trim();
+    } else if (pIdx > 0) {
+      const prevParagraphWords = paras[pIdx - 1].querySelectorAll(".word");
+      if (prevParagraphWords.length > 0) {
+        prevWord = prevParagraphWords[prevParagraphWords.length - 1].textContent.trim();
+      }
+    }
+    
+    let nextWord = "";
+    if (activeWordIdx < wordsCount - 1) {
+      nextWord = words[activeWordIdx + 1].textContent.trim();
+    } else if (pIdx < N - 1) {
+      const nextParagraphWords = paras[pIdx + 1].querySelectorAll(".word");
+      if (nextParagraphWords.length > 0) {
+        nextWord = nextParagraphWords[0].textContent.trim();
+      }
+    }
+    
+    updateKaraokeDisplay(prevWord, currentWord, nextWord);
+  };
+
+  // --- TRANSCRIPT VISUALS ---
+  const highlightParagraph = (idx) => {
+    // 1. Text mode highlighting
+    paras.forEach((p, i) => {
+      const on = i === idx;
+      p.classList.toggle("active", on);
+      
+      // Handle non-active paragraphs clean up of read words
+      if (!on) {
+        p.querySelectorAll(".word").forEach(w => w.classList.remove("read"));
+      }
+    });
+
+    // 2. Comic mode highlighting
+    const activeComicGrid = document.querySelector(`#comic-content-part${state.activePart} .comic-grid`);
+    if (activeComicGrid) {
+      const allPanels = activeComicGrid.querySelectorAll(".comic-panel");
+      allPanels.forEach(panel => panel.classList.remove("active"));
+    }
+
+    if (idx !== -1 && state.comicMode) {
+      const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${idx}"]`);
+      if (matchingPanels.length > 0) {
+        const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
+        const tStart = cues[idx];
+        const tEnd = (idx < N - 1 && cues[idx + 1] != null) ? cues[idx + 1] : state.duration;
+        const pDuration = Math.max(0.1, tEnd - tStart);
+        const progress = Math.max(0, Math.min(1, (displayTime - tStart) / pDuration));
+
+        // Proportional index
+        const activePanelIdx = Math.max(0, Math.min(matchingPanels.length - 1, Math.floor(progress * matchingPanels.length)));
+        
+        const activePanel = matchingPanels[activePanelIdx];
+        if (activePanel) {
+          activePanel.classList.add("active");
+          
+          if (state.playing && !state.calibMode) {
+            scrollComicPanelToView(activePanel);
+          }
+        }
+      }
+    }
+  };
+
+  const AUTO_SCROLL_INACTIVITY_MS = 5000;
+
+  const scrollComicPanelToView = (el) => {
+    if (!el) return;
+    if (Date.now() - lastUserScrollTime < AUTO_SCROLL_INACTIVITY_MS) {
+      return; // Respect user manual scrolling
+    }
+    const rect = el.getBoundingClientRect();
+    const midPoint = window.innerHeight * 0.4;
+    
+    if (rect.top < midPoint * 0.5 || rect.top > window.innerHeight * 0.8) {
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + rect.top - midPoint),
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const scrollToParagraph = (idx) => {
+    const el = paras[idx];
+    if (!el) return;
+    if (Date.now() - lastUserScrollTime < AUTO_SCROLL_INACTIVITY_MS) {
+      return; // Respect user manual scrolling
+    }
+    
+    const rect = el.getBoundingClientRect();
+    const midPoint = window.innerHeight * 0.4;
+    
+    if (rect.top < midPoint * 0.5 || rect.top > window.innerHeight * 0.8) {
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + rect.top - midPoint),
+        behavior: "smooth"
+      });
+    }
+  };
+
+  // --- BACKGROUNDS & VIDEOS ---
+  let isPlayingCustom = false;
+  let activeParaIdx = -1;
+  let subVideoIdx = 1;
+
+  const handlePreviewVideoEnded = (videoEl) => {
+    if (!isPlayingCustom) return;
+    
+    // Specifické pravidlo: 1. díl (activePart === 1), 13. odstavec (activeParaIdx === 13)
+    // Přehrávat pouze video 01_14_01 ve smyčce
+    if (state.activePart === 1 && parseInt(activeParaIdx) === 13) {
+      subVideoIdx = 1;
+      loadAndPlayPreview(videoEl, state.activePart, activeParaIdx, subVideoIdx);
+      return;
+    }
+
+    subVideoIdx++;
+    loadAndPlayPreview(videoEl, state.activePart, activeParaIdx, subVideoIdx);
+  };
+
+  const handlePreviewVideoError = (videoEl) => {
+    if (!isPlayingCustom) return;
+    
+    if (subVideoIdx > 1) {
+      // Loop back to the first video of this paragraph
+      subVideoIdx = 1;
+      loadAndPlayPreview(videoEl, state.activePart, activeParaIdx, subVideoIdx);
+    } else {
+      // It failed even on the first video. Fallback to standby poster.
+      isPlayingCustom = false;
+      
+      const previewPoster = document.getElementById("preview-poster");
+      const fullscreenPoster = document.getElementById("fullscreen-poster");
+      if (previewPoster) previewPoster.classList.add("active");
+      if (fullscreenPoster) fullscreenPoster.classList.add("active");
+
+      // Deactivate any active video element transitions
+      if (currentPrevEl) currentPrevEl.classList.remove("active");
+      if (nextPrevEl) nextPrevEl.classList.remove("active");
+      if (currentFsEl) currentFsEl.classList.remove("active");
+      if (nextFsEl) nextFsEl.classList.remove("active");
+
+      if (previewShotId) {
+        previewShotId.textContent = "[STANDBY]";
+        previewShotId.style.color = "var(--muted)";
+      }
+      if (fullscreenShotId) {
+        fullscreenShotId.textContent = "[STANDBY]";
+      }
+    }
+  };
+
+  const loadAndPlayPreview = (videoEl, part, paraIdx, subIdx) => {
+    const paraNum = parseInt(paraIdx) + 1; // 1-based paragraph index for filename
+
+    const partStr = String(part).padStart(2, '0');
+    const paraStr = String(paraNum).padStart(2, '0');
+    const subStr = String(subIdx).padStart(2, '0');
+    const src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+    const shotId = `[${partStr}_${paraStr}_${subStr}]`;
+    
+    console.log(`Loading custom preview video: ${src}`);
+    if (previewShotId) {
+      previewShotId.textContent = shotId;
+      previewShotId.style.color = "var(--cyan)";
+    }
+    if (fullscreenShotId) {
+      fullscreenShotId.textContent = shotId;
+    }
+
+    // Play in preview video
+    videoEl.src = src;
+    videoEl.load();
+    videoEl.play().catch(e => {
+      console.warn(`Failed to play ${src}:`, e.message);
+      // Do not trigger handlePreviewVideoError here to prevent double-firing with the error event listener
+    });
+
+    // Mirror to fullscreen if overlay is active
+    if (state.fullscreenMode) {
+      syncFullscreenSource(src);
+    }
+  };
+
+  const syncFullscreenSource = (src) => {
+    nextFsEl.src = src;
+    nextFsEl.load();
+    nextFsEl.play()
+      .then(() => {
+        nextFsEl.classList.add("active");
+        if (currentFsEl && currentFsEl !== nextFsEl) {
+          currentFsEl.classList.remove("active");
+          const oldFs = currentFsEl;
+          setTimeout(() => { oldFs.pause(); }, 1200);
+        }
+        const temp = currentFsEl;
+        currentFsEl = nextFsEl;
+        nextFsEl = temp;
+      })
+      .catch(err => console.warn("Fullscreen video mirror play failed:", err.message));
+  };
+
+  const startParagraphVideoChain = (part, paraIdx) => {
+    activeParaIdx = paraIdx;
+    subVideoIdx = 1;
+
+
+
+    isPlayingCustom = true;
+
+    // Use nextPrevEl to load and transition
+    const paraNum = parseInt(paraIdx) + 1;
+
+    const partStr = String(part).padStart(2, '0');
+    const paraStr = String(paraNum).padStart(2, '0');
+    const src = `video/dil_${part}/${partStr}_${paraStr}_01.mp4`;
+    const shotId = `[${partStr}_${paraStr}_01]`;
+
+    if (previewShotId) {
+      previewShotId.textContent = shotId;
+      previewShotId.style.color = "var(--cyan)";
+    }
+    if (fullscreenShotId) {
+      fullscreenShotId.textContent = shotId;
+    }
+
+    nextPrevEl.src = src;
+    nextPrevEl.load();
+    nextPrevEl.play()
+      .then(() => {
+        nextPrevEl.classList.add("active");
+        if (currentPrevEl && currentPrevEl !== nextPrevEl) {
+          currentPrevEl.classList.remove("active");
+          const oldPrev = currentPrevEl;
+          setTimeout(() => { oldPrev.pause(); }, 2200);
+        }
+        // Swap roles
+        const tempPrev = currentPrevEl;
+        currentPrevEl = nextPrevEl;
+        nextPrevEl = tempPrev;
+      })
+      .catch(e => {
+        // Ignore normal abort/play interruptions on src swaps
+        console.log("Preview play interrupted (normal transition):", e.message);
+      });
+
+    if (state.fullscreenMode) {
+      syncFullscreenSource(src);
+    }
+  };
+
+  const startVideoRotation = () => {
+    videoBgContainer.classList.add("active");
+    
+    // Play first video
+    playNextVideo(videos[videoIdx]);
+    
+    // Set timer to change video every 12 seconds
+    videoTimer = setInterval(() => {
+      videoIdx = (videoIdx + 1) % videos.length;
+      playNextVideo(videos[videoIdx]);
+    }, 12000);
+  };
+
+  const playNextVideo = (src) => {
+    nextVideoEl.src = src;
+    nextVideoEl.load();
+    nextVideoEl.play().catch(e => console.error("BG video play failed:", e));
+
+    if (!isPlayingCustom && state.activePart !== 3) {
+      if (previewShotId) {
+        previewShotId.textContent = "[BG_ROTATION]";
+        previewShotId.style.color = "var(--muted)";
+      }
+      if (nextPrevEl) {
+        nextPrevEl.src = src;
+        nextPrevEl.load();
+        nextPrevEl.play().catch(e => console.error("Prev video play failed:", e));
+      }
+      
+      if (nextPrevEl) nextPrevEl.classList.add("active");
+      
+      const oldPrevEl = currentPrevEl;
+      if (oldPrevEl && oldPrevEl !== nextPrevEl) {
+        oldPrevEl.classList.remove("active");
+        setTimeout(() => {
+          if (!isPlayingCustom && oldPrevEl) oldPrevEl.pause();
+        }, 2200);
+      }
+      
+      const tempPrev = currentPrevEl;
+      currentPrevEl = nextPrevEl;
+      nextPrevEl = tempPrev;
+    }
+
+    nextVideoEl.classList.add("active");
+    
+    const oldVideoEl = currentVideoEl;
+
+    if (oldVideoEl !== nextVideoEl) {
+      oldVideoEl.classList.remove("active");
+      setTimeout(() => {
+        oldVideoEl.pause();
+      }, 2200); // Wait for the 2.2s CSS opacity transition
+    }
+    
+    // Swap roles
+    const temp = currentVideoEl;
+    currentVideoEl = nextVideoEl;
+    nextVideoEl = temp;
+  };
+
+
+  // --- UI LISTENERS & CONTROL handlers ---
+  const setupUIListeners = () => {
+    // Play/Pause Click
+    playBtn.addEventListener("click", togglePlay);
+
+    // Seek Click
+    progressBar.addEventListener("click", seek);
+
+    // Sync Mode Toggle
+    btnSync.addEventListener("click", toggleCalibration);
+
+    // Export Cues
+    btnExport.addEventListener("click", exportCues);
+
+    // Reset Cues
+    btnReset.addEventListener("click", resetCues);
+
+    // Load custom audio
+    fileAudio.addEventListener("change", loadAudioFile);
+
+    // Part switching tabs
+    if (tabPart1) {
+      tabPart1.addEventListener("click", () => setPart(1));
+    }
+    if (tabPart2) {
+      tabPart2.addEventListener("click", () => setPart(2));
+    }
+    if (tabPart3) {
+      tabPart3.addEventListener("click", () => setPart(3));
+    }
+
+    // Decryption button for Part 2
+    const btnDecryptPart2 = document.getElementById("btn-decrypt-part2");
+    if (btnDecryptPart2) {
+      btnDecryptPart2.addEventListener("click", () => runDecryptionAnimation(2));
+    }
+
+    // Decryption button for Part 3
+    const btnDecryptPart3 = document.getElementById("btn-decrypt-part3");
+    if (btnDecryptPart3) {
+      btnDecryptPart3.addEventListener("click", () => runDecryptionAnimation(3));
+    }
+
+    // Custom preview video playback handlers
+    if (prevVideo1) {
+      prevVideo1.addEventListener("ended", () => handlePreviewVideoEnded(prevVideo1));
+      prevVideo1.addEventListener("error", () => handlePreviewVideoError(prevVideo1));
+    }
+    if (prevVideo2) {
+      prevVideo2.addEventListener("ended", () => handlePreviewVideoEnded(prevVideo2));
+      prevVideo2.addEventListener("error", () => handlePreviewVideoError(prevVideo2));
+    }
+
+    // Fullscreen Overlay Event Listeners
+    if (playerVideoPreview) {
+      playerVideoPreview.addEventListener("click", openFullscreenOverlay);
+    }
+    if (fullscreenCloseBtn) {
+      fullscreenCloseBtn.addEventListener("click", closeFullscreenOverlay);
+    }
+
+    // Mirror ended/error events for fullscreen videos to match preview video sequence loops
+    if (fsVideo1) {
+      fsVideo1.addEventListener("ended", () => handleFullscreenVideoEnded(fsVideo1));
+      fsVideo1.addEventListener("error", () => handleFullscreenVideoError(fsVideo1));
+    }
+    if (fsVideo2) {
+      fsVideo2.addEventListener("ended", () => handleFullscreenVideoEnded(fsVideo2));
+      fsVideo2.addEventListener("error", () => handleFullscreenVideoError(fsVideo2));
+    }
+
+    // Setup visual gallery filter buttons
+    const filterBtns = document.querySelectorAll(".gallery-filter-btn");
+    const galleryCards = document.querySelectorAll(".gallery-card");
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        // Toggle active class on buttons
+        filterBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const filter = btn.dataset.filter;
+        galleryCards.forEach(card => {
+          if (filter === "all" || card.dataset.part === filter) {
+            card.classList.remove("hidden");
+          } else {
+            card.classList.add("hidden");
+          }
+        });
+      });
+    });
+
+    // Clicking gallery cards opens the image in fullscreen overlay
+    galleryCards.forEach(card => {
+      card.addEventListener("click", () => {
+        const src = card.dataset.src;
+        const label = card.querySelector(".gallery-card-label").textContent;
+        const shotId = card.querySelector(".gallery-card-id").textContent;
+
+        openFullscreenImage(src, label, shotId);
+      });
+    });
+  };
+
+  const openFullscreenImage = (imgSrc, label, shotId) => {
+    state.fullscreenMode = true;
+    if (fullscreenOverlay) {
+      fullscreenOverlay.classList.add("active");
+    }
+
+    const fullscreenPoster = document.getElementById("fullscreen-poster");
+    const fullscreenPosterImg = document.getElementById("fullscreen-poster-img");
+    const fullscreenPosterTitle = document.getElementById("fullscreen-poster-title");
+
+    if (fullscreenPoster) fullscreenPoster.classList.add("active");
+    if (fullscreenPosterImg) fullscreenPosterImg.src = imgSrc;
+    if (fullscreenPosterTitle) fullscreenPosterTitle.textContent = label;
+
+    if (fullscreenSubtitles) {
+      fullscreenSubtitles.textContent = label;
+    }
+    if (fullscreenShotId) {
+      fullscreenShotId.textContent = shotId;
+    }
+
+    // Deactivate active videos in overlay
+    if (fsVideo1) fsVideo1.classList.remove("active");
+    if (fsVideo2) fsVideo2.classList.remove("active");
+  };
+
+  const openFullscreenOverlay = () => {
+    state.fullscreenMode = true;
+    if (fullscreenOverlay) {
+      fullscreenOverlay.classList.add("active");
+    }
+    
+    // Sync current active paragraph subtitles text
+    if (state.curIdx !== -1 && paras[state.curIdx]) {
+      fullscreenSubtitles.textContent = paras[state.curIdx].textContent.trim();
+    } else {
+      fullscreenSubtitles.textContent = state.playing ? "// FEED ACTIVE" : "// SYSTEM STANDBY";
+    }
+
+    // Sync source from active preview element
+    const activeSrc = currentPrevEl.src;
+    const activeShot = previewShotId ? previewShotId.textContent : "[STANDBY]";
+    if (fullscreenShotId) {
+      fullscreenShotId.textContent = activeShot;
+    }
+    
+    if (activeSrc) {
+      syncFullscreenSource(activeSrc);
+    }
+  };
+
+  const closeFullscreenOverlay = () => {
+    state.fullscreenMode = false;
+    if (fullscreenOverlay) {
+      fullscreenOverlay.classList.remove("active");
+    }
+    // Pause both fullscreen videos to save resources
+    if (fsVideo1) fsVideo1.pause();
+    if (fsVideo2) fsVideo2.pause();
+
+    // Revert the mode selector button back to last active non-movie mode
+    const btnModeText = document.getElementById("btn-mode-text");
+    const btnModeComic = document.getElementById("btn-mode-comic");
+    const btnModeMovie = document.getElementById("btn-mode-movie");
+    
+    btnModeMovie?.classList.remove("active");
+    if (state.comicMode) {
+      btnModeComic?.classList.add("active");
+    } else {
+      btnModeText?.classList.add("active");
+    }
+  };
+
+  const handleFullscreenVideoEnded = (videoEl) => {
+    if (!isPlayingCustom) return;
+    
+    // Looping rules matching preview video logic
+    if (state.activePart === 1 && parseInt(activeParaIdx) === 13) {
+      // Loop the same video 01_14_01
+      subVideoIdx = 1;
+      loadAndPlayFullscreenMirror(videoEl, state.activePart, activeParaIdx, subVideoIdx);
+      return;
+    }
+
+    // The preview video ended handler increments subVideoIdx and triggers loadAndPlayPreview.
+    // The loadAndPlayPreview will call syncFullscreenSource(src) which already switches currentFsEl.
+    // However, if the user interacts with the fullscreen overlay, we let the preview video guide the chain
+    // or mirror it here. To be safe, we just let the preview video control the increment and we mirror.
+    // If the fullscreen video ends independently, we check if it is out of sync.
+  };
+
+  const handleFullscreenVideoError = (videoEl) => {
+    // If fullscreen video fails, fallback to current background source
+    videoEl.src = currentVideoEl.src;
+    videoEl.load();
+    videoEl.play().catch(() => {});
+  };
+
+  const loadAndPlayFullscreenMirror = (videoEl, part, paraIdx, subIdx) => {
+    const paraNum = parseInt(paraIdx) + 1;
+
+    const partStr = String(part).padStart(2, '0');
+    const paraStr = String(paraNum).padStart(2, '0');
+    const subStr = String(subIdx).padStart(2, '0');
+    const src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+    
+    videoEl.src = src;
+    videoEl.load();
+    videoEl.play().catch(() => {});
+  };
+
+  const runDecryptionAnimation = (targetPart = 2) => {
+    const btn = document.getElementById(`btn-decrypt-part${targetPart}`);
+    const progressEl = document.getElementById(`decrypt-progress-part${targetPart}`);
+    const statusEl = document.getElementById(`leak-status-part${targetPart}`);
+    
+    if (btn) btn.disabled = true;
+    if (btn) btn.textContent = "DEKRYPTUJI...";
+    if (statusEl) {
+      statusEl.textContent = "DEKRYPTUJI...";
+      statusEl.style.color = "var(--amber)";
+      statusEl.style.borderColor = "var(--amber)";
+      statusEl.style.background = "rgba(255, 181, 46, 0.1)";
+    }
+    
+    let pct = 0;
+    const interval = setInterval(() => {
+      pct += 5;
+      if (progressEl) progressEl.textContent = `${pct}%`;
+      
+      if (pct >= 100) {
+        clearInterval(interval);
+        
+        // Persist decryption state
+        if (targetPart === 2) {
+          state.decryptedPart2 = true;
+          localStorage.setItem("decrypted_part2", "true");
+        } else if (targetPart === 3) {
+          state.decryptedPart3 = true;
+          localStorage.setItem("decrypted_part3", "true");
+        }
+        
+        setPart(targetPart, targetPart === 2); // Swap to targetPart and play (for part 2)
+      }
+    }, 80);
+  };
+
+  const togglePlay = () => {
+    if (!audio) return;
+    if (audio.paused) {
+      const savedTime = audio.currentTime;
+      playerStatus.textContent = "NAČÍTÁM…";
+      playerStatus.style.color = "var(--muted)";
+      
+      if (savedTime === 0) {
+        audio.load();
+      }
+      
+      const playWithDelay = () => {
+        if (savedTime > 0) {
+          audio.currentTime = savedTime;
+        }
+        setTimeout(() => {
+          audio.play()
+            .then(() => {
+              updateStatus();
+            })
+            .catch(e => {
+              console.error("Audio playback error:", e);
+              updateStatus();
+            });
+        }, 1000);
+      };
+
+      if (audio.readyState >= 2) {
+        playWithDelay();
+      } else {
+        audio.addEventListener("canplay", function onCanPlay() {
+          audio.removeEventListener("canplay", onCanPlay);
+          playWithDelay();
+        });
+      }
+    } else {
+      audio.pause();
+    }
+  };
+
+  const seek = (e) => {
+    if (!audio || !state.duration) return;
+    const rect = progressBar.getBoundingClientRect();
+    const fraction = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = Math.max(0, Math.min(1, fraction)) * state.duration;
+    // Force preview video to restart on seek
+    state.curIdx = -1;
+  };
+
+  const toggleCalibration = () => {
+    state.calibMode = !state.calibMode;
+    btnSync.classList.toggle("calib-active", state.calibMode);
+    
+    paras.forEach(p => {
+      p.classList.toggle("calib-outline", state.calibMode);
+    });
+
+    if (state.calibMode) {
+      highlightParagraph(-1); // Remove main highlights in calib mode
+      setHint("Režim kalibrace: pusť audio a klikni na odstavec přesně ve chvíli, kdy ho vyprávěč začíná.");
+    } else {
+      setHint("Synchronizace textu vypnuta.");
+      onTimeUpdate();
+    }
+  };
+
+  const onParaClick = (idx) => {
+    if (!state.calibMode || !audio) return;
+    
+    if (!cues) cues = new Array(N).fill(null);
+    cues[idx] = parseFloat(audio.currentTime.toFixed(2));
+    
+    // Persist
+    try {
+      localStorage.setItem(`ruda_cues_v2_part${state.activePart}`, JSON.stringify(cues));
+    } catch (e) {
+      console.warn("Could not save cues", e);
+    }
+
+    // Visual flash feedback
+    const p = paras[idx];
+    if (p) {
+      p.classList.add("calib-flash");
+      setTimeout(() => {
+        p.classList.remove("calib-flash");
+      }, 320);
+    }
+
+    setHint(`Odstavec ${idx} → ${formatTime(audio.currentTime)} (uloženo)`);
+  };
+
+  const exportCues = () => {
+    if (!cues) return;
+    
+    const data = JSON.stringify(cues.map(c => c == null ? null : parseFloat(c.toFixed(2))));
+    
+    // Copy to clipboard
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(data);
+      }
+    } catch (e) {
+      console.warn("Clipboard copy failed", e);
+    }
+    
+    // Download JSON
+    try {
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ruda_cues_part${state.activePart}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Export failed", e);
+    }
+
+    setHint("Časování bylo staženo a uloženo do schránky.");
+  };
+
+  const resetCues = () => {
+    const defaultCues = state.activePart === 1 ? PART1_CUES : (state.activePart === 2 ? PART2_CUES : PART3_CUES);
+    cues = [...defaultCues];
+    try {
+      localStorage.setItem(`ruda_cues_v2_part${state.activePart}`, JSON.stringify(cues));
+    } catch (e) {}
+    
+    state.curIdx = -1;
+    highlightParagraph(-1);
+    updateKaraokeDisplay("", "PŘIPRAVENO", "");
+    
+    setHint("Časování bylo resetováno na výchozí přesné hodnoty.");
+  };
+
+  const loadAudioFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !audio) return;
+    
+    audio.src = URL.createObjectURL(file);
+    audio.load();
+    
+    // Reset state
+    state.duration = 0;
+    state.loaded = false;
+    state.curIdx = -1;
+    cues = null;
+    
+    setHint(`Načteno vlastní audio: ${file.name}`);
+  };
+
+  // --- UTILS ---
+  const formatTime = (t) => {
+    t = Math.max(0, t || 0);
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
+  const updateStatus = () => {
+    if (state.playing) {
+      playerStatus.textContent = "PŘEHRÁVÁ SE";
+      playerStatus.style.color = "var(--cyan)";
+    } else if (state.loaded) {
+      playerStatus.textContent = "PŘIPRAVENO";
+      playerStatus.style.color = "var(--muted)";
+    } else {
+      playerStatus.textContent = "NAČÍTÁM…";
+      playerStatus.style.color = "var(--muted)";
+    }
+  };
+
+  const setHint = (msg) => {
+    state.msg = msg;
+    hintText.textContent = msg;
+  };
+
+  // --- BOOT ---
+  init();
+});

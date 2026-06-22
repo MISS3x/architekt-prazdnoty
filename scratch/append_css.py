@@ -1,0 +1,36 @@
+import os
+
+css = """
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fff;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.progress-bar-wrapper:hover .progress-fill::after {
+  opacity: 1;
+}
+
+/* Hide old handle */
+.progress-handle {
+  display: none !important;
+}
+
+/* Move text content below top nav */
+.story-content {
+  padding-top: 2rem;
+}
+"""
+
+with open("style.css", "a", encoding="utf-8") as f:
+    f.write(css)
+
+print("CSS appended.")

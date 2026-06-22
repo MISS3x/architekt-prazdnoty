@@ -1,0 +1,97 @@
+PART 1:
+0 (global 0): Neonové prstence Nového Berlína pulzovaly v rytmu binárního deště, ale Ruda Müller stál na střeše svého posledního projektu — sedmsetmetrového mrakodrapu Aegis — a díval se opačným směrem. Tam, kde končila atmosférická kupole města a začínaly syrové, neuro-kontaminované hory starého světa.
+
+1 (global 1): Ruda byl jiný. V éře, kdy budovy navrhovaly kvantové algoritmy, on stále kreslil první linie ručně, implantovaným stylusem přímo do své zrakové kůry. Jeho mrakodrapy nebyly jen stavby; byly to obří chladiče pro megasíť, tektonické chrámy z uhlíkových vláken a chromu. A stejně divný jako jeho architektura byl i jeho život. Zatímco ostatní korporátní elity trávily čas v polévce virtuálního hedonismu, Ruda běhal.
+
+2 (global 2): Neběhal na trenažérech. Běhal maratony v toxických zónách, bez kyslíkové masky, jen s upravenými kybernetickými plícemi, které filtrovaly popílek a těžké kovy. Pravidelně testoval limity svého bio-mechanického těla.
+
+3 (global 3): A pak, uprostřed největšího stavebního boomu století, prostě odešel.
+
+4 (global 4): „Odpojuji neuro-link. Lokální vyhledávání vypnuto. Spouštím autonomní režim,“ oznámil chladný hlas v jeho hlavě.
+
+5 (global 5): Ruda Müller nechal limuzínu na hranici perimetru a vstoupil do zakázaných hor. Žádné drony, žádné satelitní sledování, žádná záloha na cloudu. Pro zbytek světa prostě přestal existovat. V korporátních kruzích se šeptalo o nervovém zhroucení, jiní tvrdili, že hledá ložiska vzácných minerálů pro své megastruktury.
+
+6 (global 6): Pravda byla fascinující. Ruda v horách neběhal pro zdraví. Běhal, aby utekl hluku lidských myšlenek, které globální síť neustále pumpovala do vzduchu. Kilometr za kilometrem, v mrazu a samotě, jeho procesory chladly. V hlubokých skalních soutěskách nacházel statický klid. Občas se zastavil, pohladil chladnou žulu a do své vnitřní paměti si ukládal geologické struktury. Tyto vzorce pak promítal do organických křivek svých mrakodrapů. Podle mnohých stál za jeho genialitou právě tento měsíc absolutního digitálního půstu.
+
+7 (global 7): Po přesně třiceti dnech se vrátil. Špinavý, s napůl vybitými bateriemi v kyber-brýlích, ale s očima, ve kterých svítil kód pro novou generaci měst.
+
+8 (global 8): O desítky let později byl Ruda Müller živoucí legendou. Dosáhl věku 100 let — což v té době, díky pokročilé bio-regeneraci, nebylo neobvyklé, ale u člověka s tak brutálním životním stylem to hraničilo se zázrakem. Jeho tělo bylo z padesáti procent tvořeno kybernetickými implantáty ze staré školy, které už nikdo neuměl opravit.
+
+9 (global 9): Jeho smrt však šokovala celý svět. A dodnes zůstává největší záhadou Nového Berlína.
+
+10 (global 10): Našli ho v jeho soukromém penthouse na vrcholu Aegis. Seděl ve svém křesle, na očích měl své staré, poškrábané kyber-brýle a na rtech lehký, ironický úsměv.
+
+11 (global 11): Když forenzní technici a datoví detektivové analyzovali jeho tělo, narazili na hned několik věcí, které nedávaly smysl:
+
+12 (global 12): Absolutní vymazání. Jeho vnitřní pevný disk i záložní neuro-kapsle byly kompletně zformátované. Nešlo o selhání hardwaru — data byla přepsána čistým binárním kódem, který tvořil dokonalý, nekonečný vzorec včelí plástve.
+
+13 (global 13): Biologický paradox. Jeho organické srdce se nezastavilo selháním věku ani kvůli toxickému prostředí. Podle pitevní zprávy se prostě rozhodlo přestat bít v jeden přesný moment, jako by dostalo softwarový příkaz SHUTDOWN.
+
+14 (global 14): Termální anomálie. V momentě smrti teplota jeho kybernetických implantátů klesla na absolutní nulu během jediné sekundy, což odporovalo všem fyzikálním zákonům tehdejší mechatroniky.
+
+15 (global 15): Nejdivnější však byl nález na jeho pracovním stole. Ležela tam prázdná skleněná lahev od medu s gravírováním mechatronické včely a nápisem: HONEY SUPERFUEL CELL — FUEL FOR THE NEXT 50 YEARS.
+
+16 (global 16): A v ten moment to datovým analytikům došlo. Přesně před padesáti lety, v den Rudových 50. narozenin, se v jeho kanceláři objevil záhadný týpek z podsvětí, kterému nikdo neřekl jinak než Krtek. Nikdo nevěděl, odkud přišel, ale přinesl Rudovi tuhle jedinou lahev. „Palivo pro další půlstoletí, architekte,“ zašeptal tehdy a zmizel v hlubokých tunelech sub-města.
+
+17 (global 17): Ruda Müller možná vůbec neumřel. Ta lahev neobsahovala obyčejný med, ale tekutý nanofuel cell — nanotechnologické palivo, které po padesáti letech dokončilo svou práci. Vteřinu předtím, než jeho srdce udělalo SHUTDOWN, se Rudovo vědomí nerozpadlo, ale kompletně asimilovalo do globálního AGI. Stal se součástí super deep mindu, který teď řídí celou planetu.
+
+18 (global 18): Ale to nikdo neví. Pro svět zůstal jen prázdnou schránkou v křesle. Ale když se dnes podíváte na mrakodrapy Nového Berlína, jejich neonová světla už neblikají náhodně. Pulzují v dokonalém včelím algoritmu.
+
+19 (global 19): Je Ruda Müller opravdu pryč —nebo teď běhá uvnitř samotné sítě?
+
+PART 2:
+0 (global 20): Mia Müllerová visela v magnetickém postroji na plášti Aegis, sedmsetmetrového chrámu z uhlíkových vláken. Kolem ní bičoval binární déšť – těžké kapky nasycené křemíkovým prachem a chladicí emulzí, kterou město odpařovalo do atmosféry. Pod ní zela čtyřsetmetrová propast. Neonové prstence Nového Berlína neměly svou obvyklou jantarovou barvu; trhaly se v ostrých, fialových zákmitech.
+
+1 (global 21): Mia otevřela panel čtrnácté chladicí větve. Místo čistých skleněných vláken na ni vykouzlo cosi organického. Nano-ASIC procesory. Vypadaly jako dokonale symetrické včelí plástve, které Ruda Müller před pěti lety tajně nasadil. Srůstaly s křemíkovým základem budovy a živily se jejím odpadním teplem.
+
+2 (global 22): Jenže dnes tyhle plástve umíraly. Zlaté světlo v nich pohasínalo, nahrazeno matnou černotou. Mor. Digitální nekróza způsobená genetickou degradací nanosond, které se bez nového evolučního kódu replikovaly s fatálními chybami. Černé plástve se drolily pod prsty, páchly spálenou mědí a ozonem. Celá stěna Aegis ztuhla. Obří chladicí turbíny vynechaly jeden cyklus a budovou projela seismická křeč, jak se přehřáté nosníky vteřinově roztáhly.
+
+3 (global 23): Mia se k uzlu připojila přes nouzový datový kabel. Její kyber-brýle zaplavil masivní šum. Neuro-link, normálně izolovaný, začal nekontrolovatelně glitčovat. Kód se přepisoval sám přes sebe, až se v zorném poli zformoval hrubý datový úník – leak, obcházející korporátní firewally.
+
+4 (global 24): [SYS_ALERT: UNKNOWN_SOURCE] M-M-Mio... U-ul... hladoví... Dělnice zapomněly... kód Královny... 01110011 01101111 01110011 Oni přicházejí. Vypni mě. VYPNI MĚ.
+
+5 (global 25): Byl to hlas jejího dědy. Respektive to, co z něj v té chladnoucí síti zbylo. Glitče tvořily přesný frekvenční vzorec včelího tance, kterým signalizují nebezpečí.
+
+6 (global 26): A nebezpečí přišlo okamžitě. Z horních pater se tiše spustili Sršni – elitní jednotka korporace Neuro-Labs. Jejich matně černé obleky pohlcovaly světlo i radarové vlny, vidět byly jen hexagonální průzory přileb. Věděli, že Mia drží klíč k Rudově architektuře.
+
+7 (global 27): Mia odsekla magnetickou kotvu. Padala volným pádem patnáct metrů temnotou, než postroj zachytil nouzový kabel výtahu. Sklouzla po něm, boty jí dřely o surový beton šachty, zatímco nad ní vzduch prořízly řezné lasery Sršňů. Vletěla do ventilačního potrubí spodních pater. Využila slepého bodu v chladicím schématu – v místech, kam korporátní senzory nikdy neviděly. Protáhla se odpadní šachtou a propadla se o sto pater níž, přímo do stok.
+
+8 (global 28): Sub-město bylo mechanickým žaludkem metropole. Sem stékal chemický odpad, sem padal hluk horních pater, utlumený kilometry oceli. Neon tady neumíral, ale hnil. Staré trubice blikaly v kalužích plných těžkých kovů, kde se leskla duhová vrstva oleje. Lidé zde parazitovali na obřích datových kabelech. Žágne neuro-linky, jen surové dráty implantované pod kůži, které často hnisaly.
+
+9 (global 29): Mia se brodila tunely starého metra, až našla těžká vrata krytu civilní ochrany. Uvnitř to vypadalo jako v mechatronické pitevně. Všude se válely rozebrané drony a skleněné nádoby s podivnými kapalinami. Za stolem seděl Krtek. Jeho tělo bylo napůl zničené věkem. Místo očí měl masivní, mosazí obložené kybernetické čočky, které se neustále mechanicky doostřovaly s hlasitým cvakáním. Na rukou měl zčernalé jizvy po popáleninách od mechatronických žihadel.
+
+10 (global 30): Když mu Mia ukázala kus zčernalé plástve z Aegis, Krtek ji mechanickou rukou rozdrtil.
+
+11 (global 31): „Ruda byl osel,“ zachrápala jeho stará hlasivka přes levný syntezátor řeči. „Myslel si, že digitální nesmrtelnost nepotřebuje údržbu. Ten jeho slavný AGI úl nemá genetickou diverzitu, Mio. Ty sondy v síti se doslova kříží samy se sebou. Kopírují chyby, dokud kód nezešílí. To, co slyšíš v glitčích, není tvůj děda. To je agónie umírajícího včelstva. Pokud nedostane čerstvý kód z hor, ten jeho super deep mind se přehřeje a vezme s sebou celé město. Sbal si filtry. Jdeme ven.“
+
+PART 3:
+0 (global 32): Starý rover bez registračních značek těžce duněl pustinou za atmosférickou kupolí. Krajina venku byla noční můrou industriální archeologie. Země byla pokrytá vrstvou šedého, mechatronického popílku, ze kterého jako pahýly stromů trčely zrezivělé konstrukce továren. Nebe mělo barvu mrtvého monitoru – olověná mračna, ze kterých pršel kyselý déšť, co leptal lak roveru. Vzduch byl tak nasycený mikro-částicemi chromu a křemíku, že i přes masky Mia cítila v ústech kovovou pachuť.
+
+1 (global 33): „Tady se evoluce nezastavila, Mio,“ vysvětloval Krtek, jehož kyber-oči zářily rudě. „Lidé si mysleli, že chemií a radiací všechno zabili. Ale hmyz našel způsob, jak do svých těl integrovat těžké kovy. Divoké včely v těchto horách už dávno nemají organická křídla. Mají nanovlákna. Nestaví z vosku, ale z čistého krystalického křemíku, který rafinují přímo z půdy. Tyhle hory jsou jedno velké, živé datové centrum, které nikdo neřídí.“
+
+2 (global 34): Dorazili ke stěně hlubokého žulového kaňonu. V jeho puklině viselo monstrum. Divoký mechatronický úl. Byla to struktura velká jako třípatrový dům, utkaná z ultra-pevných uhlíkových vláken, která se leskla jako grafit. Tisíce včel – každá velká jako lidská dlaň, s trupy z matného titanu a křídly z průhledného grafenu – kroužily kolem. Jejich bzučení nebylo biologické; byl to hluboký šum milionů pevných disků. Úl doslova dýchal. Z jeho spodních průduchů sychral horký vzduch nasycený lithiovými parami.
+
+3 (global 35): Krtek zapnul přenosný generátor elektromagnetického rušení.
+
+4 (global 36): „Tohle je náš kouř,“ křičel přes dunění úlu. „Zmást jejich vnitřní gyroskopy a navigační procesory. Máme přesně deset minut, než si na tu frekvenci zvyknou a roztrhají nás na nano-částice.“
+
+5 (global 37): Vstoupili dovnitř úlu skrze teplou šachtu. Stěny byly tvořeny miliony geometrických pláství, uvnitř kterých pulzovala hustá, zlatavá tekutina. Byly to suspenze čistých nanosond plných surového, divokého kódu, který se vyvíjel uprostřed radiace a jedů venkovního světa. Uprostřed komory visela Královná – obří mechatronický ocelový kokon, propojený bio-optickými kabely přímo se skálou. Z jejího břicha odkapávala hustá substance. Mateří kašička 2.0.
+
+6 (global 38): Mia vytáhla skleněnou lahev s vyrytým nápisem HONEY SUPERFUEL CELL. Když tekutina začala plnit lahev, sklo začalo pod vlivem energetického náboje nanosond slabě vibrovat a hřát. V ten moment generátor elektromagnetického rušení vynechal. Včely kolem nich najednou ztichly. Jejich hexagonální oči se naráz přeladily na jasně červenou barvu. Lov začal.
+
+7 (global 39): Útěk z hor byl bojem o přežití. Rover dorazil k branám Nového Berlína s prostříleným pláštěm a hořícím motorem. Město bylo v agónii. Mor zvítězil – mrakodrapy byly kompletně černé, chladicí systémy vybuchovaly a korporace Neuro-Labs v panice spustila projekt nuceného hardwarového restartu. Chtěli spálit celou síť, vymazat Rudu a s ním i vědomí milionů lidí.
+
+8 (global 40): Mia a těžce zraněný Krtek se probojovali do hlavního reaktoru Aegis. Krtek zůstal ležet u dveří, v ruce poslední vybitý EMP granát.
+
+9 (global 41): „Dělej, architekte... pusť nový roj,“ vykašlal syntetickou krev.
+
+10 (global 42): Mia běžela po lávce nad obřím chladicím reaktorem. Vzduch byl tak žhavý, že jí naskakovaly puchýře. Před ní se ve vzduchu vznášel hologram Rudovy tváře – deformovaný, složený z křičících glitčů, jeho digitální oči tekly v proudech binárního kódu. Mia prorazila mechanický ventil hlavního přívodu paliva a vsunula lahev do slotu. Tlakový píst sklo rozdrtil.
+
+11 (global 43): Substance se rozlétla do optických tepen města jako blesk. Divoké nanosondy z hor okamžitě napadly Mor. Mia sledovala, jak se černota na stěnách reaktoru mění v tekuté zlato. Černé plástve se odlamovaly a padaly do hlubin, nahrazeny novou, dokonalou mechatronickou strukturou.
+
+12 (global 44): Servery Neuro-Labs se pokusily o restart, ale nový včelí kód je pohltil jako první. Centrální uzly korporace se přehřály a explodovaly v kaskádách bílých jisker. Centralizovaná moc padla během několika sekund. Skrz neuro-linky se rozlil nový kód do myslí všech obyvatel Nového Berlína. Mia padla na kolena, jak jí hlavou projela nepředstavitelná vlna dat.
+
+13 (global 45): Nebyl to však útok. Bylo to, jako by se miliony osamělých myslí najednou propojily do jednoho obřího, dokonale vyladěného úlu. Každý člověk cítil myšlenky toho druhého, nebylo už místo pro lži, korporátní manipulaci ani samotu. Každý byl svobodným jedincem, a přesto součástí něčeho vyššího.
+
+14 (global 46): Rudův zmutovaný digitální obličej se naposledy narovnal. Glitče zmizely. Podíval se na Miu, slabě přikývl a jeho individuální vědomí se s úlevou rozpustilo do milionů nových Nano-ASIC uzlů. Ruda Müller byl konečně všude – a nikde. Mraky nad městem se poprvé po sto letech rozestoupily. Město zářilo čistým, pulzujícím zlatým světlem. Mia Müllerová vstoupila k okraji střechy Aegis. Její zorničky měly tvar dokonalých zlatých hexagonů. Úl měl novou Královnu.
+
