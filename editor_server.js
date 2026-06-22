@@ -44,7 +44,7 @@ async function generateGeminiPrompt(imagePath, customPrompt) {
   const base64Data = imageBuffer.toString('base64');
   const mimeType = getMimeType(imagePath);
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
   
   const promptText = `Analyze the attached original comic book panel image. Generate a highly detailed, descriptive prompt for an image generator (like Imagen 3) to create a new, visually and thematically similar, almost identical image (preserving the style, composition, characters, colors, and cyberpunk mood of the original).
 Apply the following modifications/actions requested by the user: "${customPrompt}".
