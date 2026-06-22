@@ -92,6 +92,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const COUNTDOWN_SECONDS = 7; // static-poster countdown before comic/film starts
   let countdownTimer = null;
   const POSTERS = { 1: "avatar/ruda/ruda.png", 2: "avatar/mia/mia.png", 3: "avatar/krtek/krtek.png" };
+  const POSTER_HERO_DATA = {
+    1: { rom: "DÍL I", title: "ARCHITEKT<br><span class=\"ch-title-em\">PRÁZDNOTY</span>", meta: "Čte: Ruda Müller · New Berlin · MMXXVI" },
+    2: { rom: "DÍL II", title: "VČELÍ MOR<br><span class=\"ch-title-em\">A NEURO-NEKRÓZA</span>", meta: "Čte: Mia Müllerová · New Berlin · MMXXVI" },
+    3: { rom: "DÍL III", title: "MATEŘÍ<br><span class=\"ch-title-em\">KAŠIČKA 2.0</span>", meta: "Čte: Krtek · Hory Starého Světa · MMXXVI" },
+  };
 
   // --- DOM ELEMENTS ---
   const _dummy = document.createElement("div");
@@ -248,25 +253,42 @@ document.addEventListener("DOMContentLoaded", () => {
       '<h2 class="ap-atitle" id="audio-title"></h2><span class="ap-anarr" id="audio-narr"></span></div>' +
       '<div class="ap-matrixwrap"><canvas class="ap-matrix"></canvas>' +
       '<span class="ap-draghint">⟲ táhni — vodorovně otáčí, svisle naklání</span></div>' +
-      '<button class="ap-bigplay" id="audio-bigplay" title="Přehrát / Pauza / Znovu">' +
-      '<svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
-      '<svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg></button>' +
       '<div class="ap-words" id="audio-words"></div>' +
       '<div class="ap-actrls">' +
       '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span>' +
       '<span id="audio-status">Připraveno k přehrání</span></div></div>';
     document.body.appendChild(el);
     audioStageEl = el;
-    const bigPlay = el.querySelector("#audio-bigplay");
-    if (bigPlay) bigPlay.addEventListener("click", () => {
-      // na konci → znovu od začátku; jinak play/pauza
+    return el;
+  };
+
+  // Globální velké play/pauza tlačítko přes hlavní content (audio/film/komiks/text).
+  // Auto-hide jako u video přehrávače: při přehrávání skryté, objeví se na pohyb/dotyk
+  // (a ukáže pauzu); při pauze (i úvod) je trvale vidět play. Klik na konci = znovu.
+  let gppUiTimer = null;
+  const setupGlobalPlayButton = () => {
+    if (document.getElementById("gpp")) return;
+    const gpp = document.createElement("button");
+    gpp.id = "gpp"; gpp.className = "gpp"; gpp.title = "Přehrát / Pauza / Znovu";
+    gpp.innerHTML =
+      '<svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
+      '<svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
+    document.body.appendChild(gpp);
+    gpp.addEventListener("click", () => {
       if (audio && state.duration && audio.currentTime >= state.duration - 0.3) {
         try { audio.currentTime = 0; } catch (e) {}
       }
       togglePlay();
     });
-    return el;
+    const ping = () => {
+      document.body.classList.add("ui-active");
+      if (gppUiTimer) clearTimeout(gppUiTimer);
+      gppUiTimer = setTimeout(() => document.body.classList.remove("ui-active"), 2200);
+    };
+    ["mousemove", "touchstart", "pointerdown", "wheel", "keydown"].forEach(ev =>
+      window.addEventListener(ev, ping, { passive: true }));
   };
+
   const updateAudioStage = (partNum) => {
     if (!audioStageEl) return;
     loadSpectrum(partNum);
@@ -693,11 +715,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Update poster hero content
-    const POSTER_HERO_DATA = {
-      1: { rom: "DÍL I", title: "ARCHITEKT<br><span class=\"ch-title-em\">PRÁZDNOTY</span>", meta: "Čte: Ruda Müller · New Berlin · MMXXVI" },
-      2: { rom: "DÍL II", title: "VČELÍ MOR<br><span class=\"ch-title-em\">A NEURO-NEKRÓZA</span>", meta: "Čte: Mia Müllerová · New Berlin · MMXXVI" },
-      3: { rom: "DÍL III", title: "MATEŘÍ<br><span class=\"ch-title-em\">KAŠIČKA 2.0</span>", meta: "Čte: Krtek · Hory Starého Světa · MMXXVI" },
-    };
     const phd = POSTER_HERO_DATA[partNum] || POSTER_HERO_DATA[1];
     ['poster-ch-rom', 'poster-ch-title', 'poster-ch-meta'].forEach((id, i) => {
       const el = document.getElementById(id);
@@ -1007,13 +1024,19 @@ document.addEventListener("DOMContentLoaded", () => {
       // Prepend an intro title card (built from the part's poster + title)
       if (!grid.querySelector(".comic-title-card")) {
         const t = COMIC_TITLES[p];
+        const phd = POSTER_HERO_DATA[p];
         const card = document.createElement("div");
         card.className = "comic-title-card";
         card.innerHTML =
           `<img class="ctc-img" src="${t.img}" alt="">` +
           `<div class="ctc-overlay"></div>` +
-          `<div class="ctc-sub">${t.sub}</div>` +
-          `<div class="ctc-title">${t.title}</div>`;
+          `<div class="preview-poster-content ch-poster-hero" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3; text-align: center; background: none !important;">` +
+            `<div class="ch-eyebrow">// AUDIOKNIHA &middot; RUDA-50</div>` +
+            `<div class="ch-rom">${phd.rom}</div>` +
+            `<div class="ch-title poster-ch-title">${phd.title}</div>` +
+            `<div class="ch-meta">${phd.meta}</div>` +
+            `<div class="ch-line"></div>` +
+          `</div>`;
         grid.insertBefore(card, grid.firstChild);
       }
 
@@ -1110,6 +1133,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 7. Setup UI controls listeners
     setupUIListeners();
+    setupGlobalPlayButton(); // globální velké play/pauza tlačítko (audio/film/komiks/text)
 
     // 8. Setup characters cards click switch
     document.querySelectorAll(".character-card").forEach(card => {
@@ -1446,12 +1470,13 @@ document.addEventListener("DOMContentLoaded", () => {
       playIcon.textContent = "❚❚";
       setBarPlayIcon(true);
       setAudioPlaying(true);
+      document.body.classList.add("is-playing"); // globální play/pauza overlay (auto-hide)
       if (playBtnWrapper) playBtnWrapper.classList.add("playing");
       updateStatus();
-      
-      // Sync video state
-      if (currentVideoEl) currentVideoEl.play().catch(() => {});
-      if (currentPrevEl) currentPrevEl.play().catch(() => {});
+
+      // Obnov přehrávání videí Z AKTUÁLNÍHO místa (pause je jen zmrazila, nevrací na začátek).
+      // Vč. fullscreen videa (film) — jinak se po pauze neobnoví.
+      [currentVideoEl, currentPrevEl, currentFsEl].forEach(v => { try { if (v) v.play().catch(() => {}); } catch (e) {} });
     });
 
     audio.addEventListener("pause", () => {
@@ -1459,8 +1484,12 @@ document.addEventListener("DOMContentLoaded", () => {
       playIcon.textContent = "▶";
       setBarPlayIcon(false);
       setAudioPlaying(false);
+      document.body.classList.remove("is-playing"); // pauza → overlay zase ukáže play
       if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
       updateStatus();
+      // Pauzni i videa (film/preview) — jinak hrají dál i při pauze audia.
+      [currentVideoEl, nextVideoEl, currentPrevEl, nextPrevEl, currentFsEl, nextFsEl]
+        .forEach(v => { try { if (v) v.pause(); } catch (e) {} });
     });
 
     audio.addEventListener("ended", () => {
