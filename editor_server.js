@@ -82,10 +82,19 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(buffer));
 }
 
-// 4. API endpoint to list all panels by parsing index.html
+// Helper to resolve comic image path (dil_1, dil_2, dil_3)
+function getComicImagePath(filename) {
+  const baseName = path.basename(filename);
+  let partFolder = 'dil_1';
+  if (baseName.startsWith('02_')) partFolder = 'dil_2';
+  if (baseName.startsWith('03_')) partFolder = 'dil_3';
+  return path.join(__dirname, 'img', 'comic', partFolder, filename);
+}
+
+// 4. API endpoint to list all panels by parsing index_v2.html
 app.get('/api/panels', (req, res) => {
   try {
-    const indexPath = path.join(__dirname, 'index.html');
+    const indexPath = path.join(__dirname, 'index_v2.html');
     const htmlContent = fs.readFileSync(indexPath, 'utf8');
     
     // Parse all paragraphs to build a mapping of data-i -> text
@@ -259,7 +268,7 @@ app.post('/api/approve', (req, res) => {
   }
 
   const baseName = path.basename(filename, path.extname(filename)); // e.g. 01_01_01
-  const targetImagePath = path.join(__dirname, 'img', 'screenshots', filename);
+  const targetImagePath = getComicImagePath(filename);
   const tempImagePath = path.join(TEMP_DIR, `${baseName}_temp.jpg`);
   const tempVideoPath = path.join(TEMP_DIR, `${baseName}_temp.mp4`);
 
@@ -339,7 +348,7 @@ app.post('/api/crop', (req, res) => {
   }
 
   const baseName = path.basename(filename, path.extname(filename));
-  const targetImagePath = path.join(__dirname, 'img', 'screenshots', filename);
+  const targetImagePath = getComicImagePath(filename);
   
   // Clean base64 prefix if present
   const base64Data = imageData.replace(/^data:image\/\w+;base64,/, "");
