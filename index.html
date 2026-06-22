@@ -13,55 +13,10 @@
   
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="style.css?v=1.5">
-  <link rel="stylesheet" href="design.css?v=1.4">
+  <link rel="stylesheet" href="design.css?v=1.6">
 </head>
 <body>
   
-  <!-- Welcome/Intro Version Selection Overlay -->
-  <div id="intro-selector-overlay" class="intro-selector-overlay">
-    <div class="intro-selector-container">
-      <div class="intro-selector-header">
-        <div class="intro-selector-subtitle">// INICIALIZACE SYSTÉMU · RUDA-50</div>
-        <h1 class="intro-selector-title">ARCHITEKT PRÁZDNOTY</h1>
-        <p class="intro-selector-description">Zvolte preferovaný režim pro přehrávání této audio-legendy:</p>
-      </div>
-      
-      <div class="version-cards">
-        <div class="version-card text-card" data-mode="text">
-          <div class="card-glow"></div>
-          <div class="card-icon">📖</div>
-          <div class="card-title">// TEXTOVÁ VERZE</div>
-          <div class="card-desc">Klasické čtení doplněné o ilustrace a synchronizovaný přehrávač na boku.</div>
-          <button class="card-btn">VSTOUPIT</button>
-        </div>
-        
-        <div class="version-card comic-card" data-mode="comic">
-          <div class="card-glow"></div>
-          <div class="card-icon">🎨</div>
-          <div class="card-title">// KOMIKSOVÁ VERZE</div>
-          <div class="card-desc">Komiksové panely, kde každá věta příběhu odpovídá unikátnímu ilustrovanému okénku.</div>
-          <button class="card-btn">VSTOUPIT</button>
-        </div>
-        
-        <div class="version-card movie-card" data-mode="movie">
-          <div class="card-glow"></div>
-          <div class="card-icon">🎬</div>
-          <div class="card-title">// FILMOVÁ VERZE</div>
-          <div class="card-desc">Plnohodnotný filmový zážitek na celou obrazovku se synchronizovaným audiem a titulky.</div>
-          <button class="card-btn">VSTOUPIT</button>
-        </div>
-
-        <div class="version-card audio-card" data-mode="audio">
-          <div class="card-glow"></div>
-          <div class="card-icon">♪</div>
-          <div class="card-title">// AUDIO VERZE</div>
-          <div class="card-desc">Audiokniha s 3D prostorovým ekvalizérem — čistý poslech bez obrazu, jen zvuk a světlo.</div>
-          <button class="card-btn">VSTOUPIT</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Background images for rotating slideshow -->
   <div class="bg-container" id="bg-container">
     <img src="img/bg1.jpg" alt="" class="bg-image active">
@@ -3702,6 +3657,10 @@
   <!-- Fullscreen video overlay with subtitles -->
   <div id="fullscreen-overlay" class="fullscreen-overlay">
     <div class="fullscreen-close-btn" id="fullscreen-close-btn">✕ ZAVŘÍT // CLOSE</div>
+    <div class="ap-filmtop" id="film-hud">
+      <span class="film-hud-title" id="film-hud-title">// ARCHITEKT PRÁZDNOTY</span>
+      <span class="ap-filmhud" id="film-hud-scene">SCÉNA 1 / 20</span>
+    </div>
     <div class="fullscreen-screen">
       <video id="fs-video-1" muted playsinline class="fs-video"></video>
       <video id="fs-video-2" muted playsinline class="fs-video"></video>
@@ -3725,6 +3684,6 @@
   <audio id="audio-element" src="audio/dil_1.mp3" preload="metadata"></audio>
   
   <!-- JavaScript logic -->
-  <script src="app.js?v=2.4"></script>
+  <script src="app.js?v=2.5"></script>
 </body>
 </html>

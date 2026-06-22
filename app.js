@@ -32,8 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
     activeVideoSrc: "",
     autoplayAttempted: false,
     activePart: 1,
-    decryptedPart2: localStorage.getItem("decrypted_part2") === "true",
-    decryptedPart3: localStorage.getItem("decrypted_part3") === "true",
+    decryptedPart2: true, // UX jako reference: díly se přepínají okamžitě, bez dekrypční brány
+    decryptedPart3: true,
     fullscreenMode: false,
     comicMode: false,
     audioMode: false
@@ -99,6 +99,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const EP_TITLES = { 1: { rom: "I", t: "ARCHITEKT PRÁZDNOTY" }, 2: { rom: "II", t: "VČELÍ MOR A NEURO-NEKRÓZA" }, 3: { rom: "III", t: "MATEŘÍ KAŠIČKA 2.0" } };
   const updateBarEpTitle = (partNum) => {
     const e = EP_TITLES[partNum]; if (barEpTitle && e) barEpTitle.innerHTML = `<b>DÍL ${e.rom}</b> · ${e.t}`;
+  };
+  // Film HUD: // NÁZEV  +  SCÉNA x / N  (scéna = aktivní odstavec z N)
+  const updateFilmHud = (idx) => {
+    const sc = document.getElementById("film-hud-scene");
+    const ti = document.getElementById("film-hud-title");
+    if (sc) sc.textContent = `SCÉNA ${Math.max(1, (parseInt(idx) || 0) + 1)} / ${N || 1}`;
+    if (ti) { const e = EP_TITLES[state.activePart]; if (e) ti.textContent = `// ${e.t}`; }
   };
 
   // --- COUNTDOWN INTRO (static poster + 7s countdown before comic/film) ---
@@ -414,6 +421,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     N = paras.length;
+    updateFilmHud(-1);
     state.curIdx = -1;
     state.duration = 0;
     state.loaded = false;
@@ -468,14 +476,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
 
-      if (state.comicMode || state.fullscreenMode) {
-        // Comic & film open on a static poster with a ~7s countdown before the
-        // first scene (and the audio) begins.
-        if (state.comicMode) scrollComicToStart(partNum);
-        runCountdown(partNum, beginPlayback);
-      } else {
-        beginPlayback();
-      }
+      // UX jako reference: žádný countdown — komiks/film/text startují okamžitě.
+      if (state.comicMode) scrollComicToStart(partNum);
+      beginPlayback();
     }
   };
 
@@ -735,6 +738,8 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("wheel", registerUserInteraction, { passive: true });
     window.addEventListener("touchmove", registerUserInteraction, { passive: true });
     window.addEventListener("mousedown", registerUserInteraction, { passive: true });
+    // Tažení scrollbaru (držené tlačítko) je také user-intent → udrží seek živý.
+    window.addEventListener("mousemove", (e) => { if (e.buttons) registerUserInteraction(); }, { passive: true });
     window.addEventListener("keydown", (e) => {
       const scrollKeys = ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Space", "Home", "End"];
       if (scrollKeys.includes(e.key)) {
@@ -1203,6 +1208,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Always run highlight update (including comic panels inside paragraphs)
     highlightParagraph(activeIdx);
 
+    // Film SCÉNA x/N HUD
+    updateFilmHud(activeIdx);
+
     // 3. Karaoke highlight inside the active paragraph
     highlightWords(activeIdx, displayTime);
   };
@@ -1349,8 +1357,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const activePanel = matchingPanels[activePanelIdx];
         if (activePanel) {
           activePanel.classList.add("active");
-          // Horizontal scrolling is driven continuously by the rAF loop
-          // (comicScrollTick), so we only need to mark the active panel here.
+          // Scrolling is driven continuously by the rAF loop (syncScrollTick,
+          // cue-anchored), so we only need to mark the active panel here.
         }
       }
     }
