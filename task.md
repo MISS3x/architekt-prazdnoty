@@ -8,10 +8,10 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **51 / 59 done (86%)**
+## 📊 Progress: **59 / 59 done (100%)**
 
 ```
-######################################################################################--------------  86%
+####################################################################################################  100%
 ```
 
 | Section | Done | Total | % |
@@ -23,7 +23,7 @@
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
 | Comic Editor | 10 | 10 | 100% |
-| HUD & Editor Mask | 0 | 8 | 0% |
+| HUD & Editor Mask | 8 | 8 | 100% |
 
 ---
 
@@ -92,11 +92,11 @@
 - [x] **#51** — Opravit kešování a vynutit okamžitou aktualizaci obrázků v levém sloupci a detailu panelu po uložení ořezu nebo schválení verze ✅ completed
 
 ## HUD & Editor Mask
-- [ ] **#52** — Hide Pause button overlay during playback and add a text label in `design.css`
-- [ ] **#53** — Add screen-tap to play/pause toggle in `app.js` and add text label in `setupGlobalPlayButton`
-- [ ] **#54** — Add Aspect Ratio Mask styles to `design.css` for `.comic-panel[data-aspect]`
-- [ ] **#55** — Add the 4th tab UI for Mask Mode in `comic_editor.html`
-- [ ] **#56** — Implement mask preview and save function in `comic_editor.html`
-- [ ] **#57** — Parse and return `aspect` in `/api/panels` in `editor_server.js`
-- [ ] **#58** — Implement `/api/save-mask` POST endpoint in `editor_server.js`
-- [ ] **#59** — Commit and push changes to git origin
+- [x] **#52** — Hide Pause button overlay during playback and add a text label in `design.css` ✅ completed
+- [x] **#53** — Add screen-tap to play/pause toggle in `app.js` and add text label in `setupGlobalPlayButton` ✅ completed
+- [x] **#54** — Add Aspect Ratio Mask styles to `design.css` for `.comic-panel[data-aspect]` ✅ completed
+- [x] **#55** — Add the 4th tab UI for Mask Mode in `comic_editor.html` ✅ completed
+- [x] **#56** — Implement mask preview and save function in `comic_editor.html` ✅ completed
+- [x] **#57** — Parse and return `aspect` in `/api/panels` in `editor_server.js` ✅ completed
+- [x] **#58** — Implement `/api/save-mask` POST endpoint in `editor_server.js` ✅ completed
+- [x] **#59** — Commit and push changes to git origin ✅ completed
