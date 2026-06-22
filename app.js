@@ -36,7 +36,23 @@ document.addEventListener("DOMContentLoaded", () => {
     decryptedPart3: true,
     fullscreenMode: false,
     comicMode: false,
-    audioMode: false
+    audioMode: false,
+    restoring: false
+  };
+
+  const saveState = () => {
+    if (state.restoring) return;
+    try {
+      localStorage.setItem("ap_active_part", state.activePart);
+      localStorage.setItem("ap_current_time", state.currentTime);
+      let mode = "text";
+      if (state.comicMode) mode = "comic";
+      else if (state.audioMode) mode = "audio";
+      else if (state.fullscreenMode) mode = "movie";
+      localStorage.setItem("ap_active_mode", mode);
+    } catch (e) {
+      console.warn("Could not save state to localStorage:", e);
+    }
   };
 
   // All video backgrounds to cycle through (using valid Part 1 generated clips as base)
@@ -70,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let N = 0;
   let paras = [];
   let lastUserScrollTime = 0;
+  let lastSavedTime = 0;
   let pendingPlayHandler = null;
   const COUNTDOWN_SECONDS = 7; // static-poster countdown before comic/film starts
   let countdownTimer = null;
@@ -180,6 +197,27 @@ document.addEventListener("DOMContentLoaded", () => {
   let audioMicOn = false;
   let audioMatrixStop = null;
 
+  // Předpočítané spektrum MP3 (audio/dil_N.spectrum.json) — pohon equalizeru
+  // bez mikrofonu a bez živého Web Audio na <audio> (zvuk tak nikdy neztichne).
+  const spectrum = { fps: 20, bands: 32, frames: 0, data: null };
+  let spectrumPart = 0;
+  const loadSpectrum = (partNum) => {
+    if (spectrumPart === partNum && spectrum.data) return;
+    spectrumPart = partNum;
+    spectrum.data = null;
+    fetch(`audio/dil_${partNum}.spectrum.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!j || spectrumPart !== partNum) return;
+        spectrum.fps = j.fps; spectrum.bands = j.bands; spectrum.frames = j.frames;
+        const bin = atob(j.data);
+        const u = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        spectrum.data = u;
+      })
+      .catch(() => {});
+  };
+
   // Analyzér nad PŘEHRÁVANÝM <audio> (MP3) — plástev reaguje na reálné audio bez mikrofonu.
   // createMediaElementSource lze volat jen jednou; audio pak teče přes analyser → destination.
   const ensureMediaAnalyser = () => {
@@ -222,6 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const updateAudioStage = (partNum) => {
     if (!audioStageEl) return;
+    loadSpectrum(partNum);
     const m = AUDIO_META[partNum] || AUDIO_META[1];
     const kick = document.getElementById("audio-kick");
     const title = document.getElementById("audio-title");
@@ -332,30 +371,32 @@ document.addEventListener("DOMContentLoaded", () => {
       else { angle += vel + (play ? 0.0042 : 0.0011); vel *= 0.92; }
       t += play ? 0.03 : 0.014;
 
-      // Zdroj spektra: mikrofon (má-li přednost) → jinak reálné audio z MP3
-      // (media-element analyser) při přehrávání → jinak simulace.
-      const fx = (audioMicOn && audioFx.analyser) ? audioFx
-        : ((mediaFx.analyser && state.playing) ? mediaFx : null);
-      const real = !!fx;
-      let bins = 0;
-      if (real) { fx.analyser.getByteFrequencyData(fx.data); bins = fx.data.length; }
+      // Zdroj pásem (0..255): mikrofon (přednost) → jinak PŘEDPOČÍTANÉ spektrum MP3
+      // při přehrávání → jinak null (simulace). Žádný živý Web Audio na <audio>.
+      let bandsArr = null, nb = 0, peak = 0;
+      if (audioMicOn && audioFx.analyser) {
+        audioFx.analyser.getByteFrequencyData(audioFx.data);
+        bandsArr = audioFx.data; nb = bandsArr.length;
+      } else if (state.playing && spectrum.data && spectrum.frames > 0) {
+        const fr = Math.min(spectrum.frames - 1, Math.max(0, Math.floor(audio.currentTime * spectrum.fps)));
+        bandsArr = spectrum.data.subarray(fr * spectrum.bands, fr * spectrum.bands + spectrum.bands);
+        nb = spectrum.bands;
+      }
+      if (bandsArr) { for (let i = 0; i < nb; i++) if (bandsArr[i] > peak) peak = bandsArr[i]; peak /= 255; }
+      const real = !!bandsArr;
       const maxR = maxRad;
       for (let k = 0; k < HN; k++) {
         const hx = hexes[k], rad = hx.rad;
         let v;
         if (real) {
-          // Invert + sqrt-curve: edges → low-freq (bass, more energy); center → high-freq
-          const norm = Math.min(1, rad / maxR);             // 0 = center, 1 = edge; okraj (>maxR) ořež na 1
-          const invNorm = 1 - Math.sqrt(norm);              // 0..1
-          // bez ořezu by okrajové hexy daly záporný index → fx.data[bi] = undefined → NaN → pád draw smyčky
-          const bi = Math.max(0, Math.min(bins - 1, Math.floor(invNorm * bins * 0.7))); // low bins = bass
-          v = fx.data[bi] / 255;
-          // Softer power curve so bass reaches edges clearly
-          v = Math.pow(v, 0.85) * 1.35;
-          // Angular shimmer, stronger at edges
-          v *= 0.72 + 0.28 * Math.sin(hx.ang * 3 + t * 4);
-          // Edge hexes always have a minimum visible level
-          const edgeFloor = 0.04 + 0.10 * norm;            // 0.04 center … 0.14 edge
+          // STŘED = celková hlasitost (peak) → maxima a červená uprostřed; k okraji útlum.
+          const norm = Math.min(1, rad / maxR);             // 0 = střed, 1 = okraj
+          const bi = Math.max(0, Math.min(nb - 1, Math.floor(norm * norm * nb)));
+          const band = bandsArr[bi] / 255;
+          v = (0.7 * peak + 0.3 * band) * (1 - 0.6 * norm);
+          v = Math.pow(v, 0.9) * 1.3;
+          v *= 0.8 + 0.2 * Math.sin(hx.ang * 3 + t * 4);
+          const edgeFloor = 0.04 + 0.05 * (1 - norm);       // floor o něco vyšší ve středu
           v = Math.max(edgeFloor, Math.min(1, v));
         } else if (play) {
           // Simulation: waves radiate outward from center, edges stay alive
@@ -482,7 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const el = buildAudioStage();
     el.style.display = show ? "block" : "none";
     if (show) {
-      ensureMediaAnalyser();   // plástev reaguje na reálné MP3 (bez mikrofonu)
       resumeAudioCtx();
       updateAudioStage(state.activePart);
       setAudioPlaying(state.playing);
@@ -622,6 +662,18 @@ document.addEventListener("DOMContentLoaded", () => {
       teaserVid.src = getVideoPath(`video/teaser_${partNum}.mp4`);
       teaserVid.play().catch(e => console.log("Teaser autoplay prevented", e));
     }
+
+    // Update poster hero content
+    const POSTER_HERO_DATA = {
+      1: { rom: "DÍL I", title: "ARCHITEKT<br><span class=\"ch-title-em\">PRÁZDNOTY</span>", meta: "Čte: Ruda Müller · New Berlin · MMXXVI" },
+      2: { rom: "DÍL II", title: "VČELÍ MOR<br><span class=\"ch-title-em\">A NEURO-NEKRÓZA</span>", meta: "Čte: Mia Müllerová · New Berlin · MMXXVI" },
+      3: { rom: "DÍL III", title: "MATEŘÍ<br><span class=\"ch-title-em\">KAŠIČKA 2.0</span>", meta: "Čte: Krtek · Hory Starého Světa · MMXXVI" },
+    };
+    const phd = POSTER_HERO_DATA[partNum] || POSTER_HERO_DATA[1];
+    ['poster-ch-rom', 'poster-ch-title', 'poster-ch-meta'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = [phd.rom, phd.title, phd.meta][i];
+    });
     
 
     if (partNum === 1) {
@@ -750,6 +802,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (state.comicMode) scrollComicToStart(partNum);
       beginPlayback();
     }
+    saveState();
   };
 
   const loadCues = (partNum) => {
@@ -943,8 +996,62 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. Build the horizontal comic strip (intro title cards + wheel scrolling)
     setupComicStrip();
 
-    // Initialize Part 1
-    setPart(1, false);
+    // Restore or Initialize state
+    const savedPart = localStorage.getItem("ap_active_part");
+    const savedTime = localStorage.getItem("ap_current_time");
+    const savedMode = localStorage.getItem("ap_active_mode");
+
+    state.restoring = true;
+
+    const partToLoad = savedPart ? parseInt(savedPart) : 1;
+    setPart(partToLoad, false);
+
+    if (savedTime && audio) {
+      const timeVal = parseFloat(savedTime);
+      state.currentTime = timeVal;
+      const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
+      state.curIdx = getActiveIndex(displayTime);
+      
+      // Perform initial highlighting
+      onTimeUpdate();
+    }
+
+    if (savedMode) {
+      setActiveModeUI(savedMode);
+    } else {
+      setActiveModeUI("text");
+    }
+
+    if (savedTime && audio) {
+      const timeVal = parseFloat(savedTime);
+      
+      // Schedule instant snap as soon as DOM layout settles
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          snapViewToCurrentTime();
+          state.restoring = false;
+          lastUserScrollTime = 0;
+        });
+      });
+
+      // When audio is actually ready, restore the playback time
+      const onMetadataRestore = () => {
+        audio.removeEventListener("loadedmetadata", onMetadataRestore);
+        try {
+          audio.currentTime = timeVal;
+        } catch (e) {
+          console.warn("Failed to set audio.currentTime during restore:", e);
+        }
+      };
+
+      if (audio.readyState >= 1) {
+        onMetadataRestore();
+      } else {
+        audio.addEventListener("loadedmetadata", onMetadataRestore);
+      }
+    } else {
+      state.restoring = false;
+    }
 
     // 4. Attach paragraph click listeners (for calibration)
     allParas.forEach(p => {
@@ -1105,6 +1212,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (playerWrapperEl) playerWrapperEl.style.display = "none";
         showAudioStage(true); // 3D spatial equalizer
       }
+      saveState();
     };
 
     if (btnModeText) btnModeText.addEventListener("click", () => setActiveModeUI("text"));
@@ -1279,6 +1387,10 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("timeupdate", () => {
       state.currentTime = audio.currentTime;
       onTimeUpdate();
+      if (Math.abs(state.currentTime - lastSavedTime) >= 1) {
+        saveState();
+        lastSavedTime = state.currentTime;
+      }
     });
 
     audio.addEventListener("play", () => {
@@ -1586,6 +1698,8 @@ document.addEventListener("DOMContentLoaded", () => {
     state.currentTime = audio.currentTime;
     onTimeUpdate();
     centerActiveContent(false); // instant — obsah sleduje slider plynule i při tažení
+    saveState();
+    lastSavedTime = state.currentTime;
   };
 
   // Posun audio časové osy o jednu VĚTU kolečkem myši (dir: +1 vpřed, -1 zpět).
@@ -1609,6 +1723,8 @@ document.addEventListener("DOMContentLoaded", () => {
     state.currentTime = audio.currentTime;
     onTimeUpdate();             // okamžitá synchronizace slideru/scény/titulku (i při pauze)
     centerActiveContent();      // dorovnej text/komiks na aktuální čas
+    saveState();
+    lastSavedTime = state.currentTime;
   };
 
   // --- KARAOKE WORD HIGHLIGHT ---
@@ -1872,7 +1988,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const syncScrollTick = () => {
     comicRAF = requestAnimationFrame(syncScrollTick);
-    if (!state.playing || state.calibMode || state.fullscreenMode || state.audioMode) return;
+    if (state.restoring || !state.playing || state.calibMode || state.fullscreenMode || state.audioMode) return;
     if (Date.now() - lastUserScrollTime < AUTO_SCROLL_INACTIVITY_MS) return;
 
     const displayTime = Math.max(0, state.currentTime - 0.4);
@@ -2219,6 +2335,8 @@ document.addEventListener("DOMContentLoaded", () => {
       audio.pause();
       try { audio.currentTime = 0; } catch (e) {}
       state.curIdx = -1;
+      saveState();
+      lastSavedTime = 0;
     });
     if (barScrub) {
       const fracFromEvent = (e) => {
@@ -2237,6 +2355,11 @@ document.addEventListener("DOMContentLoaded", () => {
       barScrub.addEventListener("pointerup", endScrub);
       barScrub.addEventListener("pointercancel", endScrub);
     }
+    // Tlačítka ◀ ▶ — posun po větách (náhrada kolečka, hlavně pro mobil)
+    const btnPrev = document.getElementById("bar-prev");
+    const btnNext = document.getElementById("bar-next");
+    if (btnPrev) btnPrev.addEventListener("click", () => scrubByCue(-1));
+    if (btnNext) btnNext.addEventListener("click", () => scrubByCue(1));
 
     // Sync Mode Toggle
     if (btnSync) btnSync.addEventListener("click", toggleCalibration);
@@ -2414,6 +2537,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeSrc) {
       syncFullscreenSource(activeSrc);
     }
+    saveState();
   };
 
   const closeFullscreenOverlay = () => {
@@ -2436,6 +2560,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       btnModeText?.classList.add("active");
     }
+    saveState();
   };
 
   const handleFullscreenVideoEnded = (videoEl) => {
