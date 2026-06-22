@@ -248,12 +248,23 @@ document.addEventListener("DOMContentLoaded", () => {
       '<h2 class="ap-atitle" id="audio-title"></h2><span class="ap-anarr" id="audio-narr"></span></div>' +
       '<div class="ap-matrixwrap"><canvas class="ap-matrix"></canvas>' +
       '<span class="ap-draghint">⟲ táhni — vodorovně otáčí, svisle naklání</span></div>' +
+      '<button class="ap-bigplay" id="audio-bigplay" title="Přehrát / Pauza / Znovu">' +
+      '<svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
+      '<svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg></button>' +
       '<div class="ap-words" id="audio-words"></div>' +
       '<div class="ap-actrls">' +
       '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span>' +
       '<span id="audio-status">Připraveno k přehrání</span></div></div>';
     document.body.appendChild(el);
     audioStageEl = el;
+    const bigPlay = el.querySelector("#audio-bigplay");
+    if (bigPlay) bigPlay.addEventListener("click", () => {
+      // na konci → znovu od začátku; jinak play/pauza
+      if (audio && state.duration && audio.currentTime >= state.duration - 0.3) {
+        try { audio.currentTime = 0; } catch (e) {}
+      }
+      togglePlay();
+    });
     return el;
   };
   const updateAudioStage = (partNum) => {
@@ -541,12 +552,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 3D karusel slov v audio rezimu: kazde nove slovo prileti zepredu a odpluje dozadu.
   let lastAudioWord = "";
+  const AUDIO_STOPWORDS = new Set(["a","i","k","o","s","u","v","z","do","ke","ku","na","po","se","ze","za","ve","od","ob","při","pro","bez","nad","pod","před","mezi","přes","skrz","ale","že","či","nebo"]);
   const pushAudioWord = (w) => {
     const cont = audioStageEl && audioStageEl.querySelector(".ap-words");
     if (!cont) return;
     const el = document.createElement("span");
     el.className = "ap-word";
     el.textContent = w;
+    el.style.left = (28 + Math.random() * 44) + "%";
+    el.style.top = (34 + Math.random() * 30) + "%";
     cont.appendChild(el);
     el.addEventListener("animationend", () => el.remove());
     while (cont.children.length > 16) cont.removeChild(cont.firstChild);
@@ -554,7 +568,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const updateKaraokeDisplay = (prev, current, next) => {
     if (state.audioMode && current && current !== lastAudioWord && current !== "PŘIPRAVENO") {
       lastAudioWord = current;
-      pushAudioWord(current);
+      const nw = current.toLowerCase().replace(/[^a-záčďéěíňóřšťúůýž]/g, "");
+      if (nw.length > 1 && !AUDIO_STOPWORDS.has(nw)) pushAudioWord(current);
     }
     if (!kPrev || !kCurrent || !kNext) return;
     kPrev.textContent = prev || "";
