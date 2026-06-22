@@ -3044,31 +3044,6 @@ body.part3-active .btn-welcome-reset-btn:hover {
 }
 
 
-/* OVERRIDE VIDEO SUBTITLES TO BE BUBBLES */
-.preview-subtitles, .fullscreen-subtitles {
-  bottom: 80px;
-  left: 50% !important;
-  transform: translateX(-50%);
-  width: auto;
-  max-width: 80%;
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: none !important;
-  border-radius: 16px;
-  padding: 12px 20px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-  font-family: \'Space Grotesk\', sans-serif;
-  font-weight: 700;
-  text-align: center;
-  text-shadow: none;
-}
-
-.preview-subtitles::before, .preview-subtitles::after,
-.fullscreen-subtitles::before, .fullscreen-subtitles::after {
-  display: none !important;
-}
-
-
 /* Hide fullscreen close button as we use top-nav now */
 .fullscreen-close-btn { display: none !important; }
 

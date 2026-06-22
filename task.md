@@ -6,7 +6,7 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **39 / 39 done (100%)**
+## 📊 Progress: **41 / 41 done (100%)**
 
 ```
 #################################################################################################### 100%
@@ -15,7 +15,7 @@
 | Section | Done | Total | % |
 |---|---|---|---|
 | HTML | 9 | 9 | 100% |
-| CSS | 5 | 5 | 100% |
+| CSS | 7 | 7 | 100% |
 | JS | 10 | 10 | 100% |
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
@@ -40,7 +40,7 @@
 - [x] **#7** — Add styles for floating draggable player panels and gallery layout ✅ completed
 - [x] **#27** — Move `.sticky-mode-switcher` to top, style the new Part switcher, and implement fully mobile responsive styles ✅ completed
 - [x] **#39** — Udelej texty na desktop verzi komiks 2x mensi ✅ completed (2x smaller font, padding and pointers on desktop)
-
+- [x] **#40** — Zrušit rámeček kolem titulků ve videu všude ✅ completed
 ## JS
 - [x] **#8** — Implement decryption state tracking (`decryptedPart2`, `decryptedPart3`) in `app.js` ✅ completed
 - [x] **#9** — Connect tab switches to show/hide the corresponding dedicated part wrapper ✅ completed

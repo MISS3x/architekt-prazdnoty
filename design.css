@@ -567,6 +567,7 @@ body.comic-fs .comic-grid { height: 100% !important; }
   margin: 0 !important; min-height: 0 !important;
   background: none !important; color: #f6f8fa !important;
   padding: 0 18px !important; border-radius: 0 !important;
+  border: none !important;
   font-family: 'Chakra Petch', sans-serif !important; font-weight: 600 !important;
   font-size: 31px !important; line-height: 1.28 !important; letter-spacing: .01em; text-align: center !important;
   box-shadow: none !important;

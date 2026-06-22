@@ -85,6 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let cues = null;
   let N = 0;
   let paras = [];
+  let activeWordEl = null;     // aktuálně čtené slovo (text režim) — pro centrování po řádcích
+  let lastTextLineTop = null;  // poslední řádek, na který se text vycentroval
   let lastUserScrollTime = 0;
   let lastSavedTime = 0;
   let pendingPlayHandler = null;
@@ -1763,7 +1765,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Estimate active word index proportionally
     const activeWordIdx = Math.max(0, Math.min(wordsCount - 1, Math.floor(progress * wordsCount)));
-    
+    activeWordEl = words[activeWordIdx]; // pro per-řádkové centrování textu
+
     words.forEach((word, wIdx) => {
       if (wIdx <= activeWordIdx) {
         word.classList.add("read");
@@ -2027,12 +2030,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const pos = comicTween.from + (comicTween.target - comicTween.from) * eased;
       if (vertical) grid.scrollTop = pos; else grid.scrollLeft = pos;
     } else {
-      const target = timeToPos(displayTime, syncAnchors.text);
-      if (target == null) return;
-      const current = window.scrollY;
-      const delta = target - current;
-      if (Math.abs(delta) < 2) { window.scrollTo(0, target); return; }
-      window.scrollTo(0, current + delta * 0.10);
+      // TEXT: centruj AKTIVNÍ SLOVO. Jeho pozice v dokumentu se mění jen při
+      // zalomení na nový řádek → scroll je po řádcích (diskrétní), ne plynulý;
+      // aktivní text tak zůstává uprostřed stránky.
+      const w = activeWordEl;
+      if (!w || !w.isConnected) return;
+      const rect = w.getBoundingClientRect();
+      if (rect.height === 0) return; // skryté slovo
+      const lineTop = Math.round(rect.top + window.scrollY);
+      if (lastTextLineTop === null || Math.abs(lineTop - lastTextLineTop) > rect.height * 0.6) {
+        lastTextLineTop = lineTop;
+        const target = Math.max(0, lineTop + rect.height / 2 - window.innerHeight / 2);
+        window.scrollTo({ top: target, behavior: "smooth" });
+      }
     }
   };
   comicRAF = requestAnimationFrame(syncScrollTick);
