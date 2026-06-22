@@ -4,3 +4,7 @@ Thumbs.db
 ruda_cues.json
 .env
 resources/
+node_modules/
+img/screenshots/temp/
+img/screenshots/backup/
+

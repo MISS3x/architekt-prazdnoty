@@ -488,7 +488,7 @@
         <div style="display: flex; gap: 8px; margin-top: 5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
           <button class="btn-filter" id="tab-btn-image" onclick="switchSourceTab('image')" style="font-size: 11px;" disabled>1. Obrázek</button>
           <button class="btn-filter" id="tab-btn-video" onclick="switchSourceTab('video')" style="font-size: 11px;" disabled>2. Video Capture</button>
-          <button class="btn-filter" id="tab-btn-generate" onclick="switchSourceTab('generate')" style="font-size: 11px;" disabled>3. Generování (Kling)</button>
+          <button class="btn-filter" id="tab-btn-generate" onclick="switchSourceTab('generate')" style="font-size: 11px;" disabled>3. Generování (Gemini)</button>
         </div>
 
         <!-- Tab Content 1: Image & Crop -->
@@ -546,20 +546,25 @@
           </div>
         </div>
 
-        <!-- Tab Content 3: Kling AI Generation -->
+        <!-- Tab Content 3: Gemini Generation -->
         <div id="tab-content-generate" class="tab-content hidden" style="display: flex; flex-direction: column; gap: 15px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+            <input type="checkbox" id="generate-remake" onchange="onRemakeCheckboxChange()" style="cursor: pointer; width: 16px; height: 16px;">
+            <label for="generate-remake" style="font-size: 12px; cursor: pointer; color: var(--cyan); text-transform: none; font-weight: 600;">Remake stávajícího obrázku (přes Gemini Flash)</label>
+          </div>
+
           <div class="control-box">
-            <label>Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
+            <label id="label-custom-detail">Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
             <input type="text" id="custom-detail" placeholder="Udejte detail záběru nebo specifickou akci..." oninput="updateComposedPromptPreview()">
           </div>
 
           <div class="control-box">
-            <label>Prompt pro Kling AI generování (základní styl)</label>
-            <textarea id="generation-prompt" placeholder="Vložte detailní prompt pro Kling AI..." oninput="updateComposedPromptPreview()"></textarea>
+            <label id="label-generation-prompt">Prompt pro generování (základní styl)</label>
+            <textarea id="generation-prompt" placeholder="Vložte detailní prompt..." oninput="updateComposedPromptPreview()"></textarea>
           </div>
 
           <div class="control-box">
-            <label>Finální prompt k odeslání (sestaveno automaticky)</label>
+            <label id="label-composed-preview">Náhled zadání k odeslání</label>
             <div id="composed-prompt-preview" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted); background: rgba(1, 4, 8, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 4px; line-height: 1.4; word-break: break-all;">
               ---
             </div>
@@ -641,7 +646,7 @@
         card.onclick = () => selectPanel(p);
         
         card.innerHTML = `
-          <img src="${p.imgSrc}" alt="">
+          <img src="${p.imgSrc}?t=${Date.now()}" alt="">
           <div class="panel-card-info">
             <div class="panel-card-id">${p.filename}</div>
             <div class="panel-card-text">${p.text || '[Bez textu]'}</div>
@@ -675,7 +680,7 @@
 
       // Update original pane contents
       document.getElementById('orig-filename-label').textContent = panel.filename;
-      document.getElementById('orig-image').src = panel.imgSrc;
+      document.getElementById('orig-image').src = panel.imgSrc + '?t=' + Date.now();
       document.getElementById('sentence-text').textContent = panel.text || "[Tento panel nemá žádný přidělený text v caption]";
       document.getElementById('custom-detail').value = '';
       document.getElementById('generation-prompt').value = panel.defaultPrompt;
@@ -690,6 +695,13 @@
 
       // Switch to default image tab
       switchSourceTab('image');
+
+      // Reset remake checkbox to unchecked
+      const remakeCheckbox = document.getElementById('generate-remake');
+      if (remakeCheckbox) {
+        remakeCheckbox.checked = false;
+        onRemakeCheckboxChange();
+      }
 
       // Update composed prompt preview
       updateComposedPromptPreview();
@@ -969,9 +981,33 @@
       }
     }
 
+    function onRemakeCheckboxChange() {
+      const isRemake = document.getElementById('generate-remake').checked;
+      const genPromptTextarea = document.getElementById('generation-prompt');
+      if (isRemake) {
+        genPromptTextarea.disabled = true;
+        genPromptTextarea.style.opacity = '0.5';
+        genPromptTextarea.placeholder = 'Styl i kompozice se načtou z původního obrázku...';
+      } else {
+        genPromptTextarea.disabled = false;
+        genPromptTextarea.style.opacity = '1';
+        genPromptTextarea.placeholder = 'Vložte detailní prompt...';
+      }
+      updateComposedPromptPreview();
+    }
+
     function updateComposedPromptPreview() {
-      let prompt = document.getElementById('generation-prompt').value.trim();
+      const isRemake = document.getElementById('generate-remake') ? document.getElementById('generate-remake').checked : false;
       const customDetail = document.getElementById('custom-detail').value.trim();
+      let prompt = document.getElementById('generation-prompt').value.trim();
+      
+      if (isRemake) {
+        const previewEl = document.getElementById('composed-prompt-preview');
+        if (previewEl) {
+          previewEl.textContent = customDetail ? `[Remake s úpravou]: ${customDetail}` : '[Remake beze změn - vytvoří vizuální kopii]';
+        }
+        return customDetail;
+      }
       
       if (customDetail) {
         const stylePhrase = "video in Style of @Image";
@@ -1005,13 +1041,21 @@
     async function startGeneration() {
       if (!currentPanel) return;
       
-      const prompt = updateComposedPromptPreview();
-      if (!prompt) {
+      const isRemake = document.getElementById('generate-remake').checked;
+      const prompt = isRemake 
+        ? document.getElementById('custom-detail').value.trim() 
+        : updateComposedPromptPreview();
+        
+      if (!isRemake && !prompt) {
         showToast('Prosím zadejte prompt pro generování', false);
         return;
       }
 
-      showOverlay(true, 'Zahajuji generování na Kling AI...', 'Odesílám požadavek');
+      if (isRemake) {
+        showOverlay(true, 'Generuji remake obrázku přes Gemini API...', 'Analyzuji původní panel a překresluji...');
+      } else {
+        showOverlay(true, 'Generuji obrázek přes Gemini API (Imagen 3)...', 'Odesílám požadavek...');
+      }
       
       try {
         const response = await fetch('/api/generate', {
@@ -1019,65 +1063,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt,
-            filename: currentPanel.filename
+            filename: currentPanel.filename,
+            remake: isRemake
           })
         });
 
         const resData = await response.json();
         if (!response.ok) throw new Error(resData.error || 'Generování selhalo');
-
-        const taskId = resData.taskId;
-        startPolling(taskId);
-      } catch (err) {
-        showOverlay(false);
-        showToast('Chyba: ' + err.message, false);
-      }
-    }
-
-    function startPolling(taskId) {
-      showOverlay(true, 'Generuji video na Kling...', 'Task ID: ' + taskId + ' (čekám ve frontě)');
-      let checks = 0;
-
-      pollInterval = setInterval(async () => {
-        checks++;
-        try {
-          const response = await fetch(`/api/generate/status/${taskId}`);
-          if (!response.ok) throw new Error('Polling failed');
-          const data = await response.json();
-
-          if (data.status === 'succeed') {
-            clearInterval(pollInterval);
-            showOverlay(true, 'Stahuji video a extrahuji snímek...', 'Stahování a extrakce přes ffmpeg');
-            downloadAndExtract(data.videoUrl);
-          } else if (data.status === 'failed') {
-            clearInterval(pollInterval);
-            showOverlay(false);
-            showToast('Generování selhalo: ' + data.error, false);
-          } else {
-            // Still processing
-            updateOverlayDetails(`Zpracovávám (běží ${checks * 5}s)...`);
-          }
-        } catch (err) {
-          clearInterval(pollInterval);
-          showOverlay(false);
-          showToast('Chyba při monitorování stavu: ' + err.message, false);
-        }
-      }, 5000);
-    }
-
-    async function downloadAndExtract(videoUrl) {
-      try {
-        const response = await fetch('/api/download-frame', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            videoUrl,
-            filename: currentPanel.filename
-          })
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Stažení/extrakce selhala');
 
         showOverlay(false);
         
@@ -1085,20 +1077,20 @@
         const img = document.getElementById('generated-image');
         const video = document.getElementById('generated-video');
         
-        img.src = data.tempImageUrl + '?t=' + Date.now();
+        img.src = resData.tempImageUrl + '?t=' + Date.now();
         img.classList.remove('hidden');
         
-        video.src = data.tempVideoUrl + '?t=' + Date.now();
-        video.classList.remove('hidden');
+        video.classList.add('hidden');
+        video.src = '';
         
         document.getElementById('preview-status-label').textContent = '[PŘIPRAVENO K POSOUZENÍ]';
         document.getElementById('btn-approve').disabled = false;
         document.getElementById('btn-discard').disabled = false;
         
-        showToast('Nová varianta byla úspěšně vygenerována!', true);
+        showToast(isRemake ? 'Remake byl úspěšně vygenerován!' : 'Nová varianta byla vygenerována přes Gemini!', true);
       } catch (err) {
         showOverlay(false);
-        showToast('Chyba při extrakci: ' + err.message, false);
+        showToast('Chyba: ' + err.message, false);
       }
     }
 
@@ -1117,8 +1109,17 @@
 
         showToast('Obrázek byl úspěšně nahrazen a původní zazálohován!', true);
         
-        // Update list
-        loadPanels();
+        const savedFilename = currentPanel.filename;
+        
+        // Reload panel images
+        await loadPanels();
+        
+        // Reselect the panel to update the original image on the left!
+        const updated = panels.find(p => p.filename === savedFilename);
+        if (updated) {
+          selectPanel(updated);
+        }
+        
         resetPreviewPane();
       } catch (err) {
         showToast('Chyba při schvalování: ' + err.message, false);

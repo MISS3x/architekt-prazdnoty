@@ -16,8 +16,8 @@
 
 ### Agent 1 — Antigravity IDE (Claude Sonnet 4.6 in chat)
 **Role:** Coordination, planning, complex logic, review
-**Primary files:** `task.md`, `AGENTS.md`, `app.js` (logic only)
-**Current task:** Multi-agent coordination setup
+**Primary files:** `task.md`, `AGENTS.md`, `editor_server.js`, `comic_editor.html`
+**Current task:** Integrace Gemini API a oprava obnovování nalevo
 **Status:** 🟢 ACTIVE
 
 ### Agent 2 — Claude CLI (terminal)
@@ -44,6 +44,9 @@
 | `style.css` | Agent 1 (Antigravity IDE) | 2026-06-22 16:59 | Desktop comic speech text font size |
 | `design.css` | — | — | — |
 | `task.md` | — | — | — |
+| `editor_server.js` | Agent 1 (Antigravity IDE) | 2026-06-22 18:35 | Migrate Kling to Gemini API |
+| `comic_editor.html` | Agent 1 (Antigravity IDE) | 2026-06-22 18:35 | UI updates for Gemini and cache busting |
+
 
 ---
 

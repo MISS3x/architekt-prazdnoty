@@ -15,8 +15,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
-const KLING_API_KEY = process.env.KLING_API_KEY;
-const KLING_BASE_URL = 'https://api-singapore.klingai.com';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Ensure directories exist
 const BACKUP_DIR = path.join(__dirname, 'img', 'screenshots', 'backup');
@@ -28,58 +27,107 @@ if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }
 
-// 1. Helper to submit Kling task
-async function submitKlingTask(prompt, aspectRatio = '1:1') {
-  const url = `${KLING_BASE_URL}/v1/videos/text2video`;
+// 1. Helper to get Mime Type
+function getMimeType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.png') return 'image/png';
+  if (ext === '.webp') return 'image/webp';
+  return 'image/jpeg';
+}
+
+// 2. Helper to analyze image & generate prompt via Gemini Flash (Remake)
+async function generateGeminiPrompt(imagePath, customPrompt) {
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`Original image not found at ${imagePath}`);
+  }
+  const imageBuffer = fs.readFileSync(imagePath);
+  const base64Data = imageBuffer.toString('base64');
+  const mimeType = getMimeType(imagePath);
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+  
+  const promptText = `Analyze the attached original comic book panel image. Generate a highly detailed, descriptive prompt for an image generator (like Imagen 3) to create a new, visually and thematically similar, almost identical image (preserving the style, composition, characters, colors, and cyberpunk mood of the original).
+Apply the following modifications/actions requested by the user: "${customPrompt}".
+Ensure the prompt specifies:
+- The exact art style (2D graphic novel, bold black ink outlines, hatching, comic book aesthetic).
+- The color scheme (black and white with selective neon accents matching the original).
+- Composition, placement, camera angle, and subject.
+Output ONLY the final prompt text itself, with no introductory/concluding text, no markdown formatting (like triple backticks), just the plain text prompt.`;
+
   const payload = {
-    model_name: 'kling-v3',
-    prompt: prompt,
-    duration: 5,
-    aspect_ratio: aspectRatio,
-    mode: 'std',
-    sound: 'off'
+    contents: [{
+      parts: [
+        { text: promptText },
+        {
+          inlineData: {
+            mimeType: mimeType,
+            data: base64Data
+          }
+        }
+      ]
+    }]
   };
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${KLING_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`Kling Submit HTTP ${response.status}: ${text}`);
+  const resJson = await response.json();
+  if (resJson.error) {
+    throw new Error(`Gemini Flash Error: ${resJson.error.message}`);
   }
-  return JSON.parse(text);
+
+  const candidates = resJson.candidates;
+  if (!candidates || candidates.length === 0) {
+    throw new Error("No candidates returned from Gemini Flash");
+  }
+  const text = candidates[0].content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error("No text content returned from Gemini Flash");
+  }
+
+  return text.trim();
 }
 
-// 2. Helper to check Kling task status
-async function checkKlingStatus(taskId) {
-  const url = `${KLING_BASE_URL}/v1/videos/text2video/${taskId}`;
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${KLING_API_KEY}`
+// 3. Helper to generate image via Imagen 3
+async function generateImagenImage(prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${GEMINI_API_KEY}`;
+  
+  const payload = {
+    instances: [
+      { prompt: prompt }
+    ],
+    parameters: {
+      sampleCount: 1,
+      aspectRatio: "1:1",
+      outputMimeType: "image/jpeg"
     }
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   });
 
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`Kling Poll HTTP ${response.status}: ${text}`);
+  const resJson = await response.json();
+  if (resJson.error) {
+    throw new Error(`Imagen 3 Error: ${resJson.error.message}`);
   }
-  return JSON.parse(text);
-}
 
-// 3. Helper to download file
-async function downloadFile(url, destPath) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download file: HTTP ${response.status}`);
+  const predictions = resJson.predictions;
+  if (!predictions || predictions.length === 0) {
+    throw new Error("No predictions returned from Imagen 3");
   }
-  const buffer = await response.arrayBuffer();
-  fs.writeFileSync(destPath, Buffer.from(buffer));
+
+  const base64Image = predictions[0].bytesBase64Encoded;
+  if (!base64Image) {
+    throw new Error("No base64 image data in Imagen 3 response");
+  }
+
+  return base64Image;
 }
 
 // Helper to resolve comic image path (dil_1, dil_2, dil_3)
@@ -160,102 +208,45 @@ app.get('/api/panels', (req, res) => {
   }
 });
 
-// 5. Submit generation
+// 5. Submit generation via Gemini / Imagen 3
 app.post('/api/generate', async (req, res) => {
-  const { prompt, filename } = req.body;
+  const { prompt, filename, remake } = req.body;
   if (!prompt || !filename) {
     return res.status(400).json({ error: 'Missing prompt or filename' });
   }
 
-  if (!KLING_API_KEY) {
-    return res.status(500).json({ error: 'KLING_API_KEY environment variable is not defined.' });
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not defined.' });
   }
 
   try {
-    console.log(`Submitting prompt to Kling: ${prompt}`);
-    const submitRes = await submitKlingTask(prompt);
-    const taskId = submitRes.data?.task_id || submitRes.data?.id || submitRes.task_id || submitRes.id;
-    
-    if (!taskId) {
-      return res.status(500).json({ error: `Kling submission error: ${JSON.stringify(submitRes)}` });
-    }
+    const baseName = path.basename(filename, path.extname(filename));
+    const tempImagePath = path.join(TEMP_DIR, `${baseName}_temp.jpg`);
 
-    res.json({ taskId });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+    let finalPrompt = prompt;
 
-// 6. Poll status
-app.get('/api/generate/status/:taskId', async (req, res) => {
-  const { taskId } = req.params;
-  try {
-    const statusRes = await checkKlingStatus(taskId);
-    const statusData = statusRes.data || statusRes;
-    const taskStatus = statusData.task_status || statusData.status;
-
-    if (taskStatus === 'succeed' || taskStatus === 'completed') {
-      let videoUrl = null;
-      const videos = statusData.task_result?.videos || statusData.videos;
-      if (Array.isArray(videos) && videos.length > 0) {
-        videoUrl = videos[0].url;
-      } else if (statusData.task_result?.video?.url) {
-        videoUrl = statusData.task_result.video.url;
-      } else if (statusData.video?.url) {
-        videoUrl = statusData.video.url;
-      } else if (statusData.url) {
-        videoUrl = statusData.url;
-      }
-
-      if (!videoUrl) {
-        return res.json({ status: 'failed', error: 'No video URL found in success response' });
-      }
-
-      res.json({ status: 'succeed', videoUrl });
-    } else if (taskStatus === 'failed') {
-      res.json({ status: 'failed', error: statusData.task_status_desc || 'Unknown generation failure' });
+    if (remake === true) {
+      console.log(`Analyzing original panel for remake: ${filename}`);
+      const originalImagePath = getComicImagePath(filename);
+      finalPrompt = await generateGeminiPrompt(originalImagePath, prompt);
+      console.log(`Generated remake prompt: ${finalPrompt}`);
     } else {
-      res.json({ status: 'processing' });
+      console.log(`Generating directly from prompt: ${prompt}`);
     }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
-// 7. Download and extract frame
-app.post('/api/download-frame', async (req, res) => {
-  const { videoUrl, filename } = req.body;
-  if (!videoUrl || !filename) {
-    return res.status(400).json({ error: 'Missing videoUrl or filename' });
-  }
+    console.log(`Requesting image generation from Imagen 3...`);
+    const base64Image = await generateImagenImage(finalPrompt);
 
-  const baseName = path.basename(filename, path.extname(filename)); // e.g. 01_01_01
-  const tempVideoPath = path.join(TEMP_DIR, `${baseName}_temp.mp4`);
-  const tempImagePath = path.join(TEMP_DIR, `${baseName}_temp.jpg`);
+    fs.writeFileSync(tempImagePath, Buffer.from(base64Image, 'base64'));
+    console.log(`Saved generated temp image: ${tempImagePath}`);
 
-  try {
-    // 1. Download video
-    await downloadFile(videoUrl, tempVideoPath);
-
-    // 2. Extract first frame using ffmpeg command line (fast, reliable since we verified ffmpeg is on PATH)
-    const cmd = `ffmpeg -y -i "${tempVideoPath}" -vframes 1 -f image2 "${tempImagePath}"`;
-    
-    exec(cmd, (err, stdout, stderr) => {
-      if (err) {
-        console.error('ffmpeg extraction error:', err);
-        return res.status(500).json({ error: 'Failed to extract frame with ffmpeg: ' + err.message });
-      }
-      
-      console.log(`Successfully extracted frame to ${tempImagePath}`);
-      
-      // Return relative URLs for frontend display
-      res.json({
-        tempVideoUrl: `/img/screenshots/temp/${baseName}_temp.mp4`,
-        tempImageUrl: `/img/screenshots/temp/${baseName}_temp.jpg`
-      });
+    res.json({
+      success: true,
+      tempImageUrl: `/img/screenshots/temp/${baseName}_temp.jpg`
     });
 
   } catch (error) {
+    console.error('Generation failed:', error);
     res.status(500).json({ error: error.message });
   }
 });
