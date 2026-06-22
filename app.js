@@ -86,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let N = 0;
   let paras = [];
   let activeWordEl = null;     // aktuálně čtené slovo (text režim) — pro centrování po řádcích
-  let lastTextLineTop = null;  // poslední řádek, na který se text vycentroval
   let lastUserScrollTime = 0;
   let lastSavedTime = 0;
   let pendingPlayHandler = null;
@@ -316,8 +315,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cv || !wrap) return;
     const ctx = cv.getContext("2d");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mobile = window.matchMedia("(max-width: 768px)").matches;
 
-    const CORE = 8, FADE_RINGS = 3, RINGS = CORE + FADE_RINGS;
+    const CORE = mobile ? 6 : 8, FADE_RINGS = mobile ? 2 : 3, RINGS = CORE + FADE_RINGS;
     const S = 0.62, HEXR = S * 0.88, MAXH = 6.2, CAM = 30;
     let tilt = 1.02, dpr = 1, raf, t = 0, angle = 0, focal = 1, cx = 0, cy = 0, curOp = 1;
 
@@ -346,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fit = () => {
       const W = Math.max(120, wrap.clientWidth), H = Math.max(120, wrap.clientHeight);
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       cv.style.width = W + "px"; cv.style.height = H + "px";
       focal = cv.height * 0.62; cx = cv.width / 2; cy = cv.height * 0.54;
@@ -653,7 +653,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const teaserVid = document.getElementById("fullscreen-teaser-video");
     if (teaserVid) {
       teaserVid.src = getVideoPath(`video/teaser_${partNum}.mp4`);
-      teaserVid.play().catch(e => console.log("Teaser autoplay prevented", e));
+      teaserVid.play().catch(e => {
+        if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
+          console.log("Teaser autoplay prevented", e);
+        }
+      });
     }
 
     // Update poster hero content
@@ -1022,7 +1026,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // setActiveModeUI je const definovaný níž → odlož aplikaci režimu za konec
     // synchronního initu (jinak TDZ ReferenceError → pád celého initu).
-    queueMicrotask(() => { setActiveModeUI(savedMode || "text"); });
+    queueMicrotask(() => { setActiveModeUI(savedMode || "movie"); });
 
     if (savedTime && audio) {
       const timeVal = parseFloat(savedTime);
@@ -1471,7 +1475,11 @@ document.addEventListener("DOMContentLoaded", () => {
               document.removeEventListener("touchstart", startOnInteraction);
               setHint(""); // Clear helper hint
             })
-            .catch(e => console.error("Play on interaction failed:", e));
+            .catch(e => {
+              if (e.name !== "NotAllowedError") {
+                console.error("Play on interaction failed:", e);
+              }
+            });
         };
         
         document.addEventListener("click", startOnInteraction);
@@ -2030,18 +2038,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const pos = comicTween.from + (comicTween.target - comicTween.from) * eased;
       if (vertical) grid.scrollTop = pos; else grid.scrollLeft = pos;
     } else {
-      // TEXT: centruj AKTIVNÍ SLOVO. Jeho pozice v dokumentu se mění jen při
-      // zalomení na nový řádek → scroll je po řádcích (diskrétní), ne plynulý;
-      // aktivní text tak zůstává uprostřed stránky.
+      // TEXT: drž AKTIVNÍ SLOVO uprostřed stránky. Scrolluj jen když slovo
+      // opustí střed o víc než ~3/4 řádku (tj. zalomí na nový řádek, nebo po
+      // ručním scrollu) — okamžitý skok, NE plynulé posouvání.
       const w = activeWordEl;
       if (!w || !w.isConnected) return;
       const rect = w.getBoundingClientRect();
       if (rect.height === 0) return; // skryté slovo
-      const lineTop = Math.round(rect.top + window.scrollY);
-      if (lastTextLineTop === null || Math.abs(lineTop - lastTextLineTop) > rect.height * 0.6) {
-        lastTextLineTop = lineTop;
-        const target = Math.max(0, lineTop + rect.height / 2 - window.innerHeight / 2);
-        window.scrollTo({ top: target, behavior: "smooth" });
+      const wordCenter = rect.top + rect.height / 2;
+      const pageCenter = window.innerHeight / 2;
+      if (Math.abs(wordCenter - pageCenter) > rect.height * 0.75) {
+        const target = Math.max(0, rect.top + window.scrollY + rect.height / 2 - pageCenter);
+        window.scrollTo(0, target); // instant — diskrétní skok po řádcích
       }
     }
   };
@@ -2522,8 +2530,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update teaser video
     const teaserVid = document.getElementById("fullscreen-teaser-video");
     if (teaserVid) {
-      teaserVid.src = getVideoPath(`video/teaser_${partNum}.mp4`);
-      teaserVid.play().catch(e => console.log("Teaser autoplay prevented", e));
+      teaserVid.src = getVideoPath(`video/teaser_${state.activePart}.mp4`);
+      teaserVid.play().catch(e => {
+        if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
+          console.log("Teaser autoplay prevented", e);
+        }
+      });
     }
     
     if (fullscreenPosterImg) fullscreenPosterImg.src = imgSrc;
