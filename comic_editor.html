@@ -556,12 +556,22 @@
           </div>
 
           <div class="control-box">
+            <label>Vizuální styl panelu</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter active" id="preset-btn-comic" onclick="setStylePreset('comic')">Komiksový (2D)</button>
+              <button class="btn-filter" id="preset-btn-filmic" onclick="setStylePreset('filmic')">Filmový (3D)</button>
+              <button class="btn-filter" id="preset-btn-cartoon" onclick="setStylePreset('cartoon')">Cartoon</button>
+              <button class="btn-filter" id="preset-btn-none" onclick="setStylePreset('none')">Bez stylu (Vypnuto)</button>
+            </div>
+          </div>
+
+          <div class="control-box">
             <label id="label-custom-detail">Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
             <input type="text" id="custom-detail" placeholder="Udejte detail záběru nebo specifickou akci..." oninput="updateComposedPromptPreview()">
           </div>
 
           <div class="control-box">
-            <label id="label-generation-prompt">Prompt pro generování (základní styl)</label>
+            <label id="label-generation-prompt">Prompt pro generování (komiksový styl)</label>
             <textarea id="generation-prompt" placeholder="Vložte detailní prompt..." oninput="updateComposedPromptPreview()"></textarea>
           </div>
 
@@ -572,9 +582,14 @@
             </div>
           </div>
 
-          <button class="btn btn-primary" id="btn-generate" onclick="startGeneration()" disabled>
-            ⚡ GENERATE NEW VARIANT
-          </button>
+          <div style="display: flex; gap: 12px; width: 100%;">
+            <button class="btn btn-primary" id="btn-generate" onclick="startGeneration()" style="flex: 1;" disabled>
+              ⚡ GENERATE VARIANT
+            </button>
+            <button class="btn btn-secondary" id="btn-cartoonize" onclick="triggerCartoonize()" style="flex: 1; border-color: var(--amber); color: var(--amber); box-shadow: 0 0 10px rgba(255, 181, 46, 0.1);" disabled>
+              🎨 UDĚLAT CARTOON
+            </button>
+          </div>
         </div>
       </div>
 
@@ -686,8 +701,8 @@
       document.getElementById('sentence-text').textContent = panel.text || "[Tento panel nemá žádný přidělený text v caption]";
       document.getElementById('btn-copy-sentence').disabled = !panel.text;
       document.getElementById('custom-detail').value = '';
-      document.getElementById('generation-prompt').value = panel.defaultPrompt;
       document.getElementById('btn-generate').disabled = false;
+      document.getElementById('btn-cartoonize').disabled = false;
       document.getElementById('btn-crop-toggle').disabled = false;
 
       // Load corresponding video
@@ -706,8 +721,8 @@
         onRemakeCheckboxChange();
       }
 
-      // Update composed prompt preview
-      updateComposedPromptPreview();
+      // Set style preset to comic by default
+      setStylePreset('comic');
 
       // Reset preview pane
       resetPreviewPane();
@@ -986,6 +1001,87 @@
       }
     }
 
+    let currentStylePreset = 'comic';
+
+    function setStylePreset(preset) {
+      currentStylePreset = preset;
+      
+      // Update UI active states for preset buttons
+      document.querySelectorAll('#tab-content-generate button').forEach(btn => {
+        if (btn.id && btn.id.startsWith('preset-btn-')) {
+          btn.classList.remove('active');
+        }
+      });
+      
+      const activeBtn = document.getElementById('preset-btn-' + preset);
+      if (activeBtn) activeBtn.classList.add('active');
+      
+      // Update the textarea label dynamically
+      const label = document.getElementById('label-generation-prompt');
+      if (label) {
+        if (preset === 'comic') label.textContent = 'Prompt pro generování (komiksový styl)';
+        else if (preset === 'filmic') label.textContent = 'Prompt pro generování (filmový styl)';
+        else if (preset === 'cartoon') label.textContent = 'Prompt pro generování (cartoon styl)';
+        else label.textContent = 'Prompt pro generování (bez stylu)';
+      }
+      
+      // Update textarea content if remake is disabled
+      const remakeCheckbox = document.getElementById('generate-remake');
+      const isRemake = remakeCheckbox ? remakeCheckbox.checked : false;
+      const genPromptTextarea = document.getElementById('generation-prompt');
+      
+      if (genPromptTextarea && currentPanel) {
+        if (!isRemake) {
+          genPromptTextarea.value = getDefaultPromptForPreset(preset, currentPanel.filename);
+        }
+      }
+      
+      updateComposedPromptPreview();
+    }
+
+    function getDefaultPromptForPreset(preset, filename) {
+      if (!filename) return '';
+      const isPart1 = filename.startsWith('01_');
+      const isPart2 = filename.startsWith('02_');
+      
+      let neonColor = "neon toxic yellow-green (#ccff00)";
+      let chars = "Krtek (@Krtek) or Mia (@Mia) in an industrial sci-fi setting";
+      if (isPart1) {
+        neonColor = "neon orange / amber";
+        chars = "Rudolf Müller (@Ruda) stands in New Berlin";
+      } else if (isPart2) {
+        neonColor = "fialová (neon purple) and golden amber";
+        chars = "Mia Müller (@Mia), a young female engineer in New Berlin";
+      }
+
+      if (preset === 'comic') {
+        return `A 2D graphic novel illustration style, comic book aesthetic. Bold black ink outlines, hatching, high contrast black and white with selective vibrant ${neonColor} lights. ${chars}, looking neutral, video in Style of @Image.`;
+      } else if (preset === 'filmic') {
+        return `Dystopian sci-fi high-detail 3D render, photorealistic, dramatic high-contrast lighting. Ominous rainy atmosphere, wet glossy surfaces, streaking rain. Predominantly desaturated cool tones (greys, charcoals, slate blues) with intense ${neonColor} glowing lights. Sharp geometric architecture, craggy volcanic terrain. Deep depth of field, wide-angle shot.`;
+      } else if (preset === 'cartoon') {
+        return `A playful cartoon illustration style, vibrant colors, clean line art, stylized character features, animated series aesthetic. Bold outlines, cel shading, expressive visual style, with selective ${neonColor} accents.`;
+      } else {
+        return '';
+      }
+    }
+
+    function triggerCartoonize() {
+      if (!currentPanel) return;
+      
+      // Force remake = true
+      const remakeCheckbox = document.getElementById('generate-remake');
+      if (remakeCheckbox) {
+        remakeCheckbox.checked = true;
+        onRemakeCheckboxChange();
+      }
+      
+      // Force preset = 'cartoon'
+      setStylePreset('cartoon');
+      
+      // Start generation
+      startGeneration();
+    }
+
     function onRemakeCheckboxChange() {
       const isRemake = document.getElementById('generate-remake').checked;
       const genPromptTextarea = document.getElementById('generation-prompt');
@@ -997,6 +1093,9 @@
         genPromptTextarea.disabled = false;
         genPromptTextarea.style.opacity = '1';
         genPromptTextarea.placeholder = 'Vložte detailní prompt...';
+        if (currentPanel) {
+          genPromptTextarea.value = getDefaultPromptForPreset(currentStylePreset, currentPanel.filename);
+        }
       }
       updateComposedPromptPreview();
     }
@@ -1008,8 +1107,14 @@
       
       if (isRemake) {
         const previewEl = document.getElementById('composed-prompt-preview');
+        const styleLabel = currentStylePreset === 'comic' ? 'Komiks' 
+                         : currentStylePreset === 'filmic' ? 'Film (3D)'
+                         : currentStylePreset === 'cartoon' ? 'Cartoon'
+                         : 'Bez stylu';
         if (previewEl) {
-          previewEl.textContent = customDetail ? `[Remake s úpravou]: ${customDetail}` : '[Remake beze změn - vytvoří vizuální kopii]';
+          previewEl.textContent = customDetail 
+            ? `[Remake s úpravou do stylu ${styleLabel}]: ${customDetail}` 
+            : `[Remake do stylu ${styleLabel} beze změn - vytvoří vizuální kopii]`;
         }
         return customDetail;
       }
@@ -1069,7 +1174,8 @@
           body: JSON.stringify({
             prompt,
             filename: currentPanel.filename,
-            remake: isRemake
+            remake: isRemake,
+            stylePreset: currentStylePreset
           })
         });
 

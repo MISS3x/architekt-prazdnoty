@@ -36,7 +36,7 @@ function getMimeType(filePath) {
 }
 
 // 2. Helper to analyze image & generate prompt via Gemini Flash (Remake)
-async function generateGeminiPrompt(imagePath, customPrompt) {
+async function generateGeminiPrompt(imagePath, customPrompt, stylePreset, filename) {
   if (!fs.existsSync(imagePath)) {
     throw new Error(`Original image not found at ${imagePath}`);
   }
@@ -46,14 +46,45 @@ async function generateGeminiPrompt(imagePath, customPrompt) {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
   
+  const baseName = path.basename(filename);
+  let neonColor = "neon toxic yellow-green (#ccff00)";
+  if (baseName.startsWith('01_')) {
+    neonColor = "neon orange / amber";
+  } else if (baseName.startsWith('02_')) {
+    neonColor = "neon purple and golden amber";
+  }
+
   const userMods = customPrompt ? `Apply the following modifications/actions requested by the user: "${customPrompt}".` : "Create an exact visual copy of this image without any modifications.";
   
-  const promptText = `Analyze the attached original comic book panel image. Generate a highly detailed, descriptive prompt for an image generator (like Imagen 3) to create a new, visually and thematically similar, almost identical image (preserving the style, composition, characters, colors, and cyberpunk mood of the original).
+  let targetStyleInstructions = "";
+  if (stylePreset === 'filmic') {
+    targetStyleInstructions = `Ensure the generated prompt strictly specifies the NEW filmic style (convert the original 2D comic/sketch style to this 3D style):
+- Style: Dystopian sci-fi high-detail 3D render, photorealistic, dramatic high-contrast lighting.
+- Atmosphere: Ominous rainy atmosphere, wet glossy surfaces, streaking rain.
+- Colors: Predominantly desaturated cool tones (greys, charcoals, slate blues) with intense selective ${neonColor} glowing lights.
+- Composition: Sharp geometric architecture, craggy volcanic terrain, wide-angle shot, deep depth of field.
+DO NOT use the original 2D comic or hand-drawn style. Convert the scene and characters into this 3D photorealistic filmic style.`;
+  } else if (stylePreset === 'cartoon') {
+    targetStyleInstructions = `Ensure the generated prompt strictly specifies the NEW cartoon style (convert the original style to this cartoon style):
+- Style: A playful cartoon illustration style, vibrant colors, clean line art, stylized character features, animated series aesthetic.
+- Shading & Lines: Bold outlines, cel shading, expressive visual style, selective ${neonColor} accents.
+DO NOT use the original high contrast 3D or hand-drawn style. Convert the scene into this cartoon animation style.`;
+  } else if (stylePreset === 'comic') {
+    targetStyleInstructions = `Ensure the prompt specifies the original comic style:
+- Art style: 2D graphic novel, bold black ink outlines, hatching, comic book aesthetic.
+- Color scheme: Black and white (grayscale) with selective ${neonColor} accents matching the original.`;
+  } else {
+    targetStyleInstructions = `Describe the visual style and composition of the original, applying any requested modifications.`;
+  }
+
+  const promptText = `Analyze the attached original comic book panel image. Generate a highly detailed, descriptive prompt for an image generator (like Imagen 3) to create a new, visually and thematically similar, almost identical image (preserving the composition, characters, object placement, and cyberpunk mood of the original).
 ${userMods}
-Ensure the prompt specifies:
-- The exact art style (2D graphic novel, bold black ink outlines, hatching, comic book aesthetic).
-- The color scheme (black and white with selective neon accents matching the original).
+
+${targetStyleInstructions}
+
+Ensure the prompt describes:
 - Composition, placement, camera angle, and subject.
+- Style, lighting, and colors as specified above.
 Output ONLY the final prompt text itself, with no introductory/concluding text, no markdown formatting (like triple backticks), just the plain text prompt.`;
 
   const payload = {
@@ -222,7 +253,7 @@ app.get('/api/panels', (req, res) => {
 
 // 5. Submit generation via Gemini / Imagen 3
 app.post('/api/generate', async (req, res) => {
-  const { prompt, filename, remake } = req.body;
+  const { prompt, filename, remake, stylePreset } = req.body;
   if (!filename) {
     return res.status(400).json({ error: 'Missing filename' });
   }
@@ -243,9 +274,9 @@ app.post('/api/generate', async (req, res) => {
     let finalPrompt = prompt || "";
 
     if (remake === true) {
-      console.log(`Analyzing original panel for remake: ${filename}`);
+      console.log(`Analyzing original panel for remake (style: ${stylePreset}): ${filename}`);
       const originalImagePath = getComicImagePath(filename);
-      finalPrompt = await generateGeminiPrompt(originalImagePath, finalPrompt);
+      finalPrompt = await generateGeminiPrompt(originalImagePath, finalPrompt, stylePreset, filename);
       console.log(`Generated remake prompt: ${finalPrompt}`);
     } else {
       console.log(`Generating directly from prompt: ${finalPrompt}`);
