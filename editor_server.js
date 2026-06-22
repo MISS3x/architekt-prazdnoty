@@ -87,9 +87,20 @@ app.get('/api/panels', (req, res) => {
     const indexPath = path.join(__dirname, 'index.html');
     const htmlContent = fs.readFileSync(indexPath, 'utf8');
     
-    // We parse HTML panels using a regex to capture relevant attributes
-    // Structure: <div class="comic-panel ..." data-i="X" data-sentence="Y"> ... <img src="Z" ...> ...
-    // Let's use regex to find all matches
+    // Parse all paragraphs to build a mapping of data-i -> text
+    const paragraphRegex = /<p\s+data-i="(\d+)"[^>]*>([\s\S]*?)<\/p>/g;
+    const paragraphs = {};
+    let pMatch;
+    while ((pMatch = paragraphRegex.exec(htmlContent)) !== null) {
+      const i = parseInt(pMatch[1]);
+      let text = pMatch[2]
+        .replace(/<[^>]+>/g, '') // remove HTML tags
+        .replace(/\s+/g, ' ')    // collapse whitespaces
+        .trim();
+      paragraphs[i] = text;
+    }
+
+    // Parse HTML panels using a regex to capture relevant attributes
     const panelRegex = /<div\s+class="comic-panel[^"]*"\s+data-i="(\d+)"\s+data-sentence="(\d+)">[\s\S]*?<img\s+src="([^"]+)"[\s\S]*?<\/div>/g;
     
     const panels = [];
@@ -100,14 +111,14 @@ app.get('/api/panels', (req, res) => {
       const sentenceIdx = parseInt(match[2]);
       const imgSrc = match[3];
       
-      // Extract caption if exists in panel-caption / speech-text/bubble text
-      const innerHtml = match[0];
+      // Get the correct sentence text from the paragraph mapping
+      const paraText = paragraphs[globalI] || "";
       let text = "";
-      const textMatch = innerHtml.match(/<(?:span|p)\s+class="(?:speech-text|comic-caption-p)"[^>]*>([\s\S]*?)<\/(?:span|p)>/) 
-                    || innerHtml.match(/<div\s+class="comic-caption">[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/);
-      
-      if (textMatch) {
-        text = textMatch[1].replace(/<[^>]+>/g, '').trim();
+      if (paraText) {
+        let sentences = paraText.match(/[^.?!]+[.?!]+(?=\s|$)|[^.?!]+$/g);
+        if (!sentences) sentences = [paraText];
+        sentences = sentences.map(s => s.trim()).filter(s => s.length > 0);
+        text = (sentenceIdx < sentences.length) ? sentences[sentenceIdx] : "";
       }
       
       // Try to guess default visual prompts based on the character of the Part
