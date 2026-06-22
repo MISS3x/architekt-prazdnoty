@@ -46,8 +46,10 @@ async function generateGeminiPrompt(imagePath, customPrompt) {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
   
+  const userMods = customPrompt ? `Apply the following modifications/actions requested by the user: "${customPrompt}".` : "Create an exact visual copy of this image without any modifications.";
+  
   const promptText = `Analyze the attached original comic book panel image. Generate a highly detailed, descriptive prompt for an image generator (like Imagen 3) to create a new, visually and thematically similar, almost identical image (preserving the style, composition, characters, colors, and cyberpunk mood of the original).
-Apply the following modifications/actions requested by the user: "${customPrompt}".
+${userMods}
 Ensure the prompt specifies:
 - The exact art style (2D graphic novel, bold black ink outlines, hatching, comic book aesthetic).
 - The color scheme (black and white with selective neon accents matching the original).
@@ -91,15 +93,21 @@ Output ONLY the final prompt text itself, with no introductory/concluding text, 
   return text.trim();
 }
 
-// 3. Helper to generate image via Imagen 3
+// 3. Helper to generate image via gemini-2.5-flash-image
 async function generateImagenImage(prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`;
   
   const payload = {
-    prompt: prompt,
-    numberOfImages: 1,
-    aspectRatio: "1:1",
-    outputMimeType: "image/jpeg"
+    contents: [
+      {
+        parts: [
+          { text: prompt }
+        ]
+      }
+    ],
+    generationConfig: {
+      responseModalities: ["IMAGE"]
+    }
   };
 
   const response = await fetch(url, {
@@ -110,17 +118,25 @@ async function generateImagenImage(prompt) {
 
   const resJson = await response.json();
   if (resJson.error) {
-    throw new Error(`Imagen 3 Error: ${resJson.error.message}`);
+    throw new Error(`Gemini Image Generation Error: ${resJson.error.message}`);
   }
 
-  const generatedImages = resJson.generatedImages;
-  if (!generatedImages || generatedImages.length === 0) {
-    throw new Error("No generated images returned from Imagen 3");
+  const candidates = resJson.candidates;
+  const parts = candidates?.[0]?.content?.parts;
+  if (!parts || parts.length === 0) {
+    throw new Error("No candidates or parts returned from Gemini Image model");
   }
 
-  const base64Image = generatedImages[0].image?.imageBytes;
+  let base64Image = null;
+  for (const part of parts) {
+    if (part.inlineData && part.inlineData.data) {
+      base64Image = part.inlineData.data;
+      break;
+    }
+  }
+
   if (!base64Image) {
-    throw new Error("No base64 image data in Imagen 3 response");
+    throw new Error("No image data found in Gemini response");
   }
 
   return base64Image;
@@ -207,8 +223,13 @@ app.get('/api/panels', (req, res) => {
 // 5. Submit generation via Gemini / Imagen 3
 app.post('/api/generate', async (req, res) => {
   const { prompt, filename, remake } = req.body;
-  if (!prompt || !filename) {
-    return res.status(400).json({ error: 'Missing prompt or filename' });
+  if (!filename) {
+    return res.status(400).json({ error: 'Missing filename' });
+  }
+
+  // If remake is false, prompt is required
+  if (remake !== true && !prompt) {
+    return res.status(400).json({ error: 'Missing prompt' });
   }
 
   if (!GEMINI_API_KEY) {
@@ -219,18 +240,18 @@ app.post('/api/generate', async (req, res) => {
     const baseName = path.basename(filename, path.extname(filename));
     const tempImagePath = path.join(TEMP_DIR, `${baseName}_temp.jpg`);
 
-    let finalPrompt = prompt;
+    let finalPrompt = prompt || "";
 
     if (remake === true) {
       console.log(`Analyzing original panel for remake: ${filename}`);
       const originalImagePath = getComicImagePath(filename);
-      finalPrompt = await generateGeminiPrompt(originalImagePath, prompt);
+      finalPrompt = await generateGeminiPrompt(originalImagePath, finalPrompt);
       console.log(`Generated remake prompt: ${finalPrompt}`);
     } else {
-      console.log(`Generating directly from prompt: ${prompt}`);
+      console.log(`Generating directly from prompt: ${finalPrompt}`);
     }
 
-    console.log(`Requesting image generation from Imagen 3...`);
+    console.log(`Requesting image generation from Gemini image model...`);
     const base64Image = await generateImagenImage(finalPrompt);
 
     fs.writeFileSync(tempImagePath, Buffer.from(base64Image, 'base64'));
