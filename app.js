@@ -1709,15 +1709,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const times = buildSentenceTimes();
     if (!times.length) return;
     const t = audio.currentTime;
-    let target;
-    if (dir > 0) {
-      target = times.find(x => x > t + 0.05);
-      if (target == null) target = state.duration;
-    } else {
-      // zpět: restartuj aktuální větu, pokud jsme v ní hluboko, jinak na předchozí
-      const prev = [...times].reverse().find(x => x < t - 0.4);
-      target = prev != null ? prev : 0;
-    }
+    // Index aktuální věty = největší čas <= pozice (s tolerancí, ať „na začátku věty" = ta věta).
+    // Skok o CELOU větu: dir +1 → další věta, dir -1 → předchozí věta.
+    let idx = 0;
+    for (let i = 0; i < times.length; i++) { if (times[i] <= t + 0.25) idx = i; else break; }
+    idx = Math.max(0, Math.min(times.length - 1, idx + (dir > 0 ? 1 : -1)));
+    const target = times[idx];
     audio.currentTime = Math.max(0, Math.min(state.duration, target));
     state.curIdx = -1;          // vynuť re-highlight
     state.currentTime = audio.currentTime;
@@ -1836,6 +1833,16 @@ document.addEventListener("DOMContentLoaded", () => {
           // Scrolling is driven continuously by the rAF loop (syncScrollTick,
           // cue-anchored), so we only need to mark the active panel here.
         }
+      }
+    }
+
+    // Dim chapter hero when a paragraph becomes active
+    const hero = document.getElementById(`chapter-hero-${state.activePart}`);
+    if (hero) {
+      if (idx >= 0) {
+        hero.classList.add("dimmed");
+      } else {
+        hero.classList.remove("dimmed");
       }
     }
   };

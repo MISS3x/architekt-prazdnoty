@@ -156,6 +156,35 @@ body::after {
 .ap-ep.active{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber));
   box-shadow:0 0 22px -3px var(--amber), inset 0 0 0 1px var(--amber-hi); }
 
+/* Tlačítka ◀ ▶ (posun po větách) — na desktopu skrytá (stačí kolečko) */
+.ap-step { display: none; }
+
+/* MOBIL: slider pod stop/play na celou šířku mezi ◀ ▶, větší posuvník */
+@media (max-width: 768px) {
+  .ap-row2 {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    grid-template-areas:
+      "stop play time gal"
+      "prev scrub scrub next";
+    gap: 12px 8px; align-items: center; width: 100%; max-width: 100%;
+  }
+  .ap-trans { display: contents; }
+  #bar-stop { grid-area: stop; }
+  #bar-play { grid-area: play; }
+  .ap-time  { grid-area: time; justify-self: end; }
+  #btn-nav-gallery { grid-area: gal; }
+  #bar-prev { grid-area: prev; }
+  #bar-scrub { grid-area: scrub; width: auto !important; }
+  #bar-next { grid-area: next; }
+  .ap-step { display: grid !important; width: 46px; height: 46px; }
+  .ap-step svg { width: 18px; height: 18px; }
+  /* větší slider + posuvník pro pohodlné tažení */
+  .ap-scrub { height: 32px; }
+  .ap-track, .ap-fill { height: 5px; }
+  .ap-knob { width: 12px; height: 30px; box-shadow: 0 0 12px var(--cyan-hi), 0 0 22px var(--cyan); }
+}
+
 /* ===================== START SCREEN (version pick) ===================== */
 .intro-selector-overlay {
   position: fixed; inset: 0; z-index: 1400; display: flex; align-items: center; justify-content: center;
@@ -622,18 +651,17 @@ body.gallery-open .gallery-section { display: block; }
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1040px) {
   :root { --ap-barH: 132px; }
-  .top-nav { grid-template-columns: 1fr; gap: 9px; padding: 9px 12px; }
-  .nav-logo { justify-self: stretch; }
-  .nav-eptitle { display: none; }
-  .nav-modes { justify-self: stretch; width: 100%; }
-  .nav-modes .nav-btn { flex: 1; justify-content: center; padding: 11px 6px; }
-  .nav-controls { justify-self: stretch; width: 100%; flex-wrap: wrap; row-gap: 9px; column-gap: 10px; }
-  .nav-parts { order: 1; }
-  #btn-nav-gallery { order: 2; margin-left: auto; width: 40px; height: 40px; }
-  .bar-trans { order: 3; flex-basis: 100%; }
-  .bar-scrub { flex: 1; width: auto; }
-  .nav-parts .nav-btn { width: 36px; height: 36px; }
-  .bar-tb { width: 40px; height: 40px; }
+  /* Lišta responzivně: segment verzí přes celou šířku, tlačítka procentuálně (flex:1) */
+  .ap-bar { gap: 9px; padding: 9px 12px; }
+  .ap-row1 { flex-wrap: wrap; align-items: stretch; gap: 10px; }
+  .ap-brand { display: none; }
+  .ap-modes { width: 100%; align-items: stretch; gap: 12px; }
+  .ap-segwrap { flex: 1; min-width: 0; }
+  .ap-seg { width: 100%; }
+  .ap-seg .ap-vbtn { flex: 1; min-width: 0; justify-content: center; padding: 11px 5px; }
+  .ap-epsel { padding-left: 12px; }
+  .ap-ep { min-width: 42px; height: 42px; }
+  .ap-tb { width: 40px; height: 40px; }
   .story-container { padding-top: calc(var(--ap-barH) + 16px) !important; }
   .story-content { padding: 10px 18px 72px !important; }
   .story-img.img-circle, .story-img.img-circle-amber { width: min(78vw, 300px); height: min(78vw, 300px); }
@@ -644,8 +672,9 @@ body.gallery-open .gallery-section { display: block; }
   }
   /* Subtitles: smaller font, tucked just above the very bottom of the video */
   .fullscreen-subtitles {
+    width: 90% !important;
     max-width: 90% !important;
-    font-size: 13px !important;
+    font-size: 16px !important;
     line-height: 1.3 !important;
     bottom: 36px !important;
     padding: 0 8px !important;
@@ -655,8 +684,9 @@ body.gallery-open .gallery-section { display: block; }
   .ap-filmtop { padding: 10px 80px 10px 14px !important; font-size: 10px !important; }
 }
 @media (max-width: 430px) {
-  .nav-modes .nav-btn { font-size: 11px; letter-spacing: .04em; padding: 11px 4px; }
-  .nav-modes .nav-btn .ic { display: none; }
-  .bar-time { font-size: 10px; }
+  .ap-seg .ap-vbtn { font-size: 11px; letter-spacing: .02em; padding: 11px 3px; gap: 4px; }
+  .ap-seg .ap-vbtn .ic { display: none; }
+  .ap-ep { min-width: 36px; height: 40px; font-size: 14px; }
+  .ap-time { font-size: 10px; }
   .story-img.img-circle, .story-img.img-circle-amber { width: 82vw; height: 82vw; }
 }

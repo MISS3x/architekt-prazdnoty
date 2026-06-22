@@ -2227,35 +2227,45 @@ body.comic-fs .player-wrapper {
   display: none !important;
 }
 
-/* Mobile: comic flows vertically — a 2-up grid you scroll DOWN, audio-driven */
+/* Mobile: komiks = JEDEN sloupec, obrázek na celou šířku okna, bublina přes obrázek */
 @media (max-width: 768px) {
   body.comic-fs .comic-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: min-content;
-    align-items: start;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
     width: 100%;
     height: 100vh;
-    padding: 10px;
+    padding: 12px;
     overflow-x: hidden;
     overflow-y: auto;
   }
-  body.comic-fs .comic-col { display: contents; } /* panels become grid items */
+  body.comic-fs .comic-col { display: contents; } /* panely se stanou položkami sloupce */
   body.comic-fs .comic-panel {
     width: 100%;
     height: auto;
-    aspect-ratio: 4 / 3;
     min-height: 0;
     flex: none;
+    aspect-ratio: 4 / 3;   /* výchozí */
   }
+  /* RŮZNÉ výšky obrázků podle třídy panelu — ne jen obdélník */
+  body.comic-fs .comic-panel.panel-tall  { aspect-ratio: 3 / 4; }
+  body.comic-fs .comic-panel.panel-wide  { aspect-ratio: 16 / 9; }
+  body.comic-fs .comic-panel.panel-large { aspect-ratio: 1 / 1; }
+  body.comic-fs .comic-panel.panel-normal { aspect-ratio: 4 / 3; }
   body.comic-fs .comic-title-card {
-    grid-column: 1 / -1; /* full width */
     width: 100%;
     max-width: 100%;
-    height: 48vh;
+    height: 52vh;
     align-self: auto;
   }
+  /* menší text, bubliny rozmístěné RANDOM v rámci obrázku (cyklus 4 pozic) */
+  body.comic-fs .comic-panel .speech-text { font-size: 14px; line-height: 1.16; }
+  body.comic-fs .comic-panel .speech-bubble { max-width: 72%; }
+  body.comic-fs .comic-panel:nth-child(4n+1) .speech-bubble { top: 7%;  bottom: auto; left: 6%;  right: auto; }
+  body.comic-fs .comic-panel:nth-child(4n+2) .speech-bubble { top: auto; bottom: 8%;  left: auto; right: 6%; }
+  body.comic-fs .comic-panel:nth-child(4n+3) .speech-bubble { top: auto; bottom: 7%;  left: 6%;  right: auto; }
+  body.comic-fs .comic-panel:nth-child(4n)   .speech-bubble { top: 9%;  bottom: auto; left: auto; right: 6%; }
 }
 
 .comic-panel-img {

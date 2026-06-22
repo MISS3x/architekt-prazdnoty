@@ -1,24 +1,25 @@
 # Architekt Prázdnoty — Master Task Plan
 
-> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+> Živý dokument. Cochem dokončíme → odškrtneme `[x]`.
 
 ## 🚨 Blokující akce (manuální)
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **27 / 31 done (87%)**
+## 📊 Progress: **34 / 35 done (97%)**
 
 ```
-#######################################################################################------------- 87%
+#################################################################################################--- 97%
 ```
 
 | Section | Done | Total | % |
 |---|---|---|---|
-| HTML | 8 | 9 | 89% |
-| CSS | 3 | 4 | 75% |
-| JS | 9 | 10 | 90% |
+| HTML | 9 | 9 | 100% |
+| CSS | 4 | 4 | 100% |
+| JS | 10 | 10 | 100% |
 | Kling AI | 4 | 4 | 100% |
 | Git | 3 | 4 | 75% |
+| State & UI | 4 | 4 | 100% |
 
 ---
 
@@ -62,3 +63,9 @@
 - [x] **#22** — Commit and push Part 3 sync updates and new illustrations to origin ✅ completed
 - [x] **#31** — Purge Git history to remove heavy 1440x1440 videos and force push origin ✅ completed
 - [ ] **#29** — Commit and push new switcher UI layout and mobile responsive styles
+
+## State & UI
+- [x] **#32** — Implement state persistence (save activePart, currentTime, activeMode to localStorage) ✅ completed
+- [x] **#33** — Implement instant scroll on reload (blocking syncScrollTick while state.restoring is true) ✅ completed
+- [x] **#34** — Update poster hero content in setPart ✅ completed
+- [x] **#35** — Implement dimmed class logic for story chapter hero ✅ completed
