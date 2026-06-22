@@ -2095,9 +2095,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const getParaVideoCount = (part, paraIdx) => {
-    let relIdx = parseInt(paraIdx);
-    if (part === 2) relIdx -= 15;
-    else if (part === 3) relIdx -= 32;
+    // paraIdx je LOKÁLNÍ index odstavce v rámci dílu (0-based) — stejně jako
+    // v startParagraphVideoChain. PART_VIDEO_COUNTS jsou indexované lokálně.
+    const relIdx = parseInt(paraIdx);
     const arr = PART_VIDEO_COUNTS[part];
     if (arr && relIdx >= 0 && relIdx < arr.length) return arr[relIdx];
     return null; // neznámý počet → fallback na chování řízené error eventem
@@ -2166,11 +2166,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const loadAndPlayPreview = (videoEl, part, paraIdx, subIdx) => {
-    let relIdx = parseInt(paraIdx);
-    if (part === 2) relIdx = relIdx - 15;
-    else if (part === 3) relIdx = relIdx - 32;
-    
-    const paraNum = relIdx + 1; // 1-based paragraph index for filename
+    // paraIdx je LOKÁLNÍ index odstavce (0-based) — stejně jako startParagraphVideoChain.
+    const paraNum = parseInt(paraIdx) + 1; // 1-based číslo odstavce v názvu souboru
 
     const partStr = String(part).padStart(2, '0');
     const paraStr = String(paraNum).padStart(2, '0');

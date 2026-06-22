@@ -39,9 +39,9 @@
 
 | File | Locked by | Since | Note |
 |------|-----------|-------|------|
-| `app.js` | — | — | — |
+| `app.js` | Agent 1 (Antigravity IDE) | 2026-06-22 16:59 | Fix comic scrolling delay |
 | `index.html` | — | — | — |
-| `style.css` | — | — | — |
+| `style.css` | Agent 1 (Antigravity IDE) | 2026-06-22 16:59 | Desktop comic speech text font size |
 | `design.css` | — | — | — |
 | `task.md` | — | — | — |
 

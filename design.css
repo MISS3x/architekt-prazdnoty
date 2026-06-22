@@ -156,8 +156,8 @@ body::after {
 .ap-ep.active{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber));
   box-shadow:0 0 22px -3px var(--amber), inset 0 0 0 1px var(--amber-hi); }
 
-/* Tlačítka ◀ ▶ (posun po větách) — na desktopu skrytá (stačí kolečko) */
-.ap-step { display: none; }
+/* Tlačítka ◀ ▶ (posun po větách) — zobrazená i na desktopu */
+.ap-step { display: grid; }
 
 /* MOBIL: slider pod stop/play na celou šířku mezi ◀ ▶, větší posuvník */
 @media (max-width: 768px) {
@@ -470,6 +470,50 @@ body::after {
 .comic-title-card { border-color: var(--cyan) !important; }
 .comic-title-card .ctc-title { font-family: 'Orbitron', sans-serif !important; }
 
+/* Desktop comic text — 2x menší sizing */
+@media (min-width: 769px) {
+  body.comic-fs .speech-bubble {
+    padding: 4px 6px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .5), 0 0 0 1px rgba(10, 15, 20, .9) !important;
+  }
+  body.comic-fs .speech-text {
+    font-size: 7px !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.3px !important;
+  }
+  body.comic-fs .comic-panel.short-bubble .speech-text {
+    font-size: 8.5px !important;
+    line-height: 1.2 !important;
+  }
+  body.comic-fs .comic-panel.long-bubble .speech-text {
+    font-size: 6px !important;
+  }
+  body.comic-fs .comic-panel.xlong-bubble .speech-text {
+    font-size: 5px !important;
+  }
+  body.comic-fs .speech-pointer {
+    bottom: -4px !important;
+    left: 10px !important;
+    border-left-width: 4px !important;
+    border-right-width: 4px !important;
+    border-top-width: 4px !important;
+    border-top-color: rgba(10, 15, 20, .9) !important;
+  }
+  body.comic-fs .speech-pointer::after {
+    top: -5px !important;
+    left: -3px !important;
+    border-left-width: 3px !important;
+    border-right-width: 3px !important;
+    border-top-width: 3px !important;
+    border-top-color: #f4f7f8 !important;
+  }
+  body.comic-fs .comic-panel:nth-child(even) .speech-pointer {
+    left: auto !important;
+    right: 10px !important;
+  }
+}
+
 /* ===================== FILM ===================== */
 .fullscreen-overlay { background-color: #000 !important; padding: 0 !important; }
 .fullscreen-overlay { top: var(--ap-barH) !important; }
@@ -561,6 +605,10 @@ body.comic-fs .comic-grid { height: 100% !important; }
    (dřív se schovávaly pod video — chyba vrstvení). Stačí zvednout z-index. */
 .fullscreen-screen { z-index: 1 !important; }
 .fullscreen-subtitles, .fullscreen-shot-id, .ap-filmtop { z-index: 20 !important; }
+/* Dokud běží úvodní poster, neukazuj modrý titulek/kód/HUD (jinak text prosvítá přes intro) */
+.fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-subtitles,
+.fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-shot-id,
+.fullscreen-overlay:has(#fullscreen-poster.active) .ap-filmtop { display: none !important; }
 
 /* ===================== AUDIO · PIXELOVÁ LED MATRIX (canvas plástev) ===================== */
 .ap-audio2{ position:fixed; left:0; right:0; top:var(--ap-barH); bottom:0; z-index:1000; overflow:hidden;
@@ -573,10 +621,7 @@ body.comic-fs .comic-grid { height: 100% !important; }
 .ap-matrixwrap{ position:absolute; top:0; bottom:0; left:50%; transform:translateX(-50%);
   width:min(100%, 900px); z-index:2; margin:0; padding:0; display:block; }
 .ap-matrix{ position:absolute; inset:0; width:100%; height:100%; display:block;
-  image-rendering:pixelated; touch-action:none; user-select:none; -webkit-user-select:none;
-  transition:opacity .45s ease; }
-/* Stopnuté / pozastavené audio → equalizer ještě víc ztlumený. */
-.ap-audio2.paused .ap-matrix{ opacity:.4; }
+  image-rendering:pixelated; touch-action:none; user-select:none; -webkit-user-select:none; }
 .ap-mcorner{ display:none; }
 
 .ap-audio2 .ap-audioinfo{ position:absolute; left:50%; transform:translateX(-50%); width:min(100%, 900px); top:5%; z-index:5; text-align:center; pointer-events:none; padding:0 20px; }

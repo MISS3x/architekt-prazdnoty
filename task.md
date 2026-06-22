@@ -6,20 +6,20 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **36 / 37 done (97%)**
+## 📊 Progress: **39 / 39 done (100%)**
 
 ```
-#################################################################################################--- 97%
+#################################################################################################### 100%
 ```
 
 | Section | Done | Total | % |
 |---|---|---|---|
 | HTML | 9 | 9 | 100% |
-| CSS | 4 | 4 | 100% |
+| CSS | 5 | 5 | 100% |
 | JS | 10 | 10 | 100% |
 | Kling AI | 4 | 4 | 100% |
-| Git | 3 | 4 | 75% |
-| State & UI | 6 | 6 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
 
 ---
 
@@ -39,6 +39,7 @@
 - [x] **#6** — Adjust terminal decryption layout to work as a full-page overlay ✅ completed
 - [x] **#7** — Add styles for floating draggable player panels and gallery layout ✅ completed
 - [x] **#27** — Move `.sticky-mode-switcher` to top, style the new Part switcher, and implement fully mobile responsive styles ✅ completed
+- [x] **#39** — Udelej texty na desktop verzi komiks 2x mensi ✅ completed (2x smaller font, padding and pointers on desktop)
 
 ## JS
 - [x] **#8** — Implement decryption state tracking (`decryptedPart2`, `decryptedPart3`) in `app.js` ✅ completed
@@ -62,7 +63,7 @@
 - [x] **#18** — Push changes to git origin ✅ completed
 - [x] **#22** — Commit and push Part 3 sync updates and new illustrations to origin ✅ completed
 - [x] **#31** — Purge Git history to remove heavy 1440x1440 videos and force push origin ✅ completed
-- [ ] **#29** — Commit and push new switcher UI layout and mobile responsive styles
+- [x] **#29** — Commit and push new switcher UI layout and mobile responsive styles ✅ completed
 
 ## State & UI
 - [x] **#32** — Implement state persistence (save activePart, currentTime, activeMode to localStorage) ✅ completed
@@ -71,3 +72,4 @@
 - [x] **#35** — Implement dimmed class logic for story chapter hero ✅ completed
 - [x] **#36** — Bind ArrowLeft / ArrowRight keys to scrub audio by sentence (scrubByCue) ✅ completed
 - [x] **#37** — Hide footer in fullscreen comic mode (body.comic-fs) to prevent overlapping on mobile ✅ completed
+- [x] **#38** — Show sentence navigation buttons (◀ and ▶) on desktop by changing .ap-step from display: none to grid ✅ completed
