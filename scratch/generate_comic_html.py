@@ -113,19 +113,13 @@ def main():
             <div class="comic-panel-border"></div>
             <div class="comic-panel-number">#{idx}.{s_idx}</div>
 """
-            # Render bubble if it's a quote, else render caption box
-            if s_quotes:
-                for quote in s_quotes:
-                    panel_html += f"""
+            # Render bubble for EVERY panel as requested
+            panel_html += f"""
             <div class="speech-bubble">
-              <span class="speech-text">„{quote.strip()}“</span>
+              <span class="speech-text">{s_clean}</span>
               <div class="speech-pointer"></div>
             </div>"""
-            else:
-                panel_html += f"""
-            <div class="comic-caption">
-              <p>{s_clean}</p>
-            </div>"""
+
 
             panel_html += """
           </div>"""

@@ -477,11 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const captionPEl = panel.querySelector(".comic-caption p");
             
             if (speechTextEl) {
-              // Strip quotes if they exist, or just leave them? 
-              // The bubble looks better with quotes or we can just replace what's inside.
-              // Python added „ “ so let's ensure it has them
-              let cleanText = sText.replace(/^„|“$/g, '').trim();
-              speechTextEl.textContent = `„${cleanText}“`;
+              speechTextEl.textContent = sText;
             } else if (captionPEl) {
               captionPEl.textContent = sText;
             }

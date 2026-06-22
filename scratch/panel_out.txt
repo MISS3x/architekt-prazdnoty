@@ -1,0 +1,6 @@
+    
+          <div class="comic-panel panel-normal" data-i="0" data-sentence="0">
+            <img src="img/screenshots/01_01_01.jpg" alt="Díl 1, Odst. 1, Věta 1" class="comic-panel-img" loading="lazy">
+            <div class="comic-panel-overlay"></div>
+            <div class="comic-panel-border"></div>
+            <
