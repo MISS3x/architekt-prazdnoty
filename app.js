@@ -94,7 +94,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const barKnob = document.getElementById("bar-knob");
   const barTimeCur = document.getElementById("bar-time-cur");
   const barTimeDur = document.getElementById("bar-time-dur");
-  const setBarPlayIcon = (playing) => { if (barPlay) barPlay.textContent = playing ? "❚❚" : "▶"; };
+  const PLAY_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+  const PAUSE_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
+  const setBarPlayIcon = (playing) => { if (barPlay) barPlay.innerHTML = playing ? PAUSE_SVG : PLAY_SVG; };
+  // Dynamicky měř výšku dvouřadé lišty → --ap-barH / --barH (offset obsahu)
+  const measureBarHeight = () => {
+    const bar = document.getElementById("top-nav");
+    if (!bar) return;
+    const h = bar.offsetHeight;
+    if (h > 0) {
+      document.documentElement.style.setProperty("--ap-barH", h + "px");
+      document.documentElement.style.setProperty("--barH", h + "px");
+    }
+  };
   const barEpTitle = document.getElementById("bar-eptitle");
   const EP_TITLES = { 1: { rom: "I", t: "ARCHITEKT PRÁZDNOTY" }, 2: { rom: "II", t: "VČELÍ MOR A NEURO-NEKRÓZA" }, 3: { rom: "III", t: "MATEŘÍ KAŠIČKA 2.0" } };
   const updateBarEpTitle = (partNum) => {
@@ -163,40 +175,30 @@ document.addEventListener("DOMContentLoaded", () => {
     3: { rom: "III", title: "MATEŘÍ", am: "KAŠIČKA 2.0", who: "Krtek" },
   };
   let audioStageEl = null;
+  const audioFx = { analyser: null, data: null, ctx: null, stream: null };
+  let audioMicOn = false;
+  let audioMatrixStop = null;
+
   const buildAudioStage = () => {
     if (audioStageEl) return audioStageEl;
     const el = document.createElement("div");
     el.id = "audio-stage";
-    el.className = "ap-audio paused";
+    el.className = "ap-audio2 paused";
     el.style.display = "none";
-    const BARS = 60;
-    let rig = "";
-    for (let i = 0; i < BARS; i++) {
-      const a = (360 / BARS) * i;
-      const t = Math.abs(Math.sin((a * Math.PI) / 180));
-      const hue = Math.round(192 - 154 * t);
-      const h = 30 + ((i * 37) % 11) * 9;
-      const dur = (0.66 + ((i * 13) % 9) * 0.09).toFixed(2);
-      const delay = (((i * 7) % 17) * 0.06).toFixed(2);
-      rig +=
-        `<div class="ap-eqslot" style="transform:rotateY(${a}deg) translateZ(var(--eqR))">` +
-        `<div class="ap-eqbar" style="height:${h}px;animation-duration:${dur}s;animation-delay:${delay}s;` +
-        `background:linear-gradient(to top,hsl(${hue} 100% 46%),hsl(${hue} 100% 78%));box-shadow:0 0 14px hsl(${hue} 100% 60% / .8)"></div>` +
-        `<div class="ap-eqbar refl" style="height:${h}px;animation-duration:${dur}s;animation-delay:${delay}s;` +
-        `background:linear-gradient(to bottom,hsl(${hue} 100% 50% / .55),transparent)"></div>` +
-        `</div>`;
-    }
     el.innerHTML =
-      '<div class="ap-eqfloor"><i></i></div>' +
-      '<div class="ap-eqstage"><div class="ap-eqtilt"><div class="ap-eqrig">' +
-      '<div class="ap-eqcore"></div><div class="ap-eqwave"></div><div class="ap-eqwave w2"></div>' +
-      rig +
-      '</div></div></div>' +
       '<div class="ap-audioinfo"><span class="ap-akick" id="audio-kick"></span>' +
       '<h2 class="ap-atitle" id="audio-title"></h2><span class="ap-anarr" id="audio-narr"></span></div>' +
-      '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span><span id="audio-status">Připraveno k přehrání</span></div>';
+      '<div class="ap-matrixwrap"><canvas class="ap-matrix"></canvas>' +
+      '<span class="ap-draghint">⟲ táhni — vodorovně otáčí, svisle naklání</span></div>' +
+      '<div class="ap-actrls">' +
+      '<button class="ap-micbtn" id="audio-mic"><span class="ap-micdot"></span>' +
+      '<span id="audio-mic-label">Reagovat na živý zvuk (mikrofon)</span></button>' +
+      '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span>' +
+      '<span id="audio-status">Připraveno k přehrání</span></div></div>';
     document.body.appendChild(el);
     audioStageEl = el;
+    const micBtn = el.querySelector("#audio-mic");
+    if (micBtn) micBtn.addEventListener("click", toggleAudioMic);
     return el;
   };
   const updateAudioStage = (partNum) => {
@@ -209,18 +211,245 @@ document.addEventListener("DOMContentLoaded", () => {
     if (title) title.innerHTML = `${m.title} <span class="am">${m.am}</span>`;
     if (narr) narr.textContent = "Čte " + m.who;
   };
+  const updateAudioMicUI = () => {
+    const btn = document.getElementById("audio-mic");
+    const lab = document.getElementById("audio-mic-label");
+    if (btn) btn.classList.toggle("on", audioMicOn);
+    if (lab) lab.textContent = audioMicOn ? "Reaguje na zvuk z mikrofonu" : "Reagovat na živý zvuk (mikrofon)";
+    setAudioPlaying(state.playing);
+  };
+  const startAudioMic = async () => {
+    const fx = audioFx;
+    try {
+      if (!fx.ctx) fx.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (fx.ctx.state === "suspended") await fx.ctx.resume();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      fx.stream = stream;
+      const src = fx.ctx.createMediaStreamSource(stream);
+      const an = fx.ctx.createAnalyser();
+      an.fftSize = 128; an.smoothingTimeConstant = 0.78;
+      src.connect(an);
+      fx.analyser = an; fx.data = new Uint8Array(an.frequencyBinCount);
+      audioMicOn = true; updateAudioMicUI();
+    } catch (e) { alert("Mikrofon se nepodařilo spustit: " + e.message); }
+  };
+  const stopAudioMic = () => {
+    const fx = audioFx;
+    if (fx.stream) { fx.stream.getTracks().forEach((tr) => tr.stop()); fx.stream = null; }
+    fx.analyser = null; fx.data = null;
+    audioMicOn = false; updateAudioMicUI();
+  };
+  const toggleAudioMic = () => { audioMicOn ? stopAudioMic() : startAudioMic(); };
+
   const setAudioPlaying = (playing) => {
     if (!audioStageEl) return;
     audioStageEl.classList.toggle("paused", !playing);
     const led = document.getElementById("audio-led");
     const st = document.getElementById("audio-status");
-    if (led) led.classList.toggle("on", playing);
-    if (st) st.textContent = playing ? "Přehrávám · prostorový zvuk" : (state.currentTime > 0 ? "Pozastaveno" : "Připraveno k přehrání");
+    if (led) led.classList.toggle("on", playing || audioMicOn);
+    if (st) st.textContent = audioMicOn ? "Živá spektrální analýza"
+      : (playing ? "Přehrávám · simulace spektra" : (state.currentTime > 0 ? "Pozastaveno" : "Připraveno k přehrání"));
   };
+
+  // AUDIO — 3D prostorová pixelová plástev (canvas). Port z design projektu;
+  // řízeno state.playing (simulace) nebo živým mikrofonem (audioMicOn).
+  const startAudioMatrix = () => {
+    if (audioMatrixStop || !audioStageEl) return;
+    const cv = audioStageEl.querySelector(".ap-matrix");
+    const wrap = audioStageEl.querySelector(".ap-matrixwrap");
+    if (!cv || !wrap) return;
+    const ctx = cv.getContext("2d");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const CORE = 10, FADE_RINGS = 5, RINGS = CORE + FADE_RINGS;
+    const S = 0.62, HEXR = S * 0.88, MAXH = 6.2, CAM = 30;
+    let tilt = 1.02, dpr = 1, raf, t = 0, angle = 0, focal = 1, cx = 0, cy = 0;
+
+    const hexes = [];
+    let maxRad = 0.0001;
+    for (let q = -RINGS; q <= RINGS; q++) {
+      const rr1 = Math.max(-RINGS, -q - RINGS), rr2 = Math.min(RINGS, -q + RINGS);
+      for (let r = rr1; r <= rr2; r++) {
+        const x = 1.5 * S * q;
+        const z = Math.sqrt(3) * S * (r + q / 2);
+        const rad = Math.sqrt(x * x + z * z);
+        const ring = (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+        const over = Math.max(0, ring - CORE);
+        const scale = Math.pow(0.8, over);
+        const fade = over === 0 ? 1 : Math.pow(0.74, over);
+        if (ring <= CORE && rad > maxRad) maxRad = rad;
+        hexes.push({ x, z, rad, ang: Math.atan2(z, x), scale, fade });
+      }
+    }
+    const HN = hexes.length;
+    const field = new Float32Array(HN), tgt = new Float32Array(HN);
+    const order = new Array(HN);
+    for (let k = 0; k < HN; k++) order[k] = k;
+    const CORN = [];
+    for (let c = 0; c < 6; c++) { const a = (Math.PI / 3) * c; CORN.push([Math.cos(a) * HEXR, Math.sin(a) * HEXR]); }
+
+    const fit = () => {
+      const W = Math.max(120, wrap.clientWidth), H = Math.max(120, wrap.clientHeight);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      cv.style.width = W + "px"; cv.style.height = H + "px";
+      focal = cv.height * 0.62; cx = cv.width / 2; cy = cv.height * 0.54;
+    };
+    fit();
+    const ro = new ResizeObserver(fit); ro.observe(wrap);
+
+    let dragging = false, lastX = 0, lastY = 0, vel = 0;
+    const onDown = (e) => { dragging = true; const p = e.touches ? e.touches[0] : e; lastX = p.clientX; lastY = p.clientY; vel = 0; cv.style.cursor = "grabbing"; };
+    const onMove = (e) => { if (!dragging) return; const p = e.touches ? e.touches[0] : e; const dx = p.clientX - lastX, dy = p.clientY - lastY; lastX = p.clientX; lastY = p.clientY; angle += dx * 0.01; vel = dx * 0.01; tilt = Math.max(0.18, Math.min(1.48, tilt + dy * 0.006)); if (e.cancelable) e.preventDefault(); };
+    const onUp = () => { dragging = false; cv.style.cursor = "grab"; };
+    cv.style.cursor = "grab";
+    cv.addEventListener("mousedown", onDown); cv.addEventListener("touchstart", onDown, { passive: true });
+    window.addEventListener("mousemove", onMove); window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onUp); window.addEventListener("touchend", onUp);
+
+    const draw = () => {
+      const play = state.playing && !reduce;
+      if (dragging) { /* angle řízen myší */ }
+      else { angle += vel + (play ? 0.0042 : 0.0011); vel *= 0.92; }
+      t += play ? 0.03 : 0.014;
+
+      const fx = audioFx;
+      const real = fx && fx.analyser && audioMicOn;
+      let bins = 0;
+      if (real) { fx.analyser.getByteFrequencyData(fx.data); bins = fx.data.length; }
+      const maxR = maxRad;
+      for (let k = 0; k < HN; k++) {
+        const hx = hexes[k], rad = hx.rad;
+        let v;
+        if (real) {
+          const bi = Math.min(bins - 1, Math.floor((rad / maxR) * bins));
+          v = fx.data[bi] / 255;
+          v = Math.pow(v, 1.25) * 1.15;
+          v *= 0.78 + 0.22 * Math.sin(hx.ang * 3 + t * 4);
+          v = Math.max(0.02, Math.min(1, v));
+        } else if (play) {
+          v = 0.5 + 0.5 * Math.sin(t * 2.2 - rad * 0.95)
+            + 0.42 * Math.sin(t * 1.3 + hx.x * 0.5)
+            + 0.42 * Math.sin(t * 1.7 + hx.z * 0.5);
+          v = v / 1.95;
+          v *= 1 - rad / (maxR * 1.25);
+          v *= 0.55 + 0.45 * Math.abs(Math.sin(t * 0.55));
+          v = Math.max(0.02, Math.min(1, v));
+        } else {
+          const ripple = Math.sin(rad * 1.1 - t * 1.6);
+          const cross = Math.sin(hx.x * 0.45 + t * 0.9) * Math.sin(hx.z * 0.45 - t * 0.7);
+          const swirl = Math.sin(hx.ang * 2 + rad * 0.5 - t * 1.1);
+          let w = 0.42 + 0.30 * ripple + 0.22 * cross + 0.16 * swirl;
+          w *= 1 - rad / (maxR * 1.5);
+          w *= 0.7 + 0.3 * Math.sin(t * 0.35);
+          v = Math.max(0.03, Math.min(0.6, w));
+        }
+        tgt[k] = v;
+      }
+      for (let k = 0; k < HN; k++) {
+        const up = tgt[k] > field[k];
+        field[k] += (tgt[k] - field[k]) * (up ? 0.45 : 0.12);
+      }
+
+      const ca = Math.cos(angle), sa = Math.sin(angle), ct = Math.cos(tilt), st = Math.sin(tilt);
+      const proj = (x, y, z) => {
+        const X = x * ca - z * sa, Z = x * sa + z * ca;
+        const Yy = y * ct + Z * st, Zz = Z * ct - y * st;
+        const f = focal / (CAM + Zz);
+        return [cx + X * f, cy - Yy * f, Zz];
+      };
+
+      order.sort((a, b) => {
+        const ha = hexes[a], hb = hexes[b];
+        return (hb.x * sa + hb.z * ca) - (ha.x * sa + ha.z * ca);
+      });
+
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.lineJoin = "round";
+      ctx.globalCompositeOperation = "lighter";
+
+      for (let oi = 0; oi < order.length; oi++) {
+        const k = order[oi];
+        const hx = hexes[k];
+        const cxw = hx.x, czw = hx.z;
+        const hr = field[k], h = hr * MAXH;
+        const hue = 190 - 150 * hr;
+        const sc = hx.scale, fd = hx.fade;
+        const cn = [[CORN[0][0]*sc,CORN[0][1]*sc],[CORN[1][0]*sc,CORN[1][1]*sc],[CORN[2][0]*sc,CORN[2][1]*sc],[CORN[3][0]*sc,CORN[3][1]*sc],[CORN[4][0]*sc,CORN[4][1]*sc],[CORN[5][0]*sc,CORN[5][1]*sc]];
+
+        if (h < 0.16) {
+          ctx.strokeStyle = "rgba(45,226,255," + (0.07 * fd).toFixed(3) + ")";
+          ctx.lineWidth = Math.max(0.6, dpr * 0.6);
+          ctx.beginPath();
+          for (let c = 0; c < 6; c++) { const p = proj(cxw + cn[c][0], 0, czw + cn[c][1]); c ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+          ctx.closePath(); ctx.stroke();
+          continue;
+        }
+
+        const aWall = (0.10 + 0.26 * hr) * fd;
+        for (let c = 0; c < 6; c++) {
+          const c2 = (c + 1) % 6;
+          const b0 = proj(cxw + cn[c][0], 0, czw + cn[c][1]);
+          const b1 = proj(cxw + cn[c2][0], 0, czw + cn[c2][1]);
+          const t1 = proj(cxw + cn[c2][0], h, czw + cn[c2][1]);
+          const t0 = proj(cxw + cn[c][0], h, czw + cn[c][1]);
+          const shade = 0.55 + 0.45 * Math.abs(Math.cos((Math.PI / 3) * c + angle));
+          const g = ctx.createLinearGradient(b0[0], b0[1], t0[0], t0[1]);
+          g.addColorStop(0, "hsla(" + hue + " 95% 52% / " + (aWall * 0.14 * shade).toFixed(3) + ")");
+          g.addColorStop(1, "hsla(" + hue + " 95% 60% / " + (aWall * shade).toFixed(3) + ")");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]);
+          ctx.lineTo(t1[0], t1[1]); ctx.lineTo(t0[0], t0[1]); ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "hsla(" + hue + " 100% 72% / " + ((0.08 + 0.24 * hr) * fd).toFixed(3) + ")";
+          ctx.lineWidth = Math.max(0.5, dpr * 0.5);
+          ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(t0[0], t0[1]); ctx.stroke();
+        }
+
+        if (hr > 0.55) { ctx.shadowColor = "rgba(255,178,46,.9)"; ctx.shadowBlur = 16 * dpr; }
+        else if (hr > 0.3) { ctx.shadowColor = "rgba(45,226,255,.85)"; ctx.shadowBlur = 10 * dpr; }
+        else ctx.shadowBlur = 0;
+        ctx.fillStyle = "hsla(" + hue + " 100% " + (58 + 14 * hr) + "% / " + ((0.22 + 0.42 * hr) * fd).toFixed(3) + ")";
+        ctx.beginPath();
+        for (let c = 0; c < 6; c++) { const p = proj(cxw + cn[c][0], h, czw + cn[c][1]); c ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+        ctx.closePath(); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "hsla(" + hue + " 100% 82% / " + ((0.5 + 0.4 * hr) * fd).toFixed(3) + ")";
+        ctx.lineWidth = Math.max(1, dpr * 0.9);
+        ctx.stroke();
+      }
+
+      ctx.globalCompositeOperation = "source-over";
+      const scan = 3 * dpr;
+      ctx.fillStyle = "rgba(2,8,14,0.16)";
+      for (let y = (t * 22 * dpr) % (scan * 2); y < cv.height; y += scan * 2) {
+        ctx.fillRect(0, y, cv.width, scan);
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+
+    audioMatrixStop = () => {
+      cancelAnimationFrame(raf); ro.disconnect();
+      cv.removeEventListener("mousedown", onDown); cv.removeEventListener("touchstart", onDown);
+      window.removeEventListener("mousemove", onMove); window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("mouseup", onUp); window.removeEventListener("touchend", onUp);
+    };
+  };
+  const stopAudioMatrix = () => { if (audioMatrixStop) { audioMatrixStop(); audioMatrixStop = null; } };
+
   const showAudioStage = (show) => {
     const el = buildAudioStage();
     el.style.display = show ? "block" : "none";
-    if (show) { updateAudioStage(state.activePart); setAudioPlaying(state.playing); }
+    if (show) {
+      updateAudioStage(state.activePart);
+      setAudioPlaying(state.playing);
+      requestAnimationFrame(startAudioMatrix);
+    } else {
+      stopAudioMatrix();
+      stopAudioMic();
+    }
   };
   const playerStatus = document.getElementById("player-status") || _dummy;
   const btnSync = document.getElementById("btn-sync") || _dummy;
@@ -753,15 +982,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".comic-grid").forEach(g =>
       g.addEventListener("scroll", handleUserScrollSeek, { passive: true }));
 
-    // Wheel = scrub audio timeline by sentence, but only in FILM and AUDIO modes.
-    // TEXT keeps native scrolling; COMIC keeps its own strip-scroll handler.
+    // Kolečko myši = posun audio stopy po VĚTÁCH ve VŠECH režimech
+    // (text/komiks/film/audio). Po skoku se příslušný obsah dorovná na aktuální čas.
     let lastCueScrub = 0;
     window.addEventListener("wheel", (e) => {
-      if (!state.audioMode && !state.fullscreenMode) return;
+      if (state.calibMode) return;
+      if (document.body.classList.contains("gallery-open")) return; // galerie → nech nativní scroll
       if (!cues || !(state.duration > 0)) return;
       e.preventDefault();
       const now = Date.now();
-      if (now - lastCueScrub < 110) return; // one step per wheel notch
+      if (now - lastCueScrub < 110) return; // jeden krok na jeden „cvak"
       lastCueScrub = now;
       scrubByCue(e.deltaY > 0 ? 1 : -1);
     }, { passive: false });
@@ -771,6 +1001,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnModeComic = document.getElementById("btn-mode-comic");
     const btnModeMovie = document.getElementById("btn-mode-movie");
     const btnModeAudio = document.getElementById("btn-mode-audio");
+
+    // Force the freshly-activated view to jump to the CURRENT audio position.
+    // The mode-button click itself registers as user interaction, which makes
+    // syncScrollTick suppress auto-follow for ~5s — so we snap directly here,
+    // bypassing that gate (and clear the gate so live follow resumes at once).
+    const snapViewToCurrentTime = () => {
+      if (state.comicMode) {
+        const grid = document.querySelector(`#comic-content-part${state.activePart} .comic-grid`);
+        if (!grid) return;
+        const active = grid.querySelector(".comic-panel.active");
+        if (!active) return;
+        const offset = centerOffsetFor(grid, active);
+        if (isComicVertical()) grid.scrollTop = offset; else grid.scrollLeft = offset;
+      } else {
+        const el = paras[state.curIdx];
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        window.scrollTo(0, Math.max(0, window.scrollY + rect.top - window.innerHeight * 0.4));
+      }
+    };
 
     const setActiveModeUI = (mode) => {
       const playerPreview = document.getElementById("player-video-preview");
@@ -790,6 +1040,8 @@ document.addEventListener("DOMContentLoaded", () => {
         updateModeVisibility();
         highlightParagraph(state.curIdx);
         invalidateComicTimelines(); // přebuduj cue-anchored kotvy pro textový scroll
+        lastUserScrollTime = 0;                       // deliberate switch → povol auto-follow
+        requestAnimationFrame(snapViewToCurrentTime); // skoč na aktuální čas hned
       } else if (mode === "comic") {
         state.comicMode = true;
         document.body.classList.add("comic-fs"); // fullscreen comic playback
@@ -800,6 +1052,8 @@ document.addEventListener("DOMContentLoaded", () => {
         updateModeVisibility();
         highlightParagraph(state.curIdx);
         invalidateComicTimelines(); // recompute panel offsets in the new layout
+        lastUserScrollTime = 0;                       // deliberate switch → povol auto-follow
+        requestAnimationFrame(snapViewToCurrentTime); // naroluj strip na aktuální panel hned
       } else if (mode === "movie") {
         state.comicMode = false;
         document.body.classList.remove("comic-fs");
@@ -1226,15 +1480,36 @@ document.addEventListener("DOMContentLoaded", () => {
     return idx;
   };
 
-  // Step the audio timeline by one sentence/paragraph cue.
-  // FILM + AUDIO modes drive everything off audio time, so the mouse wheel
-  // jumps audio.currentTime to the next/previous cue (dir: +1 fwd, -1 back).
+  // Časy začátků VĚT — odvozené proporčně podle slov v odstavci (stejná logika
+  // jako kino-titulky/karaoke). Odstavec i pokrývá [cues[i], cues[i+1]] a obsahuje
+  // K vět; každá věta začíná v čase tStart + (indexPrvníhoSlova / početSlov) * span.
+  const buildSentenceTimes = () => {
+    const out = [];
+    if (!cues || !paras.length) return out;
+    for (let i = 0; i < N; i++) {
+      if (cues[i] == null) continue;
+      const tStart = cues[i];
+      const tEnd = (i < N - 1 && cues[i + 1] != null) ? cues[i + 1] : (state.duration || tStart + 4);
+      const span = Math.max(0.1, tEnd - tStart);
+      const words = paras[i] ? paras[i].querySelectorAll(".word") : [];
+      const wc = words.length;
+      out.push(tStart); // začátek odstavce = první věta
+      for (let w = 0; w < wc - 1; w++) {
+        if (SENTENCE_END.test((words[w].textContent || "").trim())) {
+          out.push(tStart + ((w + 1) / wc) * span);
+        }
+      }
+    }
+    out.sort((a, b) => a - b);
+    return out;
+  };
+
+  // Posun audio časové osy o jednu VĚTU kolečkem myši (dir: +1 vpřed, -1 zpět).
+  // FILM + AUDIO režim jedou z audio času, takže nastavíme audio.currentTime.
   const scrubByCue = (dir) => {
     if (!cues || !(state.duration > 0)) return;
-    const times = [];
-    for (let i = 0; i < N; i++) if (cues[i] != null) times.push(cues[i]);
+    const times = buildSentenceTimes();
     if (!times.length) return;
-    times.sort((a, b) => a - b);
     const t = audio.currentTime;
     let target;
     if (dir > 0) {
@@ -1539,7 +1814,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   comicRAF = requestAnimationFrame(syncScrollTick);
 
-  window.addEventListener("resize", invalidateComicTimelines);
+  window.addEventListener("resize", () => { invalidateComicTimelines(); measureBarHeight(); });
+  window.addEventListener("load", measureBarHeight);
+  measureBarHeight();
+  requestAnimationFrame(measureBarHeight);
 
   // Scroll a part's strip to its intro title card for the 3s pause.
   const scrollComicToStart = (partNum) => {
@@ -1822,13 +2100,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- UI LISTENERS & CONTROL handlers ---
   const setupUIListeners = () => {
+    // Galerie jako samostatný view (fixed overlay) — toggle přes body.gallery-open
     const btnGallery = document.getElementById("btn-nav-gallery");
+    const galleryView = document.getElementById("gallery-view");
+    const closeGallery = () => document.body.classList.remove("gallery-open");
     if (btnGallery) {
       btnGallery.addEventListener("click", () => {
-        const gallery = document.querySelector(".gallery-section");
-        if (gallery) gallery.scrollIntoView({ behavior: "smooth" });
+        document.body.classList.toggle("gallery-open");
+        if (galleryView && document.body.classList.contains("gallery-open")) galleryView.scrollTop = 0;
       });
     }
+    const btnGalleryClose = document.getElementById("gallery-close-btn");
+    if (btnGalleryClose) btnGalleryClose.addEventListener("click", closeGallery);
+    // přepnutí verze zavře galerii (dotaz přes ID — mode tlačítka se vážou až v init() po tomto callu)
+    ["btn-mode-text", "btn-mode-comic", "btn-mode-movie", "btn-mode-audio"].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.addEventListener("click", closeGallery);
+    });
     // Play/Pause Click
     if (playBtn) playBtn.addEventListener("click", togglePlay);
 
