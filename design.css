@@ -293,10 +293,12 @@ body::after {
 .story-paragraph .word.read { color: var(--cyan-hi); }
 
 /* ===================== COMIC ===================== */
-.comic-panel { box-shadow: 0 0 0 2px var(--cyan), 0 0 22px -4px rgba(45, 226, 255, .6), inset 0 0 60px -20px #000 !important; border: 0 !important; border-radius: 12px !important; }
+/* Potlačené (neaktivní) panely: tlumený rám bez záře, zhasnutá grafika.
+   Jen aktivní frame svítí barvou a cyan glow. */
+.comic-panel { box-shadow: 0 0 0 1px rgba(45, 226, 255, .22), inset 0 0 60px -20px #000 !important; border: 0 !important; border-radius: 12px !important; transition: box-shadow .35s ease !important; }
 .comic-panel.active { box-shadow: 0 0 0 2px var(--cyan-hi), 0 0 34px -2px var(--cyan) !important; }
-.comic-panel-img { filter: grayscale(.1) contrast(1.08) !important; }
-.comic-panel.active .comic-panel-img { filter: grayscale(0) contrast(1.1) brightness(1.05) !important; }
+.comic-panel-img { filter: grayscale(1) brightness(.42) contrast(.95) !important; transition: filter .35s ease !important; }
+.comic-panel.active .comic-panel-img { filter: grayscale(0) contrast(1.12) brightness(1.06) saturate(1.1) !important; }
 .comic-panel-number, .comic-caption { font-family: 'Share Tech Mono', monospace; }
 .comic-caption { border-left: 3px solid var(--cyan) !important; }
 .comic-caption p { font-family: 'Chakra Petch', sans-serif !important; }
