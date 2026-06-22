@@ -474,24 +474,24 @@ body::after {
 /* Desktop comic text — 2x menší sizing */
 @media (min-width: 769px) {
   body.comic-fs .speech-bubble {
-    padding: 4px 6px !important;
-    border-radius: 6px !important;
+    padding: 7px 11px !important;
+    border-radius: 9px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .5), 0 0 0 1px rgba(10, 15, 20, .9) !important;
   }
   body.comic-fs .speech-text {
-    font-size: 7px !important;
-    line-height: 1.15 !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
     letter-spacing: 0.3px !important;
   }
   body.comic-fs .comic-panel.short-bubble .speech-text {
-    font-size: 8.5px !important;
-    line-height: 1.2 !important;
+    font-size: 16px !important;
+    line-height: 1.22 !important;
   }
   body.comic-fs .comic-panel.long-bubble .speech-text {
-    font-size: 6px !important;
+    font-size: 11px !important;
   }
   body.comic-fs .comic-panel.xlong-bubble .speech-text {
-    font-size: 5px !important;
+    font-size: 9px !important;
   }
   body.comic-fs .speech-pointer {
     bottom: -4px !important;
@@ -626,23 +626,31 @@ body.comic-fs .comic-grid { height: 100% !important; }
   image-rendering:pixelated; touch-action:none; user-select:none; -webkit-user-select:none; }
 .ap-mcorner{ display:none; }
 
-/* Velké hexagon play tlačítko přes audio content — play / pauza / znovu */
-.ap-bigplay{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
-  cursor:pointer; border:0; width:118px; height:136px; /* poměr 0.868 = pravidelný hexagon */
+/* GLOBÁLNÍ velké hexagon play/pauza tlačítko přes hlavní content (audio/film/komiks/text).
+   Auto-hide jako u video přehrávače:
+   - pauza (i úvod) → PLAY trvale vidět,
+   - přehrávání → skryté; objeví se jen při pohybu/dotyku (body.ui-active) a ukáže PAUZU,
+   - klik na konci stopy = přehraje znovu od začátku. */
+.gpp{ position:fixed; left:50%; top:calc(50% + var(--ap-barH) / 2); transform:translate(-50%,-50%);
+  z-index:1150; cursor:pointer; border:0; width:118px; height:136px; /* poměr 0.868 = pravidelný hexagon */
   display:grid; place-items:center; color:#1a1102;
   background:linear-gradient(180deg, var(--amber-hi), var(--amber));
   clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  box-shadow:0 0 44px -4px rgba(255,178,46,.6), inset 0 0 0 2px var(--amber-hi);
-  transition:transform .18s cubic-bezier(.165,.84,.44,1), box-shadow .2s ease, opacity .25s ease; }
-.ap-bigplay svg{ width:50px; height:50px; }
-.ap-bigplay .ic-pause{ display:none; }
-.ap-bigplay:hover{ transform:translate(-50%,-50%) scale(1.06);
-  box-shadow:0 0 64px 0 rgba(255,178,46,.85), inset 0 0 0 2.5px #fff; }
-/* při přehrávání: pauza ikona, tlačítko ztlumené (slova letí přes), hover odkryje */
-.ap-audio2:not(.paused) .ap-bigplay{ opacity:.22; }
-.ap-audio2:not(.paused) .ap-bigplay:hover{ opacity:1; }
-.ap-audio2:not(.paused) .ap-bigplay .ic-play{ display:none; }
-.ap-audio2:not(.paused) .ap-bigplay .ic-pause{ display:block; }
+  box-shadow:0 0 44px -4px rgba(255,178,46,.6);
+  transition:opacity .3s ease, transform .18s cubic-bezier(.165,.84,.44,1), box-shadow .2s ease;
+  opacity:0; pointer-events:none; }
+.gpp svg{ width:50px; height:50px; }
+.gpp .ic-pause{ display:none; }
+.gpp:hover{ transform:translate(-50%,-50%) scale(1.06);
+  box-shadow:0 0 64px 0 rgba(255,178,46,.85); }
+/* viditelnost */
+body:not(.is-playing) .gpp,
+body.is-playing.ui-active .gpp{ opacity:1; pointer-events:auto; }
+/* ikona dle stavu */
+body.is-playing .gpp .ic-play{ display:none; }
+body.is-playing .gpp .ic-pause{ display:block; }
+/* skryj v galerii */
+body.gallery-open .gpp{ display:none; }
 
 /* 3D karusel slov v audio rezimu — slova prileti zepredu a odplují dozadu (mizí). */
 .ap-words { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
