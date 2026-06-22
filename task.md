@@ -6,12 +6,12 @@
 
 > Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
 
-* [ ] **Nastavit GEMINI_API_KEY v `.env`** (uživatel musí vložit svůj Gemini API klíč pro testování generování)
+*Žádné aktuální blokery* ✅
 
-## 📊 Progress: **47 / 51 done (92%)**
+## 📊 Progress: **50 / 51 done (98%)**
 
 ```
-############################################################################################-------  92%
+##################################################################################################--  98%
 ```
 
 | Section | Done | Total | % |
@@ -22,7 +22,7 @@
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
-| Comic Editor | 6 | 10 | 60% |
+| Comic Editor | 9 | 10 | 90% |
 
 ---
 
@@ -86,7 +86,8 @@
 - [ ] **#46** — Otestovat kompletní tok generování, schválení, přepsání a zobrazení v komiksu
 - [x] **#47** — Přidat funkci ořezu obrázků (16:9, 4:3, 1:1, 3:4, 9:16) s posunem a přepisem původního souboru ✅ completed
 - [x] **#48** — Přidat do editoru přepínač zdrojů (Obrázek, Video capture se sliderem, Generování) s možností ořezu zachyceného snímku ✅ completed
-- [ ] **#49** — Nahradit Kling AI integraci v `editor_server.js` za Gemini API (Imagen 3 a Gemini Flash remake)
-- [ ] **#50** — Přidat do rozhraní editoru (`comic_editor.html`) možnost zaškrtnutí remaku a napojení na nové API
-- [ ] **#51** — Opravit kešování a vynutit okamžitou aktualizaci obrázků v levém sloupci a detailu panelu po uložení ořezu nebo schválení verze
+- [x] **#49** — Nahradit Kling AI integraci v `editor_server.js` za Gemini API (Imagen 3 a Gemini Flash remake) ✅ completed
+- [x] **#50** — Přidat do rozhraní editoru (`comic_editor.html`) možnost zaškrtnutí remaku a napojení na nové API ✅ completed
+- [x] **#51** — Opravit kešování a vynutit okamžitou aktualizaci obrázků v levém sloupci a detailu panelu po uložení ořezu nebo schválení verze ✅ completed
+
 
