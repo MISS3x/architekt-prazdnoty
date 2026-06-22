@@ -317,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const CORE = 10, FADE_RINGS = 5, RINGS = CORE + FADE_RINGS;
     const S = 0.62, HEXR = S * 0.88, MAXH = 6.2, CAM = 30;
-    let tilt = 1.02, dpr = 1, raf, t = 0, angle = 0, focal = 1, cx = 0, cy = 0;
+    let tilt = 1.02, dpr = 1, raf, t = 0, angle = 0, focal = 1, cx = 0, cy = 0, curOp = 1;
 
     const hexes = [];
     let maxRad = 0.0001;
@@ -364,6 +364,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const draw = () => {
       const play = state.playing && !reduce;
+      // Stopnuté/pozastavené audio → equalizer ještě víc ztlumený (plynule, deterministicky dle state.playing).
+      curOp += ((state.playing ? 1 : 0.32) - curOp) * 0.10;
+      cv.style.opacity = curOp.toFixed(3);
       if (dragging) { /* angle řízen myší */ }
       else { angle += vel + (play ? 0.0042 : 0.0011); vel *= 0.92; }
       t += play ? 0.03 : 0.014;
@@ -946,9 +949,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".comic-panel").forEach(panel => {
       const st = panel.querySelector(".speech-text");
       const len = st ? (st.textContent || "").trim().length : 0;
-      panel.classList.remove("long-bubble", "xlong-bubble");
+      panel.classList.remove("short-bubble", "long-bubble", "xlong-bubble");
       if (len > 150) panel.classList.add("xlong-bubble");
       else if (len > 95) panel.classList.add("long-bubble");
+      else if (len < 45) panel.classList.add("short-bubble"); // krátký text → větší font
     });
 
     [1, 2, 3].forEach(p => {
@@ -1016,7 +1020,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (savedTime && audio) {
       const timeVal = parseFloat(savedTime);
       state.currentTime = timeVal;
-      const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
+      const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - (state.comicMode ? 0.05 : 0.4));
       state.curIdx = getActiveIndex(displayTime);
       
       // Perform initial highlighting
@@ -1605,7 +1609,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Apply offset to display time (e.g. 0.4s delay) when not in calibration mode
     // to align visual highlighting with audio playback latency
-    const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
+    const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - (state.comicMode ? 0.05 : 0.4));
 
     // 2. Identify active block index
     const activeIdx = getActiveIndex(displayTime);
