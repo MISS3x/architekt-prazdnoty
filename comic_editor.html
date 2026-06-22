@@ -476,9 +476,11 @@
           <span id="orig-filename-label" style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--amber);">---</span>
         </div>
 
-        <!-- Sentence context (always visible) -->
         <div class="control-box">
-          <label>Věta pro zobrazení panelu</label>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>Věta pro zobrazení panelu</label>
+            <button class="btn-filter" id="btn-copy-sentence" onclick="copySentenceToClipboard()" style="padding: 2px 8px; font-size: 10px; text-transform: uppercase;" disabled>📋 Kopírovat větu</button>
+          </div>
           <div class="sentence-box" id="sentence-text">
             Vyberte panel ze seznamu vlevo pro načtení informací.
           </div>
@@ -682,6 +684,7 @@
       document.getElementById('orig-filename-label').textContent = panel.filename;
       document.getElementById('orig-image').src = panel.imgSrc + '?t=' + Date.now();
       document.getElementById('sentence-text').textContent = panel.text || "[Tento panel nemá žádný přidělený text v caption]";
+      document.getElementById('btn-copy-sentence').disabled = !panel.text;
       document.getElementById('custom-detail').value = '';
       document.getElementById('generation-prompt').value = panel.defaultPrompt;
       document.getElementById('btn-generate').disabled = false;
@@ -1172,6 +1175,17 @@
       setTimeout(() => {
         toast.classList.remove('active');
       }, 4000);
+    }
+
+    function copySentenceToClipboard() {
+      const text = document.getElementById('sentence-text').textContent.trim();
+      if (!text || text.startsWith("Vyberte panel")) return;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Věta byla zkopírována do schránky!', true);
+      }).catch(err => {
+        showToast('Chyba při kopírování: ' + err.message, false);
+      });
     }
 
     // Init
