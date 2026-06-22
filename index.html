@@ -12,7 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Chakra+Petch:wght@400;500;600;700&family=Comic+Neue:ital,wght@0,400;0,700;1,700&family=JetBrains+Mono:wght@500;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=1.4">
+  <link rel="stylesheet" href="style.css?v=1.5">
+  <link rel="stylesheet" href="design.css?v=1.1">
 </head>
 <body>
   
@@ -81,21 +82,33 @@
     <!-- Top Navigation -->
     <nav class="top-nav" id="top-nav">
       <div class="nav-logo">
-        <div class="nav-subtitle">// A NEW BERLIN STORY &middot; RUDA-50</div>
-        <div class="nav-title">ARCHITEKT PRÁZDNOTY</div>
+        <span class="nav-dia"></span>
+        <span class="nav-title">RUDA-50</span>
+        <span class="nav-sep"></span>
+        <span class="nav-eptitle" id="bar-eptitle"><b>DÍL I</b> · ARCHITEKT PRÁZDNOTY</span>
+      </div>
+      <div class="nav-group nav-modes">
+        <button id="btn-mode-text" class="nav-btn active"><span class="ic">◫</span> TEXT</button>
+        <button id="btn-mode-comic" class="nav-btn"><span class="ic">◧</span> KOMIKS</button>
+        <button id="btn-mode-movie" class="nav-btn"><span class="ic">▸</span> FILM</button>
       </div>
       <div class="nav-controls">
-        <div class="nav-group nav-modes">
-          <button id="btn-mode-text" class="nav-btn active">📖 TEXT</button>
-          <button id="btn-mode-comic" class="nav-btn">🎨 KOMIKS</button>
-          <button id="btn-mode-movie" class="nav-btn">🎬 FILM</button>
-        </div>
         <div class="nav-group nav-parts">
-          <button id="btn-sticky-part1" class="nav-btn active">DÍL 1</button>
-          <button id="btn-sticky-part2" class="nav-btn">DÍL 2</button>
-          <button id="btn-sticky-part3" class="nav-btn">DÍL 3</button>
+          <button id="btn-sticky-part1" class="nav-btn active" title="Díl I">I</button>
+          <button id="btn-sticky-part2" class="nav-btn" title="Díl II">II</button>
+          <button id="btn-sticky-part3" class="nav-btn" title="Díl III">III</button>
         </div>
-        <button id="btn-nav-gallery" class="nav-btn" style="padding: 0.5rem;" title="Přejít do Galerie">🖼️</button>
+        <div class="nav-group bar-trans">
+          <button class="bar-tb" id="bar-stop" title="Stop">■</button>
+          <button class="bar-play" id="bar-play" title="Přehrát / Pauza">▶</button>
+          <div class="bar-scrub" id="bar-scrub">
+            <div class="bar-track"></div>
+            <div class="bar-fill" id="bar-fill"></div>
+            <div class="bar-knob" id="bar-knob"></div>
+          </div>
+          <span class="bar-time"><span id="bar-time-cur">0:00</span><span class="dim" id="bar-time-dur"> / 0:00</span></span>
+        </div>
+        <button id="btn-nav-gallery" class="nav-btn" title="Přejít do Galerie">▣</button>
       </div>
     </nav>
     
@@ -3703,6 +3716,6 @@
   <audio id="audio-element" src="audio/dil_1.mp3" preload="metadata" autoplay></audio>
   
   <!-- JavaScript logic -->
-  <script src="app.js?v=1.7"></script>
+  <script src="app.js?v=2.0"></script>
 </body>
 </html>

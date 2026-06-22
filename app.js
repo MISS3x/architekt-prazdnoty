@@ -83,6 +83,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const progressFill = document.getElementById("progress-fill") || _dummy;
   const timeCurrent = document.getElementById("time-current") || _dummy;
   const timeDuration = document.getElementById("time-total") || _dummy;
+
+  // --- TOP BAR TRANSPORT (TRON design) ---
+  const barPlay = document.getElementById("bar-play");
+  const barStop = document.getElementById("bar-stop");
+  const barScrub = document.getElementById("bar-scrub");
+  const barFill = document.getElementById("bar-fill");
+  const barKnob = document.getElementById("bar-knob");
+  const barTimeCur = document.getElementById("bar-time-cur");
+  const barTimeDur = document.getElementById("bar-time-dur");
+  const setBarPlayIcon = (playing) => { if (barPlay) barPlay.textContent = playing ? "❚❚" : "▶"; };
+  const barEpTitle = document.getElementById("bar-eptitle");
+  const EP_TITLES = { 1: { rom: "I", t: "ARCHITEKT PRÁZDNOTY" }, 2: { rom: "II", t: "VČELÍ MOR A NEURO-NEKRÓZA" }, 3: { rom: "III", t: "MATEŘÍ KAŠIČKA 2.0" } };
+  const updateBarEpTitle = (partNum) => {
+    const e = EP_TITLES[partNum]; if (barEpTitle && e) barEpTitle.innerHTML = `<b>DÍL ${e.rom}</b> · ${e.t}`;
+  };
   const playerStatus = document.getElementById("player-status") || _dummy;
   const btnSync = document.getElementById("btn-sync") || _dummy;
   const btnExport = document.getElementById("btn-export") || _dummy;
@@ -173,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const setPart = (partNum, startPlaying = false) => {
     state.activePart = partNum;
+    updateBarEpTitle(partNum);
     
     // Reset all tabs active states
     if (tabPart1) tabPart1.classList.remove("active", "part2-active", "part3-active");
@@ -828,6 +844,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("play", () => {
       state.playing = true;
       playIcon.textContent = "❚❚";
+      setBarPlayIcon(true);
       if (playBtnWrapper) playBtnWrapper.classList.add("playing");
       updateStatus();
       
@@ -839,6 +856,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("pause", () => {
       state.playing = false;
       playIcon.textContent = "▶";
+      setBarPlayIcon(false);
       if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
       updateStatus();
     });
@@ -942,12 +960,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const SENTENCE_END = /[.!?…]["'»“”)\]]*$/;
 
   const setSubtitles = (content, asHtml) => {
+    // Wrap word spans in a single centered line so the flex box centers the whole
+    // sentence as one block (otherwise each <span> becomes its own flex item).
+    const html = asHtml ? `<span class="cin-line">${content}</span>` : null;
     if (previewSubtitles) {
-      if (asHtml) previewSubtitles.innerHTML = content;
+      if (asHtml) previewSubtitles.innerHTML = html;
       else previewSubtitles.textContent = content;
     }
     if (fullscreenSubtitles) {
-      if (asHtml) fullscreenSubtitles.innerHTML = content;
+      if (asHtml) fullscreenSubtitles.innerHTML = html;
       else fullscreenSubtitles.textContent = content;
     }
   };
@@ -998,6 +1019,11 @@ document.addEventListener("DOMContentLoaded", () => {
       progressFill.style.width = `${pct}%`;
       timeCurrent.textContent = formatTime(state.currentTime);
       timeDuration.textContent = formatTime(state.duration);
+      // TRON top-bar transport
+      if (barFill) barFill.style.width = `${pct}%`;
+      if (barKnob) barKnob.style.left = `${pct}%`;
+      if (barTimeCur) barTimeCur.textContent = formatTime(state.currentTime);
+      if (barTimeDur) barTimeDur.textContent = " / " + formatTime(state.duration);
     }
 
     // Apply offset to display time (e.g. 0.4s delay) when not in calibration mode
@@ -1474,6 +1500,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Seek Click
     if (progressBar) progressBar.addEventListener("click", seek);
+
+    // TRON top-bar transport
+    if (barPlay) barPlay.addEventListener("click", togglePlay);
+    if (barStop) barStop.addEventListener("click", () => {
+      audio.pause();
+      try { audio.currentTime = 0; } catch (e) {}
+      state.curIdx = -1;
+    });
+    if (barScrub) barScrub.addEventListener("click", (e) => {
+      if (!state.duration) return;
+      const r = barScrub.getBoundingClientRect();
+      const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      audio.currentTime = f * state.duration;
+      state.curIdx = -1;
+    });
 
     // Sync Mode Toggle
     if (btnSync) btnSync.addEventListener("click", toggleCalibration);

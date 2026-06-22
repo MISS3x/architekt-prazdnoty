@@ -1613,6 +1613,12 @@ body.part3-active {
 }
 
 /* Word-by-word karaoke inside the cinematic subtitles */
+.preview-subtitles .cin-line,
+.fullscreen-subtitles .cin-line {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
 .preview-subtitles .cin-word,
 .fullscreen-subtitles .cin-word {
   opacity: 0.4;

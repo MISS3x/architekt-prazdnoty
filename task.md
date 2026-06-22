@@ -6,19 +6,19 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **25 / 29 done (86%)**
+## 📊 Progress: **27 / 31 done (87%)**
 
 ```
-######################################################################################-------------- 86%
+#######################################################################################------------- 87%
 ```
 
 | Section | Done | Total | % |
 |---|---|---|---|
-| HTML | 7 | 8 | 88% |
+| HTML | 8 | 9 | 89% |
 | CSS | 3 | 4 | 75% |
 | JS | 9 | 10 | 90% |
 | Kling AI | 4 | 4 | 100% |
-| Git | 2 | 3 | 67% |
+| Git | 3 | 4 | 75% |
 
 ---
 
@@ -31,6 +31,7 @@
 - [x] **#20** — Add Part 3 screenshots to the visual gallery with filter button ✅ completed
 - [x] **#23** — Add a third mode button for "// FILMOVÁ VERZE" (Movie Mode) in index.html and update python generators ✅ completed
 - [x] **#26** — Add Part switcher buttons (Díl 1, 2, 3) inside `.sticky-mode-switcher` panel in `index.html` ✅ completed
+- [x] **#30** — Změna všech textů v komiksové verzi na komiksové bubliny (speech-bubble) ✅ completed
 
 ## CSS
 - [x] **#5** — Add visibility states for `.story-content` containers and character selector styles ✅ completed
@@ -59,4 +60,5 @@
 ## Git
 - [x] **#18** — Push changes to git origin ✅ completed
 - [x] **#22** — Commit and push Part 3 sync updates and new illustrations to origin ✅ completed
+- [x] **#31** — Purge Git history to remove heavy 1440x1440 videos and force push origin ✅ completed
 - [ ] **#29** — Commit and push new switcher UI layout and mobile responsive styles
