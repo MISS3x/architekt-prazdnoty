@@ -344,27 +344,41 @@ document.addEventListener("DOMContentLoaded", () => {
         const hx = hexes[k], rad = hx.rad;
         let v;
         if (real) {
-          const bi = Math.min(bins - 1, Math.floor((rad / maxR) * bins));
+          // Invert + sqrt-curve: edges → low-freq (bass, more energy); center → high-freq
+          const norm = rad / maxR;                          // 0 = center, 1 = edge
+          const invNorm = 1 - Math.sqrt(norm);              // sqrt gives wider spread to edges
+          const bi = Math.min(bins - 1, Math.floor(invNorm * bins * 0.7)); // low bins = bass
           v = fx.data[bi] / 255;
-          v = Math.pow(v, 1.25) * 1.15;
-          v *= 0.78 + 0.22 * Math.sin(hx.ang * 3 + t * 4);
-          v = Math.max(0.02, Math.min(1, v));
+          // Softer power curve so bass reaches edges clearly
+          v = Math.pow(v, 0.85) * 1.35;
+          // Angular shimmer, stronger at edges
+          v *= 0.72 + 0.28 * Math.sin(hx.ang * 3 + t * 4);
+          // Edge hexes always have a minimum visible level
+          const edgeFloor = 0.04 + 0.10 * norm;            // 0.04 center … 0.14 edge
+          v = Math.max(edgeFloor, Math.min(1, v));
         } else if (play) {
-          v = 0.5 + 0.5 * Math.sin(t * 2.2 - rad * 0.95)
-            + 0.42 * Math.sin(t * 1.3 + hx.x * 0.5)
-            + 0.42 * Math.sin(t * 1.7 + hx.z * 0.5);
-          v = v / 1.95;
-          v *= 1 - rad / (maxR * 1.25);
-          v *= 0.55 + 0.45 * Math.abs(Math.sin(t * 0.55));
-          v = Math.max(0.02, Math.min(1, v));
+          // Simulation: waves radiate outward from center, edges stay alive
+          v = 0.55 + 0.45 * Math.sin(t * 2.2 - rad * 0.85)
+            + 0.38 * Math.sin(t * 1.3 + hx.x * 0.45)
+            + 0.38 * Math.sin(t * 1.7 + hx.z * 0.45);
+          v = v / 1.75;
+          // Gentler fade at edges so they stay visible
+          v *= 1 - (rad / (maxR * 1.6)) * 0.65;
+          v *= 0.6 + 0.4 * Math.abs(Math.sin(t * 0.55));
+          // Edge floor — always show something
+          const edgeFloor = 0.06 + 0.12 * (rad / maxR);
+          v = Math.max(edgeFloor, Math.min(1, v));
         } else {
-          const ripple = Math.sin(rad * 1.1 - t * 1.6);
-          const cross = Math.sin(hx.x * 0.45 + t * 0.9) * Math.sin(hx.z * 0.45 - t * 0.7);
-          const swirl = Math.sin(hx.ang * 2 + rad * 0.5 - t * 1.1);
-          let w = 0.42 + 0.30 * ripple + 0.22 * cross + 0.16 * swirl;
-          w *= 1 - rad / (maxR * 1.5);
-          w *= 0.7 + 0.3 * Math.sin(t * 0.35);
-          v = Math.max(0.03, Math.min(0.6, w));
+          // Idle ripple — full grid stays visible, edges at ~30% height
+          const ripple = Math.sin(rad * 1.0 - t * 1.5);
+          const cross = Math.sin(hx.x * 0.42 + t * 0.9) * Math.sin(hx.z * 0.42 - t * 0.7);
+          const swirl = Math.sin(hx.ang * 2 + rad * 0.4 - t * 1.0);
+          let w = 0.38 + 0.28 * ripple + 0.20 * cross + 0.14 * swirl;
+          // Edges get ~30% of center height, not near-zero
+          w = w * (0.35 + 0.65 * (1 - rad / (maxR * 1.4)));
+          w *= 0.72 + 0.28 * Math.sin(t * 0.35);
+          const edgeFloor = 0.06 + 0.10 * (rad / maxR);
+          v = Math.max(edgeFloor, Math.min(0.75, w));
         }
         tgt[k] = v;
       }
@@ -395,7 +409,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const hx = hexes[k];
         const cxw = hx.x, czw = hx.z;
         const hr = field[k], h = hr * MAXH;
-        const hue = 190 - 150 * hr;
+        // Full sweep: cyan(190) → amber(40) → red(0) as hr goes 0→1
+        const hue = hr < 0.75 ? 190 - 200 * hr : Math.max(0, 40 - 160 * (hr - 0.75));
         const sc = hx.scale, fd = hx.fade;
         const cn = [[CORN[0][0]*sc,CORN[0][1]*sc],[CORN[1][0]*sc,CORN[1][1]*sc],[CORN[2][0]*sc,CORN[2][1]*sc],[CORN[3][0]*sc,CORN[3][1]*sc],[CORN[4][0]*sc,CORN[4][1]*sc],[CORN[5][0]*sc,CORN[5][1]*sc]];
 
@@ -429,8 +444,9 @@ document.addEventListener("DOMContentLoaded", () => {
           ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(t0[0], t0[1]); ctx.stroke();
         }
 
-        if (hr > 0.55) { ctx.shadowColor = "rgba(255,178,46,.9)"; ctx.shadowBlur = 16 * dpr; }
-        else if (hr > 0.3) { ctx.shadowColor = "rgba(45,226,255,.85)"; ctx.shadowBlur = 10 * dpr; }
+        if (hr > 0.82) { ctx.shadowColor = "rgba(255,60,30,.95)"; ctx.shadowBlur = 22 * dpr; }
+        else if (hr > 0.55) { ctx.shadowColor = "rgba(255,178,46,.9)"; ctx.shadowBlur = 16 * dpr; }
+        else if (hr > 0.28) { ctx.shadowColor = "rgba(45,226,255,.85)"; ctx.shadowBlur = 10 * dpr; }
         else ctx.shadowBlur = 0;
         ctx.fillStyle = "hsla(" + hue + " 100% " + (58 + 14 * hr) + "% / " + ((0.22 + 0.42 * hr) * fd).toFixed(3) + ")";
         ctx.beginPath();
