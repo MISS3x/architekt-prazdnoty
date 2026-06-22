@@ -248,14 +248,10 @@ document.addEventListener("DOMContentLoaded", () => {
       '<div class="ap-matrixwrap"><canvas class="ap-matrix"></canvas>' +
       '<span class="ap-draghint">⟲ táhni — vodorovně otáčí, svisle naklání</span></div>' +
       '<div class="ap-actrls">' +
-      '<button class="ap-micbtn" id="audio-mic"><span class="ap-micdot"></span>' +
-      '<span id="audio-mic-label">Reagovat na živý zvuk (mikrofon)</span></button>' +
       '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span>' +
       '<span id="audio-status">Připraveno k přehrání</span></div></div>';
     document.body.appendChild(el);
     audioStageEl = el;
-    const micBtn = el.querySelector("#audio-mic");
-    if (micBtn) micBtn.addEventListener("click", toggleAudioMic);
     return el;
   };
   const updateAudioStage = (partNum) => {
@@ -356,10 +352,11 @@ document.addEventListener("DOMContentLoaded", () => {
     fit();
     const ro = new ResizeObserver(fit); ro.observe(wrap);
 
-    let dragging = false, lastX = 0, lastY = 0, vel = 0;
-    const onDown = (e) => { dragging = true; const p = e.touches ? e.touches[0] : e; lastX = p.clientX; lastY = p.clientY; vel = 0; cv.style.cursor = "grabbing"; };
-    const onMove = (e) => { if (!dragging) return; const p = e.touches ? e.touches[0] : e; const dx = p.clientX - lastX, dy = p.clientY - lastY; lastX = p.clientX; lastY = p.clientY; angle += dx * 0.01; vel = dx * 0.01; tilt = Math.max(0.18, Math.min(1.48, tilt + dy * 0.006)); if (e.cancelable) e.preventDefault(); };
-    const onUp = () => { dragging = false; cv.style.cursor = "grab"; };
+    let dragging = false, lastX = 0, lastY = 0, vel = 0, moved = 0;
+    const onDown = (e) => { dragging = true; const p = e.touches ? e.touches[0] : e; lastX = p.clientX; lastY = p.clientY; moved = 0; vel = 0; cv.style.cursor = "grabbing"; };
+    const onMove = (e) => { if (!dragging) return; const p = e.touches ? e.touches[0] : e; const dx = p.clientX - lastX, dy = p.clientY - lastY; lastX = p.clientX; lastY = p.clientY; moved += Math.abs(dx) + Math.abs(dy); angle += dx * 0.01; vel = dx * 0.01; tilt = Math.max(0.18, Math.min(1.48, tilt + dy * 0.006)); if (e.cancelable) e.preventDefault(); };
+    // tap (bez tažení) = play/pauza celého audia; tažení = otáčení equalizeru
+    const onUp = () => { if (dragging && moved < 6) { vel = 0; togglePlay(); } dragging = false; cv.style.cursor = "grab"; };
     cv.style.cursor = "grab";
     cv.addEventListener("mousedown", onDown); cv.addEventListener("touchstart", onDown, { passive: true });
     window.addEventListener("mousemove", onMove); window.addEventListener("touchmove", onMove, { passive: false });
@@ -1728,7 +1725,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = audio.currentTime;
     // Index aktuální věty = největší čas <= pozice (s tolerancí, ať „na začátku věty" = ta věta).
     // Skok o CELOU větu: dir +1 → další věta, dir -1 → předchozí věta.
-    let idx = 0;
+    let idx = -1; // -1 = před první větou (díly II/III mají první cue až ~10 s)
     for (let i = 0; i < times.length; i++) { if (times[i] <= t + 0.25) idx = i; else break; }
     idx = Math.max(0, Math.min(times.length - 1, idx + (dir > 0 ? 1 : -1)));
     const target = times[idx];

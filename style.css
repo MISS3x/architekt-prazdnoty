@@ -2227,45 +2227,67 @@ body.comic-fs .player-wrapper {
   display: none !important;
 }
 
-/* Mobile: komiks = JEDEN sloupec, obrázek na celou šířku okna, bublina přes obrázek */
+/* Mobile: komiks = JEDEN sloupec; obrázek (náhodná výška) + bublina POD ním (nepřekrývá obrázek),
+   delší šipka míří nahoru do obrázku. Tokový layout → žádný přetok ani ořez. */
 @media (max-width: 768px) {
   body.comic-fs .comic-grid {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 8px;
     width: 100%;
     height: 100vh;
-    padding: 12px;
+    padding: 12px 12px 40px;
     overflow-x: hidden;
     overflow-y: auto;
   }
-  body.comic-fs .comic-col { display: contents; } /* panely se stanou položkami sloupce */
+  body.comic-fs .comic-col { display: contents; }
+  /* panel = tok (obrázek + bublina), bez rámu/pozadí, přetečení viditelné */
   body.comic-fs .comic-panel {
-    width: 100%;
-    height: auto;
-    min-height: 0;
-    flex: none;
-    aspect-ratio: 4 / 3;   /* výchozí */
+    display: flex; flex-direction: column; align-items: stretch;
+    width: 100%; height: auto; aspect-ratio: auto; min-height: 0; flex: none;
+    overflow: visible; border: 0; background: transparent; box-shadow: none;
+    transform: none !important; margin: 0 0 4px;
   }
-  /* RŮZNÉ výšky obrázků podle třídy panelu — ne jen obdélník */
-  body.comic-fs .comic-panel.panel-tall  { aspect-ratio: 3 / 4; }
-  body.comic-fs .comic-panel.panel-wide  { aspect-ratio: 16 / 9; }
-  body.comic-fs .comic-panel.panel-large { aspect-ratio: 1 / 1; }
-  body.comic-fs .comic-panel.panel-normal { aspect-ratio: 4 / 3; }
-  body.comic-fs .comic-title-card {
-    width: 100%;
-    max-width: 100%;
-    height: 52vh;
-    align-self: auto;
+  /* obrázek = blok s pevným, NÁHODNĚJŠÍM poměrem (cyklus 6 různých výšek) */
+  body.comic-fs .comic-panel .comic-panel-img {
+    position: relative; inset: auto; order: 1;
+    width: 100%; height: auto; object-fit: cover;
+    border-radius: 12px; box-shadow: 0 0 0 1px rgba(45, 226, 255, .22);
+    aspect-ratio: 4 / 3;
   }
-  /* menší text, bubliny rozmístěné RANDOM v rámci obrázku (cyklus 4 pozic) */
-  body.comic-fs .comic-panel .speech-text { font-size: 14px; line-height: 1.16; }
-  body.comic-fs .comic-panel .speech-bubble { max-width: 72%; }
-  body.comic-fs .comic-panel:nth-child(4n+1) .speech-bubble { top: 7%;  bottom: auto; left: 6%;  right: auto; }
-  body.comic-fs .comic-panel:nth-child(4n+2) .speech-bubble { top: auto; bottom: 8%;  left: auto; right: 6%; }
-  body.comic-fs .comic-panel:nth-child(4n+3) .speech-bubble { top: auto; bottom: 7%;  left: 6%;  right: auto; }
-  body.comic-fs .comic-panel:nth-child(4n)   .speech-bubble { top: 9%;  bottom: auto; left: auto; right: 6%; }
+  body.comic-fs .comic-panel:nth-child(6n+1) .comic-panel-img { aspect-ratio: 4 / 3; }
+  body.comic-fs .comic-panel:nth-child(6n+2) .comic-panel-img { aspect-ratio: 3 / 4; }
+  body.comic-fs .comic-panel:nth-child(6n+3) .comic-panel-img { aspect-ratio: 1 / 1; }
+  body.comic-fs .comic-panel:nth-child(6n+4) .comic-panel-img { aspect-ratio: 16 / 9; }
+  body.comic-fs .comic-panel:nth-child(6n+5) .comic-panel-img { aspect-ratio: 5 / 6; }
+  body.comic-fs .comic-panel:nth-child(6n)   .comic-panel-img { aspect-ratio: 16 / 11; }
+  /* aktivní obrázek = cyan glow (rám panelu už není) */
+  body.comic-fs .comic-panel.active .comic-panel-img { box-shadow: 0 0 0 2px var(--cyan), 0 0 24px -4px var(--cyan); }
+  /* dekorace, co by kryly celý panel, vypnout; číslo necháme na obrázku */
+  body.comic-fs .comic-panel .comic-panel-overlay,
+  body.comic-fs .comic-panel .comic-panel-border { display: none; }
+  body.comic-fs .comic-panel .comic-panel-number { top: 10px; right: 12px; z-index: 5; }
+  body.comic-fs .comic-title-card { width: 100%; max-width: 100%; height: 52vh; align-self: auto; }
+
+  /* bublina V TOKU pod obrázkem (nepřekrývá ho) */
+  body.comic-fs .comic-panel .speech-bubble {
+    position: relative; top: auto; left: auto; right: auto; bottom: auto; transform: none;
+    order: 2; margin: 22px auto 4px; max-width: 94%;
+  }
+  body.comic-fs .comic-panel:nth-child(even) .speech-bubble { left: auto; right: auto; }
+  body.comic-fs .comic-panel .speech-text { font-size: 15px; line-height: 1.2; }
+  body.comic-fs .comic-panel.long-bubble .speech-text { font-size: 13.5px; }
+  body.comic-fs .comic-panel.xlong-bubble .speech-text { font-size: 12.5px; line-height: 1.16; }
+  /* delší šipka nahoru, zasahuje do obrázku */
+  body.comic-fs .comic-panel .speech-pointer {
+    top: -26px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 9px solid transparent; border-right: 9px solid transparent;
+    border-bottom: 28px solid #f4f7f8; border-top: 0;
+  }
+  body.comic-fs .comic-panel:nth-child(even) .speech-pointer { left: 50%; right: auto; }
+  body.comic-fs .comic-panel .speech-pointer::after { display: none; }
 }
 
 .comic-panel-img {
