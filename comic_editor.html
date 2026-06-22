@@ -469,38 +469,14 @@
 
     <!-- Main Workspace -->
     <div class="workspace">
-      <!-- Left Pane: Original -->
+      <!-- Left Pane: Original / Source selector -->
       <div class="workspace-pane" id="original-pane">
-        <div class="pane-title">
-          <span>ORIGINÁLNÍ OBRÁZEK</span>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <span id="orig-filename-label" style="margin-right: 10px;">---</span>
-            <button class="btn btn-secondary" id="btn-crop-toggle" onclick="toggleCropMode()" style="padding: 4px 10px; font-size: 11px;" disabled>
-              ✂ OŘEZAT
-            </button>
-          </div>
-        </div>
-        
-        <div class="image-container" id="orig-image-container">
-          <img id="orig-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2306111c'/><text x='50' y='55' font-family='sans-serif' font-size='8' fill='%237aa5b0' text-anchor='middle'>VYBERTE PANEL</text></svg>" alt="Original image preview">
+        <div class="pane-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>ZDROJ PANELU</span>
+          <span id="orig-filename-label" style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--amber);">---</span>
         </div>
 
-        <div id="crop-toolbar" class="hidden" style="display: flex; flex-direction: column; gap: 10px; background: rgba(1, 4, 8, 0.6); padding: 12px; border-radius: 4px; border: 1px solid var(--border-color); margin-top: -10px;">
-          <label style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted);">POMĚR STRAN OŘEZU</label>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-filter" id="crop-aspect-16-9" onclick="setCropAspect(16/9)">16:9</button>
-            <button class="btn-filter" id="crop-aspect-4-3" onclick="setCropAspect(4/3)">4:3</button>
-            <button class="btn-filter active" id="crop-aspect-1-1" onclick="setCropAspect(1)">1:1</button>
-            <button class="btn-filter" id="crop-aspect-3-4" onclick="setCropAspect(3/4)">3:4</button>
-            <button class="btn-filter" id="crop-aspect-9-16" onclick="setCropAspect(9/16)">9:16</button>
-            <button class="btn-filter" id="crop-aspect-free" onclick="setCropAspect(NaN)">Volný</button>
-          </div>
-          <div style="display: flex; gap: 10px; margin-top: 5px; justify-content: flex-end;">
-            <button class="btn btn-secondary" onclick="cancelCrop()" style="padding: 6px 15px; font-size: 11px;">Zrušit</button>
-            <button class="btn btn-success" onclick="commitCrop()" style="padding: 6px 15px; font-size: 11px;">Uložit ořez</button>
-          </div>
-        </div>
-
+        <!-- Sentence context (always visible) -->
         <div class="control-box">
           <label>Věta pro zobrazení panelu</label>
           <div class="sentence-box" id="sentence-text">
@@ -508,26 +484,91 @@
           </div>
         </div>
 
-        <div class="control-box">
-          <label>Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
-          <input type="text" id="custom-detail" placeholder="Udejte detail záběru nebo specifickou akci..." oninput="updateComposedPromptPreview()">
+        <!-- Tab switcher -->
+        <div style="display: flex; gap: 8px; margin-top: 5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <button class="btn-filter" id="tab-btn-image" onclick="switchSourceTab('image')" style="font-size: 11px;" disabled>1. Obrázek</button>
+          <button class="btn-filter" id="tab-btn-video" onclick="switchSourceTab('video')" style="font-size: 11px;" disabled>2. Video Capture</button>
+          <button class="btn-filter" id="tab-btn-generate" onclick="switchSourceTab('generate')" style="font-size: 11px;" disabled>3. Generování (Kling)</button>
         </div>
 
-        <div class="control-box">
-          <label>Prompt pro Kling AI generování (základní styl)</label>
-          <textarea id="generation-prompt" placeholder="Vložte detailní prompt pro Kling AI..." oninput="updateComposedPromptPreview()"></textarea>
-        </div>
+        <!-- Tab Content 1: Image & Crop -->
+        <div id="tab-content-image" class="tab-content" style="display: flex; flex-direction: column; gap: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>Aktuální snímek panelu</label>
+            <button class="btn btn-secondary" id="btn-crop-toggle" onclick="toggleCropMode()" style="padding: 4px 10px; font-size: 11px;" disabled>
+              ✂ Ořezat obrázek
+            </button>
+          </div>
+          <div class="image-container" id="orig-image-container">
+            <img id="orig-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2306111c'/><text x='50' y='55' font-family='sans-serif' font-size='8' fill='%237aa5b0' text-anchor='middle'>VYBERTE PANEL</text></svg>" alt="Original image preview">
+          </div>
 
-        <div class="control-box">
-          <label>Finální prompt k odeslání (sestaveno automaticky)</label>
-          <div id="composed-prompt-preview" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted); background: rgba(1, 4, 8, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 4px; line-height: 1.4; word-break: break-all;">
-            ---
+          <div id="crop-toolbar" class="hidden" style="display: flex; flex-direction: column; gap: 10px; background: rgba(1, 4, 8, 0.6); padding: 12px; border-radius: 4px; border: 1px solid var(--border-color); margin-top: -5px;">
+            <label style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted);">POMĚR STRAN OŘEZU</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn-filter" id="crop-aspect-16-9" onclick="setCropAspect(16/9)">16:9</button>
+              <button class="btn-filter" id="crop-aspect-4-3" onclick="setCropAspect(4/3)">4:3</button>
+              <button class="btn-filter active" id="crop-aspect-1-1" onclick="setCropAspect(1)">1:1</button>
+              <button class="btn-filter" id="crop-aspect-3-4" onclick="setCropAspect(3/4)">3:4</button>
+              <button class="btn-filter" id="crop-aspect-9-16" onclick="setCropAspect(9/16)">9:16</button>
+              <button class="btn-filter" id="crop-aspect-free" onclick="setCropAspect(NaN)">Volný</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 5px; justify-content: flex-end;">
+              <button class="btn btn-secondary" onclick="cancelCrop()" style="padding: 6px 15px; font-size: 11px;">Zrušit</button>
+              <button class="btn btn-success" onclick="commitCrop()" style="padding: 6px 15px; font-size: 11px;">Uložit ořez</button>
+            </div>
           </div>
         </div>
 
-        <button class="btn btn-primary" id="btn-generate" onclick="startGeneration()" disabled>
-          ⚡ GENERATE NEW VARIANT
-        </button>
+        <!-- Tab Content 2: Video Capture -->
+        <div id="tab-content-video" class="tab-content hidden" style="display: flex; flex-direction: column; gap: 15px;">
+          <label>Odpovídající video soubor</label>
+          <div class="image-container" id="video-container" style="position: relative;">
+            <video id="capture-video" style="width: 100%; height: 100%; object-fit: contain;" preload="auto" playsinline></video>
+            <div id="video-error-msg" class="hidden" style="position: absolute; color: #ff4a4a; font-family: 'Share Tech Mono', monospace; font-size: 12px; background: rgba(2,8,14,0.9); padding: 10px; border-radius: 4px; border: 1px solid #ff4a4a; text-align: center; left: 5%; right: 5%;">
+              Video soubor nebyl na serveru nalezen.<br>Ujistěte se, že existuje video k tomuto dílu.
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label>Posun videa (Časová osa)</label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <button class="btn btn-secondary" id="btn-video-play-pause" onclick="togglePlayPauseCaptureVideo()" style="padding: 8px 12px; font-size: 11px; min-width: 80px;">▶ Přehrát</button>
+              <input type="range" id="video-time-slider" min="0" max="100" step="0.01" value="0" style="flex: 1;" onmousedown="this.dataset.dragging = 'true'" onmouseup="this.dataset.dragging = ''" ontouchstart="this.dataset.dragging = 'true'" ontouchend="this.dataset.dragging = ''" oninput="onVideoSliderInput(this.value)" onchange="onVideoSliderChange(this.value)">
+              <span id="video-time-display" style="font-family: 'Share Tech Mono', monospace; font-size: 12px; width: 60px; text-align: right; color: var(--cyan);">0.00s</span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button class="btn btn-primary" id="btn-capture-frame" onclick="captureVideoFrame()" style="padding: 10px 20px; font-size: 12px;">
+              📸 Udělat snímek & oříznout
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content 3: Kling AI Generation -->
+        <div id="tab-content-generate" class="tab-content hidden" style="display: flex; flex-direction: column; gap: 15px;">
+          <div class="control-box">
+            <label>Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
+            <input type="text" id="custom-detail" placeholder="Udejte detail záběru nebo specifickou akci..." oninput="updateComposedPromptPreview()">
+          </div>
+
+          <div class="control-box">
+            <label>Prompt pro Kling AI generování (základní styl)</label>
+            <textarea id="generation-prompt" placeholder="Vložte detailní prompt pro Kling AI..." oninput="updateComposedPromptPreview()"></textarea>
+          </div>
+
+          <div class="control-box">
+            <label>Finální prompt k odeslání (sestaveno automaticky)</label>
+            <div id="composed-prompt-preview" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted); background: rgba(1, 4, 8, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 4px; line-height: 1.4; word-break: break-all;">
+              ---
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-generate" onclick="startGeneration()" disabled>
+            ⚡ GENERATE NEW VARIANT
+          </button>
+        </div>
       </div>
 
       <!-- Right Pane: New Generation Preview -->
@@ -627,6 +668,11 @@
         }
       });
 
+      // Enable tab buttons
+      document.getElementById('tab-btn-image').disabled = false;
+      document.getElementById('tab-btn-video').disabled = false;
+      document.getElementById('tab-btn-generate').disabled = false;
+
       // Update original pane contents
       document.getElementById('orig-filename-label').textContent = panel.filename;
       document.getElementById('orig-image').src = panel.imgSrc;
@@ -636,14 +682,168 @@
       document.getElementById('btn-generate').disabled = false;
       document.getElementById('btn-crop-toggle').disabled = false;
 
+      // Load corresponding video
+      loadCaptureVideo(panel);
+
       // Cancel any active crop to refresh the state for the new panel
       cancelCrop();
+
+      // Switch to default image tab
+      switchSourceTab('image');
 
       // Update composed prompt preview
       updateComposedPromptPreview();
 
       // Reset preview pane
       resetPreviewPane();
+    }
+
+    function switchSourceTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('#original-pane .btn-filter').forEach(el => {
+        if (el.id && el.id.startsWith('tab-btn-')) {
+          el.classList.remove('active');
+        }
+      });
+      
+      // Show selected tab
+      document.getElementById('tab-content-' + tabName).classList.remove('hidden');
+      const tabBtn = document.getElementById('tab-btn-' + tabName);
+      if (tabBtn) tabBtn.classList.add('active');
+      
+      // Special actions on tab switch
+      const video = document.getElementById('capture-video');
+      if (tabName !== 'video' && video) {
+        video.pause();
+        const playBtn = document.getElementById('btn-video-play-pause');
+        if (playBtn) playBtn.textContent = '▶ Přehrát';
+      }
+      
+      if (tabName !== 'image') {
+        cancelCrop();
+      }
+    }
+
+    function loadCaptureVideo(panel) {
+      const baseName = panel.filename.replace(/\.[^/.]+$/, ""); // get name without extension
+      let partFolder = 'dil_1';
+      if (baseName.startsWith('02_')) partFolder = 'dil_2';
+      if (baseName.startsWith('03_')) partFolder = 'dil_3';
+      
+      const videoSrc = `/video/${partFolder}/${baseName}.mp4`;
+      const video = document.getElementById('capture-video');
+      const errorMsg = document.getElementById('video-error-msg');
+      const captureBtn = document.getElementById('btn-capture-frame');
+      const slider = document.getElementById('video-time-slider');
+      
+      video.src = videoSrc;
+      video.load();
+      
+      errorMsg.classList.add('hidden');
+      captureBtn.disabled = true;
+      slider.value = 0;
+      document.getElementById('video-time-display').textContent = '0.00s';
+      
+      video.onloadedmetadata = function() {
+        slider.max = video.duration;
+        captureBtn.disabled = false;
+      };
+      
+      video.onerror = function() {
+        console.warn("Video file failed to load:", videoSrc);
+        errorMsg.classList.remove('hidden');
+        captureBtn.disabled = true;
+      };
+      
+      video.ontimeupdate = function() {
+        if (!slider.dataset.dragging) {
+          slider.value = video.currentTime;
+          document.getElementById('video-time-display').textContent = video.currentTime.toFixed(2) + 's';
+        }
+      };
+    }
+
+    function togglePlayPauseCaptureVideo() {
+      const video = document.getElementById('capture-video');
+      const btn = document.getElementById('btn-video-play-pause');
+      if (!video) return;
+      if (video.paused) {
+        video.play();
+        if (btn) btn.textContent = '⏸ Pauza';
+      } else {
+        video.pause();
+        if (btn) btn.textContent = '▶ Přehrát';
+      }
+    }
+
+    function onVideoSliderInput(val) {
+      const video = document.getElementById('capture-video');
+      if (video) {
+        video.currentTime = parseFloat(val);
+        document.getElementById('video-time-display').textContent = parseFloat(val).toFixed(2) + 's';
+      }
+    }
+
+    function onVideoSliderChange(val) {
+      const video = document.getElementById('capture-video');
+      if (video) {
+        video.currentTime = parseFloat(val);
+      }
+    }
+
+    function captureVideoFrame() {
+      const video = document.getElementById('capture-video');
+      if (!video || video.readyState < 2) return;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      const frameDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      
+      // Switch to image tab
+      switchSourceTab('image');
+      
+      // Set the image src to our captured frame
+      const imageEl = document.getElementById('orig-image');
+      imageEl.src = frameDataUrl;
+      
+      // Stop video
+      video.pause();
+      const playBtn = document.getElementById('btn-video-play-pause');
+      if (playBtn) playBtn.textContent = '▶ Přehrát';
+      
+      // Automatically open crop mode on the captured frame
+      if (cropper) {
+        cropper.destroy();
+      }
+      
+      isCropMode = true;
+      const toolbar = document.getElementById('crop-toolbar');
+      const btn = document.getElementById('btn-crop-toggle');
+      if (btn) {
+        btn.classList.add('active');
+        btn.textContent = '✕ ZAVŘÍT OŘEZ';
+      }
+      if (toolbar) toolbar.classList.remove('hidden');
+      
+      // Reset aspect to 1:1
+      document.querySelectorAll('#crop-toolbar .btn-filter').forEach(b => b.classList.remove('active'));
+      const aspectBtn = document.getElementById('crop-aspect-1-1');
+      if (aspectBtn) aspectBtn.classList.add('active');
+      
+      cropper = new Cropper(imageEl, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 1,
+        background: false,
+        ready() {
+          console.log("Cropper initialized on captured frame.");
+        }
+      });
     }
 
     function toggleCropMode() {
