@@ -8,10 +8,10 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **50 / 51 done (98%)**
+## 📊 Progress: **51 / 51 done (100%)**
 
 ```
-##################################################################################################--  98%
+####################################################################################################  100%
 ```
 
 | Section | Done | Total | % |
@@ -22,7 +22,7 @@
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
-| Comic Editor | 9 | 10 | 90% |
+| Comic Editor | 10 | 10 | 100% |
 
 ---
 
@@ -83,7 +83,7 @@
 - [x] **#43** — Vytvořit uživatelské rozhraní editoru (`comic_editor.html`) pro review panelů, vět a promptů ✅ completed
 - [x] **#44** — Implementovat Kling AI generování a ffmpeg extrakci snímků (prvního frejmu z videa) ✅ completed
 - [x] **#45** — Přidat mechanismus zálohování původních souborů do `img/screenshots/backup` ✅ completed
-- [ ] **#46** — Otestovat kompletní tok generování, schválení, přepsání a zobrazení v komiksu
+- [x] **#46** — Otestovat kompletní tok generování, schválení, přepsání a zobrazení v komiksu ✅ completed
 - [x] **#47** — Přidat funkci ořezu obrázků (16:9, 4:3, 1:1, 3:4, 9:16) s posunem a přepisem původního souboru ✅ completed
 - [x] **#48** — Přidat do editoru přepínač zdrojů (Obrázek, Video capture se sliderem, Generování) s možností ořezu zachyceného snímku ✅ completed
 - [x] **#49** — Nahradit Kling AI integraci v `editor_server.js` za Gemini API (Imagen 3 a Gemini Flash remake) ✅ completed
