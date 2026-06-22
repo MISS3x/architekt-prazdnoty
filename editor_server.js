@@ -188,13 +188,13 @@ app.get('/api/panels', (req, res) => {
     const indexPath = path.join(__dirname, 'index_v2.html');
     const htmlContent = fs.readFileSync(indexPath, 'utf8');
     
-    // Parse all paragraphs to build a mapping of data-i -> text
-    const paragraphRegex = /<p\s+data-i="(\d+)"[^>]*>([\s\S]*?)<\/p>/g;
+    // Parse all blocks (paragraphs, quotes, bullets) to build a mapping of data-i -> text
+    const paragraphRegex = /<(p|blockquote|div)\s+data-i="(\d+)"[^>]*>([\s\S]*?)<\/\1>/g;
     const paragraphs = {};
     let pMatch;
     while ((pMatch = paragraphRegex.exec(htmlContent)) !== null) {
-      const i = parseInt(pMatch[1]);
-      let text = pMatch[2]
+      const i = parseInt(pMatch[2]);
+      let text = pMatch[3]
         .replace(/<[^>]+>/g, '') // remove HTML tags
         .replace(/\s+/g, ' ')    // collapse whitespaces
         .trim();
