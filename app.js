@@ -35,7 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
     decryptedPart2: localStorage.getItem("decrypted_part2") === "true",
     decryptedPart3: localStorage.getItem("decrypted_part3") === "true",
     fullscreenMode: false,
-    comicMode: false
+    comicMode: false,
+    audioMode: false
   };
 
   // All video backgrounds to cycle through (using valid Part 1 generated clips as base)
@@ -70,8 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let paras = [];
   let lastUserScrollTime = 0;
   let pendingPlayHandler = null;
-  const COMIC_INTRO_PAUSE_MS = 3000; // pause on the intro title card at each part start
-  let comicIntroTimer = null;
+  const COUNTDOWN_SECONDS = 7; // static-poster countdown before comic/film starts
+  let countdownTimer = null;
+  const POSTERS = { 1: "avatar/ruda/ruda.png", 2: "avatar/mia/mia.png", 3: "avatar/krtek/krtek.png" };
 
   // --- DOM ELEMENTS ---
   const _dummy = document.createElement("div");
@@ -97,6 +99,121 @@ document.addEventListener("DOMContentLoaded", () => {
   const EP_TITLES = { 1: { rom: "I", t: "ARCHITEKT PRÁZDNOTY" }, 2: { rom: "II", t: "VČELÍ MOR A NEURO-NEKRÓZA" }, 3: { rom: "III", t: "MATEŘÍ KAŠIČKA 2.0" } };
   const updateBarEpTitle = (partNum) => {
     const e = EP_TITLES[partNum]; if (barEpTitle && e) barEpTitle.innerHTML = `<b>DÍL ${e.rom}</b> · ${e.t}`;
+  };
+
+  // --- COUNTDOWN INTRO (static poster + 7s countdown before comic/film) ---
+  const ensureCountdownOverlay = () => {
+    let el = document.getElementById("countdown-overlay");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "countdown-overlay";
+      el.className = "countdown-overlay hidden";
+      el.innerHTML =
+        '<img class="cd-img" alt="">' +
+        '<div class="cd-tint"></div>' +
+        '<div class="cd-info"><div class="cd-sub"></div><div class="cd-title"></div></div>' +
+        '<div class="cd-ring"><span class="cd-num"></span></div>' +
+        '<div class="cd-hint">// PŘÍPRAVA SCÉNY</div>';
+      document.body.appendChild(el);
+    }
+    return el;
+  };
+  const cancelCountdown = () => {
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    const el = document.getElementById("countdown-overlay");
+    if (el) el.classList.add("hidden");
+  };
+  const runCountdown = (partNum, done) => {
+    cancelCountdown();
+    try { audio.pause(); audio.currentTime = 0; } catch (e) {} // stay silent during the countdown
+    const el = ensureCountdownOverlay();
+    const e = EP_TITLES[partNum];
+    el.querySelector(".cd-img").src = POSTERS[partNum] || POSTERS[1];
+    el.querySelector(".cd-sub").textContent = e ? `// DÍL ${e.rom}` : "";
+    el.querySelector(".cd-title").textContent = e ? e.t : "";
+    const numEl = el.querySelector(".cd-num");
+    let n = COUNTDOWN_SECONDS;
+    numEl.textContent = n;
+    el.classList.remove("hidden");
+    const finish = () => {
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+      el.classList.add("hidden");
+      el.onclick = null;
+      done();
+    };
+    el.onclick = finish; // click to skip the countdown
+    countdownTimer = setInterval(() => {
+      n--;
+      if (n <= 0) finish();
+      else numEl.textContent = n;
+    }, 1000);
+  };
+
+  // --- AUDIO MODE (3D spatial equalizer) ---
+  const AUDIO_META = {
+    1: { rom: "I", title: "ARCHITEKT", am: "PRÁZDNOTY", who: "Ruda Müller" },
+    2: { rom: "II", title: "VČELÍ MOR", am: "A NEURO-NEKRÓZA", who: "Mia Müllerová" },
+    3: { rom: "III", title: "MATEŘÍ", am: "KAŠIČKA 2.0", who: "Krtek" },
+  };
+  let audioStageEl = null;
+  const buildAudioStage = () => {
+    if (audioStageEl) return audioStageEl;
+    const el = document.createElement("div");
+    el.id = "audio-stage";
+    el.className = "ap-audio paused";
+    el.style.display = "none";
+    const BARS = 60;
+    let rig = "";
+    for (let i = 0; i < BARS; i++) {
+      const a = (360 / BARS) * i;
+      const t = Math.abs(Math.sin((a * Math.PI) / 180));
+      const hue = Math.round(192 - 154 * t);
+      const h = 30 + ((i * 37) % 11) * 9;
+      const dur = (0.66 + ((i * 13) % 9) * 0.09).toFixed(2);
+      const delay = (((i * 7) % 17) * 0.06).toFixed(2);
+      rig +=
+        `<div class="ap-eqslot" style="transform:rotateY(${a}deg) translateZ(var(--eqR))">` +
+        `<div class="ap-eqbar" style="height:${h}px;animation-duration:${dur}s;animation-delay:${delay}s;` +
+        `background:linear-gradient(to top,hsl(${hue} 100% 46%),hsl(${hue} 100% 78%));box-shadow:0 0 14px hsl(${hue} 100% 60% / .8)"></div>` +
+        `<div class="ap-eqbar refl" style="height:${h}px;animation-duration:${dur}s;animation-delay:${delay}s;` +
+        `background:linear-gradient(to bottom,hsl(${hue} 100% 50% / .55),transparent)"></div>` +
+        `</div>`;
+    }
+    el.innerHTML =
+      '<div class="ap-eqfloor"><i></i></div>' +
+      '<div class="ap-eqstage"><div class="ap-eqtilt"><div class="ap-eqrig">' +
+      '<div class="ap-eqcore"></div><div class="ap-eqwave"></div><div class="ap-eqwave w2"></div>' +
+      rig +
+      '</div></div></div>' +
+      '<div class="ap-audioinfo"><span class="ap-akick" id="audio-kick"></span>' +
+      '<h2 class="ap-atitle" id="audio-title"></h2><span class="ap-anarr" id="audio-narr"></span></div>' +
+      '<div class="ap-astatus"><span class="ap-aled" id="audio-led"></span><span id="audio-status">Připraveno k přehrání</span></div>';
+    document.body.appendChild(el);
+    audioStageEl = el;
+    return el;
+  };
+  const updateAudioStage = (partNum) => {
+    if (!audioStageEl) return;
+    const m = AUDIO_META[partNum] || AUDIO_META[1];
+    const kick = document.getElementById("audio-kick");
+    const title = document.getElementById("audio-title");
+    const narr = document.getElementById("audio-narr");
+    if (kick) kick.textContent = "// Audiokniha · Díl " + m.rom;
+    if (title) title.innerHTML = `${m.title} <span class="am">${m.am}</span>`;
+    if (narr) narr.textContent = "Čte " + m.who;
+  };
+  const setAudioPlaying = (playing) => {
+    if (!audioStageEl) return;
+    audioStageEl.classList.toggle("paused", !playing);
+    const led = document.getElementById("audio-led");
+    const st = document.getElementById("audio-status");
+    if (led) led.classList.toggle("on", playing);
+    if (st) st.textContent = playing ? "Přehrávám · prostorový zvuk" : (state.currentTime > 0 ? "Pozastaveno" : "Připraveno k přehrání");
+  };
+  const showAudioStage = (show) => {
+    const el = buildAudioStage();
+    el.style.display = show ? "block" : "none";
+    if (show) { updateAudioStage(state.activePart); setAudioPlaying(state.playing); }
   };
   const playerStatus = document.getElementById("player-status") || _dummy;
   const btnSync = document.getElementById("btn-sync") || _dummy;
@@ -189,6 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const setPart = (partNum, startPlaying = false) => {
     state.activePart = partNum;
     updateBarEpTitle(partNum);
+    if (state.audioMode) updateAudioStage(partNum);
     
     // Reset all tabs active states
     if (tabPart1) tabPart1.classList.remove("active", "part2-active", "part3-active");
@@ -350,15 +468,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
 
-      if (state.comicMode) {
-        // Comic mode: every part opens on its intro title card with a 3s pause
-        // before the audio (and the left→right slide) begins.
-        scrollComicToStart(partNum);
-        if (comicIntroTimer) clearTimeout(comicIntroTimer);
-        comicIntroTimer = setTimeout(() => {
-          comicIntroTimer = null;
-          beginPlayback();
-        }, COMIC_INTRO_PAUSE_MS);
+      if (state.comicMode || state.fullscreenMode) {
+        // Comic & film open on a static poster with a ~7s countdown before the
+        // first scene (and the audio) begins.
+        if (state.comicMode) scrollComicToStart(partNum);
+        runCountdown(partNum, beginPlayback);
       } else {
         beginPlayback();
       }
@@ -632,17 +746,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnModeText = document.getElementById("btn-mode-text");
     const btnModeComic = document.getElementById("btn-mode-comic");
     const btnModeMovie = document.getElementById("btn-mode-movie");
+    const btnModeAudio = document.getElementById("btn-mode-audio");
 
     const setActiveModeUI = (mode) => {
       const playerPreview = document.getElementById("player-video-preview");
       const playerWrapperEl = document.querySelector(".player-wrapper");
+      // reset all mode buttons; the active branch re-adds its own
+      [btnModeText, btnModeComic, btnModeMovie, btnModeAudio].forEach(b => b?.classList.remove("active"));
+      state.audioMode = (mode === "audio");
+      if (mode !== "audio") showAudioStage(false);
 
       if (mode === "text") {
         state.comicMode = false;
         document.body.classList.remove("comic-fs");
+        if (state.fullscreenMode) closeFullscreenOverlay(); // leave film when switching live
         btnModeText?.classList.add("active");
-        btnModeComic?.classList.remove("active");
-        btnModeMovie?.classList.remove("active");
         if (playerPreview) playerPreview.style.display = "flex"; // Show video monitor in text mode
         if (playerWrapperEl) playerWrapperEl.style.display = "flex"; // Ensure dashboard is visible in text mode
         updateModeVisibility();
@@ -650,28 +768,35 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (mode === "comic") {
         state.comicMode = true;
         document.body.classList.add("comic-fs"); // fullscreen comic playback
+        if (state.fullscreenMode) closeFullscreenOverlay(); // leave film when switching live
         btnModeComic?.classList.add("active");
-        btnModeText?.classList.remove("active");
-        btnModeMovie?.classList.remove("active");
         if (playerPreview) playerPreview.style.display = "none"; // Hide preview monitor since strip is fullscreen
         if (playerWrapperEl) playerWrapperEl.style.display = "none"; // Hide dashboard panel in comic mode
         updateModeVisibility();
         highlightParagraph(state.curIdx);
         invalidateComicTimelines(); // recompute panel offsets in the new layout
       } else if (mode === "movie") {
+        state.comicMode = false;
         document.body.classList.remove("comic-fs");
         btnModeMovie?.classList.add("active");
-        btnModeText?.classList.remove("active");
-        btnModeComic?.classList.remove("active");
         if (playerPreview) playerPreview.style.display = "flex";
         if (playerWrapperEl) playerWrapperEl.style.display = "flex"; // Show player dashboard panel during movie mode
         openFullscreenOverlay();
+      } else if (mode === "audio") {
+        state.comicMode = false;
+        document.body.classList.remove("comic-fs");
+        if (state.fullscreenMode) closeFullscreenOverlay(); // leave film when switching live
+        btnModeAudio?.classList.add("active");
+        if (playerPreview) playerPreview.style.display = "none";
+        if (playerWrapperEl) playerWrapperEl.style.display = "none";
+        showAudioStage(true); // 3D spatial equalizer
       }
     };
 
     if (btnModeText) btnModeText.addEventListener("click", () => setActiveModeUI("text"));
     if (btnModeComic) btnModeComic.addEventListener("click", () => setActiveModeUI("comic"));
     if (btnModeMovie) btnModeMovie.addEventListener("click", () => setActiveModeUI("movie"));
+    if (btnModeAudio) btnModeAudio.addEventListener("click", () => setActiveModeUI("audio"));
 
     // Sticky Part Switcher listeners
     const handleStickyPartClick = (partNum) => {
@@ -741,8 +866,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      // Auto-select after 10 seconds if no interaction
-      startAutoSelect();
+      // NOTE: no auto-select — the start screen waits for the user to pick a version.
+      // (The previous 10s auto-select silently switched to FILM.)
     }
 
     // Reset back to welcome screen selector
@@ -845,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.playing = true;
       playIcon.textContent = "❚❚";
       setBarPlayIcon(true);
+      setAudioPlaying(true);
       if (playBtnWrapper) playBtnWrapper.classList.add("playing");
       updateStatus();
       
@@ -857,6 +983,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.playing = false;
       playIcon.textContent = "▶";
       setBarPlayIcon(false);
+      setAudioPlaying(false);
       if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
       updateStatus();
     });

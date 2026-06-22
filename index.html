@@ -13,7 +13,7 @@
   
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="style.css?v=1.5">
-  <link rel="stylesheet" href="design.css?v=1.1">
+  <link rel="stylesheet" href="design.css?v=1.3">
 </head>
 <body>
   
@@ -48,6 +48,14 @@
           <div class="card-icon">🎬</div>
           <div class="card-title">// FILMOVÁ VERZE</div>
           <div class="card-desc">Plnohodnotný filmový zážitek na celou obrazovku se synchronizovaným audiem a titulky.</div>
+          <button class="card-btn">VSTOUPIT</button>
+        </div>
+
+        <div class="version-card audio-card" data-mode="audio">
+          <div class="card-glow"></div>
+          <div class="card-icon">♪</div>
+          <div class="card-title">// AUDIO VERZE</div>
+          <div class="card-desc">Audiokniha s 3D prostorovým ekvalizérem — čistý poslech bez obrazu, jen zvuk a světlo.</div>
           <button class="card-btn">VSTOUPIT</button>
         </div>
       </div>
@@ -91,6 +99,7 @@
         <button id="btn-mode-text" class="nav-btn active"><span class="ic">◫</span> TEXT</button>
         <button id="btn-mode-comic" class="nav-btn"><span class="ic">◧</span> KOMIKS</button>
         <button id="btn-mode-movie" class="nav-btn"><span class="ic">▸</span> FILM</button>
+        <button id="btn-mode-audio" class="nav-btn"><span class="ic">♪</span> AUDIO</button>
       </div>
       <div class="nav-controls">
         <div class="nav-group nav-parts">
@@ -3713,9 +3722,9 @@
   </div>
 
   <!-- Audio element -->
-  <audio id="audio-element" src="audio/dil_1.mp3" preload="metadata" autoplay></audio>
+  <audio id="audio-element" src="audio/dil_1.mp3" preload="metadata"></audio>
   
   <!-- JavaScript logic -->
-  <script src="app.js?v=2.0"></script>
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>
