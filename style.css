@@ -3053,3 +3053,20 @@ body.part3-active .btn-welcome-reset-btn:hover {
 
 /* Add top padding so video is not hidden behind the menu */
 .fullscreen-overlay { padding-top: 80px !important; }
+
+/* ===== KOMIKS: defaultní čtvercová maska 1:1 (fit cover) pro všechny obrázky ===== */
+/* (dočasné — testujeme vzhled než zapneme editovatelné masky) */
+.comic-panel-img { object-fit: cover !important; }
+/* desktop strip — panely čtverce; sloupce dimenzované dle počtu panelů, ať se vejdou na výšku */
+@media (min-width: 769px) {
+  body.comic-fs .comic-panel { flex: 0 0 auto !important; aspect-ratio: 1 / 1 !important;
+    width: 100% !important; height: auto !important; }
+  body.comic-fs .comic-col { justify-content: center !important; }
+  body.comic-fs .comic-col.cols-1 { width: min(84vh, 46vw) !important; }
+  body.comic-fs .comic-col.cols-2 { width: min(42vh, 40vw) !important; }
+  body.comic-fs .comic-col.cols-3 { width: min(28vh, 30vw) !important; }
+}
+/* mobil — jeden sloupec, čtvercové obrázky */
+@media (max-width: 768px) {
+  body.comic-fs .comic-panel { aspect-ratio: 1 / 1 !important; }
+}
