@@ -330,6 +330,38 @@ app.post('/api/discard', (req, res) => {
   }
 });
 
+// 10. Crop original image
+app.post('/api/crop', (req, res) => {
+  const { filename, imageData } = req.body;
+  if (!filename || !imageData) {
+    return res.status(400).json({ error: 'Missing filename or imageData' });
+  }
+
+  const baseName = path.basename(filename, path.extname(filename));
+  const targetImagePath = path.join(__dirname, 'img', 'screenshots', filename);
+  
+  // Clean base64 prefix if present
+  const base64Data = imageData.replace(/^data:image\/\w+;base64,/, "");
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  try {
+    // Make backup of the original image
+    if (fs.existsSync(targetImagePath)) {
+      const backupImagePath = path.join(BACKUP_DIR, `${baseName}_backup_${Date.now()}${path.extname(filename)}`);
+      fs.copyFileSync(targetImagePath, backupImagePath);
+      console.log(`Backed up original image to ${backupImagePath} before crop`);
+    }
+
+    // Overwrite target image with cropped image
+    fs.writeFileSync(targetImagePath, buffer);
+    console.log(`Saved cropped image: ${targetImagePath}`);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Comic Editor backend listening at http://localhost:${PORT}`);
 });
