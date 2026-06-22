@@ -315,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctx = cv.getContext("2d");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const CORE = 10, FADE_RINGS = 5, RINGS = CORE + FADE_RINGS;
+    const CORE = 8, FADE_RINGS = 3, RINGS = CORE + FADE_RINGS;
     const S = 0.62, HEXR = S * 0.88, MAXH = 6.2, CAM = 30;
     let tilt = 1.02, dpr = 1, raf, t = 0, angle = 0, focal = 1, cx = 0, cy = 0, curOp = 1;
 
@@ -454,7 +454,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Full sweep: cyan(190) → amber(40) → red(0) as hr goes 0→1
         const hue = hr < 0.75 ? 190 - 200 * hr : Math.max(0, 40 - 160 * (hr - 0.75));
         const sc = hx.scale, fd = hx.fade;
-        const cn = [[CORN[0][0]*sc,CORN[0][1]*sc],[CORN[1][0]*sc,CORN[1][1]*sc],[CORN[2][0]*sc,CORN[2][1]*sc],[CORN[3][0]*sc,CORN[3][1]*sc],[CORN[4][0]*sc,CORN[4][1]*sc],[CORN[5][0]*sc,CORN[5][1]*sc]];
+        const cn = hx.cn || (hx.cn = [[CORN[0][0]*sc,CORN[0][1]*sc],[CORN[1][0]*sc,CORN[1][1]*sc],[CORN[2][0]*sc,CORN[2][1]*sc],[CORN[3][0]*sc,CORN[3][1]*sc],[CORN[4][0]*sc,CORN[4][1]*sc],[CORN[5][0]*sc,CORN[5][1]*sc]]);
 
         if (h < 0.16) {
           ctx.strokeStyle = "rgba(45,226,255," + (0.07 * fd).toFixed(3) + ")";
@@ -473,23 +473,14 @@ document.addEventListener("DOMContentLoaded", () => {
           const t1 = proj(cxw + cn[c2][0], h, czw + cn[c2][1]);
           const t0 = proj(cxw + cn[c][0], h, czw + cn[c][1]);
           const shade = 0.55 + 0.45 * Math.abs(Math.cos((Math.PI / 3) * c + angle));
-          const g = ctx.createLinearGradient(b0[0], b0[1], t0[0], t0[1]);
-          g.addColorStop(0, "hsla(" + hue + " 95% 52% / " + (aWall * 0.14 * shade).toFixed(3) + ")");
-          g.addColorStop(1, "hsla(" + hue + " 95% 60% / " + (aWall * shade).toFixed(3) + ")");
-          ctx.fillStyle = g;
+          ctx.fillStyle = "hsla(" + hue + " 95% 56% / " + (aWall * shade).toFixed(3) + ")";
           ctx.beginPath();
           ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]);
           ctx.lineTo(t1[0], t1[1]); ctx.lineTo(t0[0], t0[1]); ctx.closePath();
           ctx.fill();
-          ctx.strokeStyle = "hsla(" + hue + " 100% 72% / " + ((0.08 + 0.24 * hr) * fd).toFixed(3) + ")";
-          ctx.lineWidth = Math.max(0.5, dpr * 0.5);
-          ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(t0[0], t0[1]); ctx.stroke();
         }
 
-        if (hr > 0.82) { ctx.shadowColor = "rgba(255,60,30,.95)"; ctx.shadowBlur = 22 * dpr; }
-        else if (hr > 0.55) { ctx.shadowColor = "rgba(255,178,46,.9)"; ctx.shadowBlur = 16 * dpr; }
-        else if (hr > 0.28) { ctx.shadowColor = "rgba(45,226,255,.85)"; ctx.shadowBlur = 10 * dpr; }
-        else ctx.shadowBlur = 0;
+        // shadowBlur odstranen (drahe) — zari dela lighter kompozice + jasna barva
         ctx.fillStyle = "hsla(" + hue + " 100% " + (58 + 14 * hr) + "% / " + ((0.22 + 0.42 * hr) * fd).toFixed(3) + ")";
         ctx.beginPath();
         for (let c = 0; c < 6; c++) { const p = proj(cxw + cn[c][0], h, czw + cn[c][1]); c ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
