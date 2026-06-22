@@ -1016,11 +1016,9 @@ document.addEventListener("DOMContentLoaded", () => {
       onTimeUpdate();
     }
 
-    if (savedMode) {
-      setActiveModeUI(savedMode);
-    } else {
-      setActiveModeUI("text");
-    }
+    // setActiveModeUI je const definovaný níž → odlož aplikaci režimu za konec
+    // synchronního initu (jinak TDZ ReferenceError → pád celého initu).
+    queueMicrotask(() => { setActiveModeUI(savedMode || "text"); });
 
     if (savedTime && audio) {
       const timeVal = parseFloat(savedTime);
