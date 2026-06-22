@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Chakra+Petch:wght@400;500;600;700&family=Comic+Neue:ital,wght@0,400;0,700;1,700&family=JetBrains+Mono:wght@500;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=1.5">
-  <link rel="stylesheet" href="design.css?v=1.6">
+  <link rel="stylesheet" href="style.css?v=1.6">
+  <link rel="stylesheet" href="design.css?v=2.4">
 </head>
 <body>
   
@@ -43,38 +43,48 @@
   <div class="wrapper">
     
     <!-- Top Navigation -->
-    <nav class="top-nav" id="top-nav">
-      <div class="nav-logo">
-        <span class="nav-dia"></span>
-        <span class="nav-title">RUDA-50</span>
-        <span class="nav-sep"></span>
-        <span class="nav-eptitle" id="bar-eptitle"><b>DÍL I</b> · ARCHITEKT PRÁZDNOTY</span>
-      </div>
-      <div class="nav-group nav-modes">
-        <button id="btn-mode-text" class="nav-btn active"><span class="ic">◫</span> TEXT</button>
-        <button id="btn-mode-comic" class="nav-btn"><span class="ic">◧</span> KOMIKS</button>
-        <button id="btn-mode-movie" class="nav-btn"><span class="ic">▸</span> FILM</button>
-        <button id="btn-mode-audio" class="nav-btn"><span class="ic">♪</span> AUDIO</button>
-      </div>
-      <div class="nav-controls">
-        <div class="nav-group nav-parts">
-          <button id="btn-sticky-part1" class="nav-btn active" title="Díl I">I</button>
-          <button id="btn-sticky-part2" class="nav-btn" title="Díl II">II</button>
-          <button id="btn-sticky-part3" class="nav-btn" title="Díl III">III</button>
-        </div>
-        <div class="nav-group bar-trans">
-          <button class="bar-tb" id="bar-stop" title="Stop">■</button>
-          <button class="bar-play" id="bar-play" title="Přehrát / Pauza">▶</button>
-          <div class="bar-scrub" id="bar-scrub">
-            <div class="bar-track"></div>
-            <div class="bar-fill" id="bar-fill"></div>
-            <div class="bar-knob" id="bar-knob"></div>
+    <header class="ap-bar" id="top-nav">
+      <div class="ap-row1">
+        <div class="ap-modes">
+          <div class="ap-segwrap">
+            <span class="ap-modelab">Verze</span>
+            <div class="ap-seg">
+              <button id="btn-mode-audio" class="ap-vbtn"><span class="ic">♪</span>Audio</button>
+              <button id="btn-mode-movie" class="ap-vbtn"><span class="ic">▸</span>Film</button>
+              <button id="btn-mode-comic" class="ap-vbtn"><span class="ic">◧</span>Komiks</button>
+              <button id="btn-mode-text" class="ap-vbtn active"><span class="ic">◫</span>Text</button>
+            </div>
           </div>
-          <span class="bar-time"><span id="bar-time-cur">0:00</span><span class="dim" id="bar-time-dur"> / 0:00</span></span>
+          <div class="ap-epsel">
+            <span class="ap-modelab am">Díl</span>
+            <div class="ap-eps">
+              <button id="btn-sticky-part1" class="ap-ep active" title="Díl I"><span class="rom">I</span></button>
+              <button id="btn-sticky-part2" class="ap-ep" title="Díl II"><span class="rom">II</span></button>
+              <button id="btn-sticky-part3" class="ap-ep" title="Díl III"><span class="rom">III</span></button>
+            </div>
+          </div>
         </div>
-        <button id="btn-nav-gallery" class="nav-btn" title="Přejít do Galerie">▣</button>
+        <div class="ap-brand">
+          <span class="ap-dia"></span>
+          <span class="ap-brandtx">RUDA-50</span>
+          <span class="ap-sep"></span>
+          <span class="ap-eptitle" id="bar-eptitle"><b>DÍL I</b> · ARCHITEKT PRÁZDNOTY</span>
+        </div>
       </div>
-    </nav>
+      <div class="ap-row2">
+        <div class="ap-trans">
+          <button class="ap-tb" id="bar-stop" title="Stop"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14"/></svg></button>
+          <button class="ap-play" id="bar-play" title="Přehrát / Pauza"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg></button>
+          <div class="ap-scrub" id="bar-scrub">
+            <div class="ap-track"></div>
+            <div class="ap-fill" id="bar-fill"></div>
+            <div class="ap-knob" id="bar-knob"></div>
+          </div>
+          <span class="ap-time"><span id="bar-time-cur">0:00</span><span class="dim" id="bar-time-dur"> / 0:00</span></span>
+        </div>
+        <button class="ap-gal" id="btn-nav-gallery" title="Vizuální galerie"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6 19.5 7v10L12 21.4 4.5 17V7z"/><path d="M12 8.2 15.2 10v4L12 15.8 8.8 14v-4z" stroke-width="1.3" opacity="0.8"/></svg></button>
+      </div>
+    </header>
     
     <!-- Hero Video Background (retained for text mode background effect) -->
     <div class="text-bg-video-container">
@@ -88,6 +98,15 @@
     <main class="story-container">
       <div class="story-content" id="story-content-part1">
         
+        <!-- Chapter Hero Header -->
+        <div class="story-chapter-hero" id="chapter-hero-1">
+          <div class="ch-eyebrow">// AUDIOKNIHA &middot; RUDA-50</div>
+          <div class="ch-rom">DÍL I</div>
+          <h1 class="ch-title">ARCHITEKT<br><span class="ch-title-em">PRÁZDNOTY</span></h1>
+          <div class="ch-meta">Čte: Ruda Müller &nbsp;·&nbsp; New Berlin &nbsp;·&nbsp; MMXXVI</div>
+          <div class="ch-line"></div>
+        </div>
+
         <!-- Paragraph 0 -->
         <p data-i="0" class="story-paragraph">
           <span class="dropcap">N</span>eonové prstence Nového Berlína pulzovaly v rytmu binárního deště, ale Ruda Müller stál na střeše svého posledního projektu — sedmsetmetrového mrakodrapu <em>Aegis</em> — a díval se opačným směrem. Tam, kde končila atmosférická kupole města a začínaly syrové, neuro-kontaminované hory starého světa.
@@ -984,6 +1003,14 @@
 
       <!-- Part 2 -->
       <div class="story-content hidden" id="story-content-part2">
+        <!-- Chapter Hero Header -->
+        <div class="story-chapter-hero" id="chapter-hero-2">
+          <div class="ch-eyebrow">// AUDIOKNIHA &middot; RUDA-50</div>
+          <div class="ch-rom">DÍL II</div>
+          <h1 class="ch-title">VČELÍ MOR<br><span class="ch-title-em">A NEURO-NEKRÓZA</span></h1>
+          <div class="ch-meta">Čte: Mia Müllerová &nbsp;·&nbsp; New Berlin &nbsp;·&nbsp; MMXXVI</div>
+          <div class="ch-line"></div>
+        </div>
         <!-- Decryption gate -->
         <div class="future-leak-panel" id="leak-panel-part2">
           <div class="leak-border-top"></div>
@@ -1823,6 +1850,14 @@
 
       <!-- Part 3 -->
       <div class="story-content hidden" id="story-content-part3">
+        <!-- Chapter Hero Header -->
+        <div class="story-chapter-hero" id="chapter-hero-3">
+          <div class="ch-eyebrow">// AUDIOKNIHA &middot; RUDA-50</div>
+          <div class="ch-rom">DÍL III</div>
+          <h1 class="ch-title">MATEŘÍ<br><span class="ch-title-em">KAŠIČKA 2.0</span></h1>
+          <div class="ch-meta">Čte: Krtek &nbsp;·&nbsp; Hory Starého Světa &nbsp;·&nbsp; MMXXVI</div>
+          <div class="ch-line"></div>
+        </div>
         <!-- Decryption gate -->
         <div class="future-leak-panel" id="leak-panel-part3">
           <div class="leak-border-top"></div>
@@ -1968,16 +2003,18 @@
         </div>
       </div>
     
-    <!-- Gallery Section -->
-    <section class="gallery-section">
+    <!-- Gallery Section (samostatný view) -->
+    <section class="gallery-section" id="gallery-view">
       <div class="gallery-header">
-        <h2 class="gallery-title">// DATOVÝ ARCHIV — VIZUÁLNÍ GALERIE</h2>
+        <div class="gallery-kick">// Vizuální archiv</div>
+        <h2 class="gallery-title">GALERIE</h2>
         <div class="gallery-filters">
           <button class="gallery-filter-btn active" data-filter="all">VŠE</button>
           <button class="gallery-filter-btn" data-filter="1">DÍL I</button>
           <button class="gallery-filter-btn" data-filter="2">DÍL II</button>
           <button class="gallery-filter-btn" data-filter="3">DÍL III</button>
         </div>
+        <button class="gallery-close-btn" id="gallery-close-btn" title="Zavřít galerii">✕ ZAVŘÍT</button>
       </div>
       <div class="gallery-grid">
         
@@ -3681,9 +3718,9 @@
   </div>
 
   <!-- Audio element -->
-  <audio id="audio-element" src="audio/dil_1.mp3" preload="metadata"></audio>
+  <audio id="audio-element" src="audio/dil_1.mp3" preload="auto">
   
   <!-- JavaScript logic -->
-  <script src="app.js?v=2.5"></script>
+  <script src="app.js?v=2.14"></script>
 </body>
 </html>

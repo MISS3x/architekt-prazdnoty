@@ -345,9 +345,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let v;
         if (real) {
           // Invert + sqrt-curve: edges → low-freq (bass, more energy); center → high-freq
-          const norm = rad / maxR;                          // 0 = center, 1 = edge
-          const invNorm = 1 - Math.sqrt(norm);              // sqrt gives wider spread to edges
-          const bi = Math.min(bins - 1, Math.floor(invNorm * bins * 0.7)); // low bins = bass
+          const norm = Math.min(1, rad / maxR);             // 0 = center, 1 = edge; okraj (>maxR) ořež na 1
+          const invNorm = 1 - Math.sqrt(norm);              // 0..1
+          // bez ořezu by okrajové hexy daly záporný index → fx.data[bi] = undefined → NaN → pád draw smyčky
+          const bi = Math.max(0, Math.min(bins - 1, Math.floor(invNorm * bins * 0.7))); // low bins = bass
           v = fx.data[bi] / 255;
           // Softer power curve so bass reaches edges clearly
           v = Math.pow(v, 0.85) * 1.35;
@@ -380,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const edgeFloor = 0.06 + 0.10 * (rad / maxR);
           v = Math.max(edgeFloor, Math.min(0.75, w));
         }
-        tgt[k] = v;
+        tgt[k] = Number.isFinite(v) ? v : 0; // pojistka: nikdy NaN do rendereru
       }
       for (let k = 0; k < HN; k++) {
         const up = tgt[k] > field[k];
@@ -1891,8 +1892,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (target == null) return;
       const current = window.scrollY;
       const delta = target - current;
-      if (Math.abs(delta) < 0.5) { window.scrollTo(0, target); return; }
-      window.scrollTo(0, current + delta * 0.2);
+      if (Math.abs(delta) < 2) { window.scrollTo(0, target); return; }
+      window.scrollTo(0, current + delta * 0.10);
     }
   };
   comicRAF = requestAnimationFrame(syncScrollTick);
