@@ -1537,7 +1537,7 @@
       reader.onload = async function(e) {
         const base64Data = e.target.result;
         
-        showOverlay(true, 'Nahrávám a injektuji video...', 'Zálohování a přepisování cílového videosouboru');
+        showOverlay(true, 'Nahrávám a injektuji video...', 'Generuji mobilní verzi přes ffmpeg a přepisuji HTML...');
         
         try {
           const response = await fetch('/api/inject-video', {
@@ -1556,7 +1556,7 @@
           if (!response.ok) throw new Error(resData.error || 'Server error');
 
           showOverlay(false);
-          showToast('Video bylo úspěšně vloženo do filmu!', true);
+          showToast('Video bylo úspěšně vloženo a upraveno pro mobilní formát!', true);
           
           // Reset tab upload
           input.value = '';
@@ -1564,8 +1564,16 @@
           document.getElementById('inject-video-info').classList.add('hidden');
           document.getElementById('btn-inject-video').disabled = true;
 
-          // Reload video capture preview player
-          loadCaptureVideo(currentPanel);
+          // Reload all panels from the server since data-video was updated in HTML
+          const savedFilename = currentPanel.filename;
+          await loadPanels();
+          
+          // Select the updated panel and auto-switch to the Video Capture tab
+          const updated = panels.find(p => p.filename === savedFilename);
+          if (updated) {
+            selectPanel(updated);
+            switchSourceTab('video');
+          }
         } catch (err) {
           showOverlay(false);
           showToast('Chyba při vkládání videa: ' + err.message, false);

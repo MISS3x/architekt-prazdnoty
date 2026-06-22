@@ -8,10 +8,10 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **70 / 70 done (100%)**
+## 📊 Progress: **75 / 75 done (100%)**
 
 ```
-####################################################################################################  100%
+#################################################################################################### 100%
 ```
 
 | Section | Done | Total | % |
@@ -26,6 +26,7 @@
 | HUD & Editor Mask | 8 | 8 | 100% |
 | Video Injection | 5 | 5 | 100% |
 | File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 5 | 5 | 100% |
 
 ---
 
@@ -117,4 +118,11 @@
 - [x] **#68** — Update `/api/panels` in `editor_server.js` to parse and return `data-video` ✅ completed
 - [x] **#69** — Verify file renaming works (image & video renamed, HTML updated, plays in Movie mode) ✅ verified by subagent
 - [x] **#70** — Git commit and push all changes ✅ completed
+
+## Sentence-Level Video Sync
+- [x] **#71** — Implement `getActiveSentenceIndex(pIdx, displayTime)` helper function in `app.js` ✅ completed
+- [x] **#72** — Add tracking variables `activeParaIdxForVideo` and `activeSentIdxForVideo` to `app.js` state scope ✅ completed
+- [/] **#73** — Update `onTimeUpdate` to trigger video changes at sentence-level boundaries based on `hasCustomVideo || hasDefaultVideo`
+- [/] **#74** — Ensure native looping by setting `videoEl.loop = true` in `loadAndPlayPreview`, `syncFullscreenSource`, and `loadAndPlayFullscreenMirror`
+- [ ] **#75** — Verify sentence-level video transitions and native looping in FILM mode and commit changes
 

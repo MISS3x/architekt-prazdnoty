@@ -1675,6 +1675,63 @@ document.addEventListener("DOMContentLoaded", () => {
     setSubtitles(html, true);
   };
 
+  const changeSentenceVideo = (part, paraIdx, sIdx) => {
+    isPlayingCustom = true;
+    activeParaIdx = paraIdx;
+    subVideoIdx = sIdx + 1;
+
+    const paraNum = parseInt(paraIdx) + 1;
+    const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
+    const panel = matchingPanels[sIdx];
+
+    let src;
+    let shotId;
+    if (panel && panel.dataset.video) {
+      src = panel.dataset.video;
+      const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
+      shotId = `[${base}]`;
+    } else {
+      const partStr = String(part).padStart(2, '0');
+      const paraStr = String(paraNum).padStart(2, '0');
+      const subStr = String(sIdx + 1).padStart(2, '0');
+      src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
+      shotId = `[${partStr}_${paraStr}_${subStr}]`;
+    }
+
+    if (previewShotId) {
+      previewShotId.textContent = shotId;
+      previewShotId.style.color = "var(--cyan)";
+    }
+    if (fullscreenShotId) {
+      fullscreenShotId.textContent = shotId;
+    }
+
+    nextPrevEl.loop = true; // ZAJIŠTĚNÍ NATIVNÍHO LOOPU PRO VĚTU
+    nextPrevEl.src = getVideoPath(src);
+    nextPrevEl.load();
+    nextPrevEl.play()
+      .then(() => {
+        nextPrevEl.classList.add("active");
+        if (currentPrevEl && currentPrevEl !== nextPrevEl) {
+          currentPrevEl.classList.remove("active");
+          const oldPrev = currentPrevEl;
+          setTimeout(() => { oldPrev.pause(); }, 2200);
+        }
+        // Swap roles
+        const tempPrev = currentPrevEl;
+        currentPrevEl = nextPrevEl;
+        nextPrevEl = tempPrev;
+      })
+      .catch(e => {
+        if (e && e.name !== "AbortError") console.warn("Film video preview play error:", e.message);
+      });
+
+    if (state.fullscreenMode) {
+      syncFullscreenSource(src);
+    }
+  };
+
   const onTimeUpdate = () => {
     // 1. Update progress bar
     if (state.duration) {
@@ -1698,22 +1755,37 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeIdx !== state.curIdx) {
       state.curIdx = activeIdx;
 
-      // Trigger custom paragraph preview video loading
       if (activeIdx !== -1) {
-        // Hide initial poster overlays when video playback sync begins (only for parts with videos: 1 and 2)
+        // Hide initial poster overlays when video playback sync begins
         const previewPoster = document.getElementById("preview-poster");
         const fullscreenPoster = document.getElementById("fullscreen-poster");
         if (previewPoster) previewPoster.classList.remove("active");
         if (fullscreenPoster) fullscreenPoster.classList.remove("active");
-
-        // Restartuj video-řetězec JEN když se opravdu změnil ODSTAVEC.
-        // (Scrub po větách v rámci téhož odstavce jinak zbytečně přenačítal videa
-        //  → flood „play() interrupted by a new load".)
-        if (activeIdx !== activeParaIdx) {
-          startParagraphVideoChain(state.activePart, activeIdx);
-        }
       } else {
         isPlayingCustom = false;
+      }
+    }
+
+    // Sentence-level video sync trigger
+    if (activeIdx !== -1) {
+      const sIdx = getActiveSentenceIndex(activeIdx, displayTime);
+      if (sIdx !== -1) {
+        if (activeIdx !== activeParaIdxForVideo || sIdx !== activeSentIdxForVideo) {
+          // Check if this sentence (panel) has a custom video or default video
+          const di = paras[activeIdx] ? paras[activeIdx].dataset.i : activeIdx;
+          const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
+          const panel = matchingPanels[sIdx];
+          const hasCustomVideo = !!(panel && panel.dataset.video);
+          const count = getParaVideoCount(state.activePart, activeIdx);
+          const hasDefaultVideo = count !== null && (sIdx + 1) <= count;
+
+          if (hasCustomVideo || hasDefaultVideo) {
+            changeSentenceVideo(state.activePart, activeIdx, sIdx);
+          }
+          // Update tracking variables regardless of whether a new video started or we kept the previous one running
+          activeParaIdxForVideo = activeIdx;
+          activeSentIdxForVideo = sIdx;
+        }
       }
     }
 
@@ -2173,6 +2245,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let isPlayingCustom = false;
   let activeParaIdx = -1;
   let subVideoIdx = 1;
+  let activeParaIdxForVideo = -1;
+  let activeSentIdxForVideo = -1;
 
   // Počet videí na odstavec (1-based dle pořadí v názvu souboru _NN.mp4).
   // Díky tomu umíme po posledním videu odstavce čistě skočit zpět na první
@@ -2191,6 +2265,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const arr = PART_VIDEO_COUNTS[part];
     if (arr && relIdx >= 0 && relIdx < arr.length) return arr[relIdx];
     return null; // neznámý počet → fallback na chování řízené error eventem
+  };
+
+  const getActiveSentenceIndex = (pIdx, displayTime) => {
+    if (pIdx < 0 || !paras[pIdx] || !cues) return -1;
+    const di = paras[pIdx].dataset.i;
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
+    if (matchingPanels.length === 0) return -1;
+    
+    const tStart = cues[pIdx];
+    const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
+    const pDuration = Math.max(0.1, tEnd - tStart);
+    const progress = Math.max(0, Math.min(1, (displayTime - tStart) / pDuration));
+    
+    return Math.max(0, Math.min(matchingPanels.length - 1, Math.floor(progress * matchingPanels.length)));
   };
 
   const handlePreviewVideoEnded = (videoEl) => {
@@ -2288,6 +2376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Play in preview video
+    videoEl.loop = true;
     videoEl.src = getVideoPath(src);
     videoEl.load();
     videoEl.play().catch(e => {
@@ -2302,6 +2391,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const syncFullscreenSource = (src) => {
+    nextFsEl.loop = true;
     nextFsEl.src = getVideoPath(src);
     nextFsEl.load();
     nextFsEl.play()
@@ -2351,6 +2441,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fullscreenShotId.textContent = shotId;
     }
 
+    nextPrevEl.loop = true;
     nextPrevEl.src = getVideoPath(src);
     nextPrevEl.load();
     nextPrevEl.play()
@@ -2390,6 +2481,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const playNextVideo = (src) => {
+    nextVideoEl.loop = false;
     nextVideoEl.src = getVideoPath(src);
     nextVideoEl.load();
     nextVideoEl.play().catch(e => console.error("BG video play failed:", e));
@@ -2400,12 +2492,14 @@ document.addEventListener("DOMContentLoaded", () => {
         previewShotId.style.color = "var(--muted)";
       }
       if (nextPrevEl) {
+        nextPrevEl.loop = false;
         nextPrevEl.src = getVideoPath(src);
         nextPrevEl.load();
         nextPrevEl.play().catch(e => console.error("Prev video play failed:", e));
       }
       
       if (nextPrevEl) nextPrevEl.classList.add("active");
+
       
       const oldPrevEl = currentPrevEl;
       if (oldPrevEl && oldPrevEl !== nextPrevEl) {

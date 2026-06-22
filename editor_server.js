@@ -504,7 +504,7 @@ app.post('/api/save-mask', (req, res) => {
 });
 
 // 12. Inject Video for Film version
-app.post('/api/inject-video', (req, res) => {
+app.post('/api/inject-video', async (req, res) => {
   const { filename, globalI, sentenceIdx, videoData, video } = req.body;
   if (globalI == null || sentenceIdx == null || !videoData) {
     return res.status(400).json({ error: 'Missing parameters or videoData' });
@@ -559,11 +559,56 @@ app.post('/api/inject-video', (req, res) => {
     fs.writeFileSync(targetVideoPath, buffer);
     console.log(`Injected video saved: ${targetVideoPath}`);
 
-    // Write to mobile video (simplest fallback to ensure both are updated)
-    fs.writeFileSync(targetMobileVideoPath, buffer);
-    console.log(`Injected mobile video saved: ${targetMobileVideoPath}`);
+    // Update HTML files to link this new video to the specific panel
+    const indexPaths = [
+      path.join(__dirname, 'index_v2.html'),
+      path.join(__dirname, 'index.html')
+    ];
+    
+    const videoAttrValue = `video/${partFolder}/${videoFilename}`;
+    indexPaths.forEach(indexPath => {
+      if (!fs.existsSync(indexPath)) return;
+      let htmlContent = fs.readFileSync(indexPath, 'utf8');
+      let changed = false;
+      
+      htmlContent = htmlContent.replace(/<div\s+([^>]*?class="[^"]*comic-panel[^"]*"[^>]*?)>/g, (match, attrs) => {
+        const iMatch = attrs.match(/data-i="(\d+)"/);
+        const sMatch = attrs.match(/data-sentence="(\d+)"/);
+        if (iMatch && parseInt(iMatch[1]) === parseInt(globalI) && 
+            sMatch && parseInt(sMatch[1]) === parseInt(sentenceIdx)) {
+          
+          let newAttrs = attrs;
+          if (attrs.includes('data-video=')) {
+            newAttrs = attrs.replace(/data-video="[^"]*"/, `data-video="${videoAttrValue}"`);
+          } else {
+            newAttrs = attrs + ` data-video="${videoAttrValue}"`;
+          }
+          changed = true;
+          return `<div ${newAttrs}>`;
+        }
+        return match;
+      });
+      
+      if (changed) {
+        fs.writeFileSync(indexPath, htmlContent, 'utf8');
+        console.log(`Updated data-video attribute in ${path.basename(indexPath)}`);
+      }
+    });
 
-    res.json({ success: true, targetPath: `/video/${partFolder}/${videoFilename}` });
+    // Generate mobile video version via ffmpeg
+    console.log(`Generating mobile video version using ffmpeg...`);
+    const ffmpegCmd = `ffmpeg -y -i "${targetVideoPath}" -vf "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280" -c:v libx264 -crf 23 -preset fast -c:a copy "${targetMobileVideoPath}"`;
+    
+    exec(ffmpegCmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`ffmpeg error: ${error.message}`);
+        // Even if ffmpeg fails, we return success for the main video
+      } else {
+        console.log(`Successfully generated mobile video: ${targetMobileVideoPath}`);
+      }
+      res.json({ success: true, targetPath: `/${videoAttrValue}` });
+    });
+
   } catch (error) {
     console.error('Video injection failed:', error);
     res.status(500).json({ error: error.message });
