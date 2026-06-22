@@ -944,6 +944,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     populateComicText();
 
+    // Klasifikuj bubliny podle délky textu → na mobilu menší font + vyšší obrázek,
+    // aby se dlouhý text vešel a nepřetékal panel.
+    document.querySelectorAll(".comic-panel").forEach(panel => {
+      const st = panel.querySelector(".speech-text");
+      const len = st ? (st.textContent || "").trim().length : 0;
+      panel.classList.remove("long-bubble", "xlong-bubble");
+      if (len > 150) panel.classList.add("xlong-bubble");
+      else if (len > 95) panel.classList.add("long-bubble");
+    });
+
     [1, 2, 3].forEach(p => {
       const grid = document.querySelector(`#comic-content-part${p} .comic-grid`);
       if (!grid) return;
@@ -1111,6 +1121,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const scrollKeys = ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Space", "Home", "End"];
       if (scrollKeys.includes(e.key)) {
         registerUserInteraction();
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        registerUserInteraction();
+        scrubByCue(1);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        registerUserInteraction();
+        scrubByCue(-1);
       }
     });
 

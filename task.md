@@ -6,7 +6,7 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **34 / 35 done (97%)**
+## 📊 Progress: **35 / 36 done (97%)**
 
 ```
 #################################################################################################--- 97%
@@ -19,7 +19,7 @@
 | JS | 10 | 10 | 100% |
 | Kling AI | 4 | 4 | 100% |
 | Git | 3 | 4 | 75% |
-| State & UI | 4 | 4 | 100% |
+| State & UI | 5 | 5 | 100% |
 
 ---
 
@@ -69,3 +69,4 @@
 - [x] **#33** — Implement instant scroll on reload (blocking syncScrollTick while state.restoring is true) ✅ completed
 - [x] **#34** — Update poster hero content in setPart ✅ completed
 - [x] **#35** — Implement dimmed class logic for story chapter hero ✅ completed
+- [x] **#36** — Bind ArrowLeft / ArrowRight keys to scrub audio by sentence (scrubByCue) ✅ completed
