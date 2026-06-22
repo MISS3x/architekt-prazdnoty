@@ -274,6 +274,24 @@
       box-shadow: 0 0 8px rgba(45, 226, 255, 0.15);
     }
 
+    input[type="text"] {
+      width: 100%;
+      background: rgba(2, 8, 14, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 13px;
+      padding: 12px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 8px rgba(45, 226, 255, 0.15);
+    }
+
     /* Controls & Buttons */
     .btn {
       font-family: 'Share Tech Mono', monospace;
@@ -468,8 +486,20 @@
         </div>
 
         <div class="control-box">
-          <label>Prompt pro Kling AI generování</label>
-          <textarea id="generation-prompt" placeholder="Vložte detailní prompt pro Kling AI..."></textarea>
+          <label>Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
+          <input type="text" id="custom-detail" placeholder="Udejte detail záběru nebo specifickou akci..." oninput="updateComposedPromptPreview()">
+        </div>
+
+        <div class="control-box">
+          <label>Prompt pro Kling AI generování (základní styl)</label>
+          <textarea id="generation-prompt" placeholder="Vložte detailní prompt pro Kling AI..." oninput="updateComposedPromptPreview()"></textarea>
+        </div>
+
+        <div class="control-box">
+          <label>Finální prompt k odeslání (sestaveno automaticky)</label>
+          <div id="composed-prompt-preview" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted); background: rgba(1, 4, 8, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 4px; line-height: 1.4; word-break: break-all;">
+            ---
+          </div>
         </div>
 
         <button class="btn btn-primary" id="btn-generate" onclick="startGeneration()" disabled>
@@ -576,11 +606,35 @@
       document.getElementById('orig-filename-label').textContent = panel.filename;
       document.getElementById('orig-image').src = panel.imgSrc;
       document.getElementById('sentence-text').textContent = panel.text || "[Tento panel nemá žádný přidělený text v caption]";
+      document.getElementById('custom-detail').value = '';
       document.getElementById('generation-prompt').value = panel.defaultPrompt;
       document.getElementById('btn-generate').disabled = false;
 
+      // Update composed prompt preview
+      updateComposedPromptPreview();
+
       // Reset preview pane
       resetPreviewPane();
+    }
+
+    function updateComposedPromptPreview() {
+      let prompt = document.getElementById('generation-prompt').value.trim();
+      const customDetail = document.getElementById('custom-detail').value.trim();
+      
+      if (customDetail) {
+        const stylePhrase = "video in Style of @Image";
+        if (prompt.includes(stylePhrase)) {
+          prompt = prompt.replace(stylePhrase, `${customDetail}, ${stylePhrase}`);
+        } else {
+          prompt = `${prompt}, ${customDetail}`;
+        }
+      }
+      
+      const previewEl = document.getElementById('composed-prompt-preview');
+      if (previewEl) {
+        previewEl.textContent = prompt || '---';
+      }
+      return prompt;
     }
 
     function resetPreviewPane() {
@@ -599,7 +653,7 @@
     async function startGeneration() {
       if (!currentPanel) return;
       
-      const prompt = document.getElementById('generation-prompt').value.trim();
+      const prompt = updateComposedPromptPreview();
       if (!prompt) {
         showToast('Prosím zadejte prompt pro generování', false);
         return;
