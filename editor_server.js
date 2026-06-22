@@ -93,17 +93,13 @@ Output ONLY the final prompt text itself, with no introductory/concluding text, 
 
 // 3. Helper to generate image via Imagen 3
 async function generateImagenImage(prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${GEMINI_API_KEY}`;
   
   const payload = {
-    instances: [
-      { prompt: prompt }
-    ],
-    parameters: {
-      sampleCount: 1,
-      aspectRatio: "1:1",
-      outputMimeType: "image/jpeg"
-    }
+    prompt: prompt,
+    numberOfImages: 1,
+    aspectRatio: "1:1",
+    outputMimeType: "image/jpeg"
   };
 
   const response = await fetch(url, {
@@ -117,12 +113,12 @@ async function generateImagenImage(prompt) {
     throw new Error(`Imagen 3 Error: ${resJson.error.message}`);
   }
 
-  const predictions = resJson.predictions;
-  if (!predictions || predictions.length === 0) {
-    throw new Error("No predictions returned from Imagen 3");
+  const generatedImages = resJson.generatedImages;
+  if (!generatedImages || generatedImages.length === 0) {
+    throw new Error("No generated images returned from Imagen 3");
   }
 
-  const base64Image = predictions[0].bytesBase64Encoded;
+  const base64Image = generatedImages[0].image?.imageBytes;
   if (!base64Image) {
     throw new Error("No base64 image data in Imagen 3 response");
   }
