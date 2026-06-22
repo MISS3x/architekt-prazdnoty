@@ -6,7 +6,7 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **45 / 46 done (98%)**
+## 📊 Progress: **46 / 47 done (98%)**
 
 ```
 ##################################################################################################-- 98%
@@ -20,7 +20,7 @@
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
-| Comic Editor | 4 | 5 | 80% |
+| Comic Editor | 5 | 6 | 83% |
 
 ---
 
@@ -82,3 +82,4 @@
 - [x] **#44** — Implementovat Kling AI generování a ffmpeg extrakci snímků (prvního frejmu z videa) ✅ completed
 - [x] **#45** — Přidat mechanismus zálohování původních souborů do `img/screenshots/backup` ✅ completed
 - [ ] **#46** — Otestovat kompletní tok generování, schválení, přepsání a zobrazení v komiksu
+- [x] **#47** — Přidat funkci ořezu obrázků (16:9, 4:3, 1:1, 3:4, 9:16) s posunem a přepisem původního souboru ✅ completed
