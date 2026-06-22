@@ -325,11 +325,21 @@ body::after {
   overflow: visible !important;
 }
 /* Dark cinematic gradient at the bottom of the video frame (subtitle legibility) */
+/* Letterbox vigneta na VŠECH 4 stranách (vlevo+nahoře přes ::before, vpravo+dole přes ::after).
+   Každý pseudo-prvek kryje celé video a má dvě gradientové vrstvy fadeující z černé do průhledna. */
 .fullscreen-screen::before, .fullscreen-screen::after {
-  content: ''; position: absolute; pointer-events: none;
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
 }
-.fullscreen-screen::before { top: 0; left: 0; bottom: 0; width: 14%; z-index: 2; background: linear-gradient(90deg, #000, transparent); }
-.fullscreen-screen::after  { right: 0; top: 0; bottom: 0; width: 14%; z-index: 2; background: linear-gradient(270deg, #000, transparent); }
+.fullscreen-screen::before {
+  background:
+    linear-gradient(90deg, #000, transparent 14%),   /* vlevo */
+    linear-gradient(180deg, #000, transparent 14%);  /* nahoře */
+}
+.fullscreen-screen::after {
+  background:
+    linear-gradient(270deg, #000, transparent 14%),  /* vpravo */
+    linear-gradient(0deg, #000, transparent 14%);    /* dole */
+}
 /* Bottom subtitle fade — separate pseudo, injected via a wrapper div approach:
    We use a box-shadow trick on fullscreen-overlay to darken the bottom zone */
 .fullscreen-overlay::after {
@@ -382,7 +392,8 @@ body.comic-fs .comic-grid { height: 100% !important; }
   font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: .22em;
   text-transform: uppercase; color: rgba(255, 255, 255, .5);
 }
-.ap-filmhud { color: var(--cyan-hi); letter-spacing: .18em; text-shadow: 0 0 10px rgba(45, 226, 255, .5); }
+.ap-filmhud { white-space: nowrap; color: var(--cyan-hi); letter-spacing: .18em; text-shadow: 0 0 10px rgba(45, 226, 255, .5); }
+.film-hud-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
 .fullscreen-close-btn {
   font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important;
   border: 1px solid rgba(45, 226, 255, .3) !important; background: rgba(45, 226, 255, .06) !important; z-index: 11;
@@ -497,7 +508,22 @@ body.gallery-open .gallery-section { display: block; }
   .story-container { padding-top: calc(var(--ap-barH) + 16px) !important; }
   .story-content { padding: 10px 18px 72px !important; }
   .story-img.img-circle, .story-img.img-circle-amber { width: min(78vw, 300px); height: min(78vw, 300px); }
-  .fullscreen-subtitles { max-width: min(800px, 90vw) !important; font-size: 15px !important; bottom: 58px !important; }
+  /* Mobile film: screen fills most of overlay so subtitles land INSIDE the video frame */
+  .fullscreen-screen {
+    height: calc(100% - 80px) !important;
+    max-height: calc(100% - 80px) !important;
+  }
+  /* Subtitles: smaller font, tucked just above the very bottom of the video */
+  .fullscreen-subtitles {
+    max-width: 90% !important;
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    bottom: 36px !important;
+    padding: 0 8px !important;
+  }
+  .fullscreen-shot-id { bottom: 14px !important; font-size: 9px !important; }
+  /* HUD strip: tighter padding so SCÉNA X / Y fits on one line */
+  .ap-filmtop { padding: 10px 80px 10px 14px !important; font-size: 10px !important; }
 }
 @media (max-width: 430px) {
   .nav-modes .nav-btn { font-size: 11px; letter-spacing: .04em; padding: 11px 4px; }
