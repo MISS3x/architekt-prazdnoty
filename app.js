@@ -1046,10 +1046,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const offset = centerOffsetFor(grid, active);
         if (isComicVertical()) grid.scrollTop = offset; else grid.scrollLeft = offset;
       } else {
+        // Text mode: center the active paragraph instantly (no smooth)
         const el = paras[state.curIdx];
         if (!el) return;
+        const barH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--ap-barH")) || 104;
         const rect = el.getBoundingClientRect();
-        window.scrollTo(0, Math.max(0, window.scrollY + rect.top - window.innerHeight * 0.4));
+        const targetY = window.scrollY + rect.top - barH - Math.max(0, (window.innerHeight - barH - el.offsetHeight) / 2);
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "instant" });
       }
     };
 
@@ -1071,8 +1074,9 @@ document.addEventListener("DOMContentLoaded", () => {
         updateModeVisibility();
         highlightParagraph(state.curIdx);
         invalidateComicTimelines(); // přebuduj cue-anchored kotvy pro textový scroll
-        lastUserScrollTime = 0;                       // deliberate switch → povol auto-follow
-        requestAnimationFrame(snapViewToCurrentTime); // skoč na aktuální čas hned
+        lastUserScrollTime = 0;                        // deliberate switch → povol auto-follow
+        // Double-rAF: first frame finishes layout, second frame measures correct positions
+        requestAnimationFrame(() => requestAnimationFrame(snapViewToCurrentTime));
       } else if (mode === "comic") {
         state.comicMode = true;
         document.body.classList.add("comic-fs"); // fullscreen comic playback
@@ -1481,7 +1485,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeIdx = getActiveIndex(displayTime);
     if (activeIdx !== state.curIdx) {
       state.curIdx = activeIdx;
-      
+
       // Trigger custom paragraph preview video loading
       if (activeIdx !== -1) {
         // Hide initial poster overlays when video playback sync begins (only for parts with videos: 1 and 2)
@@ -1490,7 +1494,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (previewPoster) previewPoster.classList.remove("active");
         if (fullscreenPoster) fullscreenPoster.classList.remove("active");
 
-        startParagraphVideoChain(state.activePart, activeIdx);
+        // Restartuj video-řetězec JEN když se opravdu změnil ODSTAVEC.
+        // (Scrub po větách v rámci téhož odstavce jinak zbytečně přenačítal videa
+        //  → flood „play() interrupted by a new load".)
+        if (activeIdx !== activeParaIdx) {
+          startParagraphVideoChain(state.activePart, activeIdx);
+        }
       } else {
         isPlayingCustom = false;
       }
@@ -1857,9 +1866,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // okno) i komiks (horizontálně/vertikálně, strip) na pozici odpovídající
   // aktuálnímu času audia (timeToPos). Běží jen při přehrávání a mimo
   // cooldown po ručním scrollu, takže se s ručním seekem nepere.
-  // Komiks: krok + dojezd (ease-out ~0,5 s) na aktivní panel místo spojitého driftu.
-  const COMIC_GLIDE_MS = 500;
-  let comicTween = { from: 0, target: null, start: 0 };
+  // Komiks: okamžitý hard-snap na střed aktivního panelu (bez animace).
 
   const syncScrollTick = () => {
     comicRAF = requestAnimationFrame(syncScrollTick);
@@ -1870,23 +1877,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayTime = Math.max(0, state.currentTime - 0.4);
 
     if (state.comicMode) {
-      // Drž aktivní panel vycentrovaný; když se aktivuje další (vpravo/dolů),
-      // přecentruj na něj za ~0,5 s s ease-out (dojezd) — žádný spojitý drift.
+      // Hard-snap: okamžitě vycentruj aktivní panel bez efektu.
       const grid = document.querySelector(`#comic-content-part${state.activePart} .comic-grid`);
       if (!grid) return;
       const active = grid.querySelector(".comic-panel.active");
       if (!active) return;
       const vertical = isComicVertical();
       const desired = centerOffsetFor(grid, active);
-      if (comicTween.target == null || Math.abs(desired - comicTween.target) > 1) {
-        comicTween.from = vertical ? grid.scrollTop : grid.scrollLeft; // odkud dojezd začíná
-        comicTween.target = desired;
-        comicTween.start = Date.now();
-      }
-      const p = Math.min(1, (Date.now() - comicTween.start) / COMIC_GLIDE_MS);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out → dojezd na konci
-      const pos = comicTween.from + (comicTween.target - comicTween.from) * eased;
-      if (vertical) grid.scrollTop = pos; else grid.scrollLeft = pos;
+      if (vertical) grid.scrollTop = desired; else grid.scrollLeft = desired;
     } else {
       const target = timeToPos(displayTime, syncAnchors.text);
       if (target == null) return;
@@ -2030,7 +2028,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
     const shotId = `[${partStr}_${paraStr}_${subStr}]`;
     
-    console.log(`Loading custom preview video: ${src}`);
     if (previewShotId) {
       previewShotId.textContent = shotId;
       previewShotId.style.color = "var(--cyan)";
@@ -2043,8 +2040,8 @@ document.addEventListener("DOMContentLoaded", () => {
     videoEl.src = getVideoPath(src);
     videoEl.load();
     videoEl.play().catch(e => {
-      console.warn(`Failed to play ${src}:`, e.message);
-      // Do not trigger handlePreviewVideoError here to prevent double-firing with the error event listener
+      // AbortError = play() přerušeno novým load() při rychlém přepnutí — benigní, neloguj.
+      if (e && e.name !== "AbortError") console.warn(`Video ${src}:`, e.message);
     });
 
     // Mirror to fullscreen if overlay is active
@@ -2111,8 +2108,8 @@ document.addEventListener("DOMContentLoaded", () => {
         nextPrevEl = tempPrev;
       })
       .catch(e => {
-        // Ignore normal abort/play interruptions on src swaps
-        console.log("Preview play interrupted (normal transition):", e.message);
+        // Běžné přerušení play() při výměně src (AbortError) — ticho.
+        if (e && e.name !== "AbortError") console.warn("Film video:", e.message);
       });
 
     if (state.fullscreenMode) {

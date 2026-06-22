@@ -313,6 +313,9 @@ body::after {
 }
 /* Once a paragraph becomes active, dim the hero */
 .story-chapter-hero.dimmed { opacity: 0.22; pointer-events: none; }
+/* Push hero below the fixed bar so it's fully visible */
+.story-chapter-hero { padding-top: calc(var(--ap-barH) + 40px); }
+@media (max-width: 600px) { .story-chapter-hero { padding-top: calc(var(--ap-barH) + 24px); } }
 
 .ch-eyebrow {
   font-family: 'Share Tech Mono', monospace;
@@ -370,7 +373,58 @@ body::after {
   .ch-title { font-size: clamp(28px, 9vw, 50px) !important; }
 }
 
+/* ===================== COMIC CHAPTER HERO ===================== */
+/* Title card at the start of each comic strip (horizontal scroll) */
+.comic-chapter-hero {
+  flex: 0 0 auto;
+  width: 100vw;                  /* fills one viewport width in horizontal strip */
+  min-height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  background:
+    radial-gradient(80% 60% at 50% 40%, rgba(45,226,255,.08), transparent 80%),
+    radial-gradient(60% 50% at 50% 90%, rgba(255,178,46,.06), transparent 70%),
+    var(--ap-bg);
+  box-shadow: inset -1px 0 0 rgba(45,226,255,.2);
+  position: relative;
+}
+.comic-chapter-hero::after {
+  content: ''; position: absolute; right: 0; top: 15%; bottom: 15%; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--cyan-dim) 40%, var(--amber-dim, rgba(255,178,46,.3)) 60%, transparent);
+}
+/* Vertical comic layout (mobile): chapter card fills viewport height */
+@media (max-width: 768px) {
+  .comic-chapter-hero {
+    width: 100%; min-height: 70vh; padding: 40px 24px;
+    box-shadow: inset 0 -1px 0 rgba(45,226,255,.2);
+  }
+  .comic-chapter-hero::after { display: none; }
+}
 
+/* ===================== FILM POSTER HERO ===================== */
+/* Replaces the small preview-poster-content with the full cinematic hero */
+.ch-poster-hero {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important; flex-direction: column !important;
+  align-items: center !important; justify-content: center !important;
+  padding: 40px 32px !important;
+  text-align: center;
+  background: none !important;
+  z-index: 3;
+}
+.ch-poster-hero .ch-title {
+  font-size: clamp(28px, 5.5vw, 62px) !important;
+}
+.ch-poster-hero .ch-rom {
+  font-size: clamp(11px, 1.6vw, 14px);
+}
+.poster-ch-title { pointer-events: none; }
+/* Ensure grayscale is removed from film intro teaser video */
+.fullscreen-overlay .preview-poster-img {
+  filter: none !important;
+}
 
 /* ===================== COMIC ===================== */
 /* Potlačené (neaktivní) panely: tlumený rám bez záře, zhasnutá grafika.
