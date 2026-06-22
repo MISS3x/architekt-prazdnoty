@@ -393,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const norm = Math.min(1, rad / maxR);             // 0 = střed, 1 = okraj
           const bi = Math.max(0, Math.min(nb - 1, Math.floor(norm * norm * nb)));
           const band = bandsArr[bi] / 255;
-          v = (0.7 * peak + 0.3 * band) * (1 - 0.6 * norm);
+          v = (0.7 * peak + 0.3 * band) * 2.1 * (1 - 0.6 * norm); // gain → maxima dosáhnou červené
           v = Math.pow(v, 0.9) * 1.3;
           v *= 0.8 + 0.2 * Math.sin(hx.ang * 3 + t * 4);
           const edgeFloor = 0.04 + 0.05 * (1 - norm);       // floor o něco vyšší ve středu
