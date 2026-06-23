@@ -1637,41 +1637,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (previewSubtitles) previewSubtitles.style.color = "var(--cyan)";
 
-    const words = Array.from(paras[pIdx].querySelectorAll(".word"))
-      .map(w => w.textContent.trim())
-      .filter(Boolean);
-    if (!words.length) { setSubtitles(paras[pIdx].textContent.trim(), false); return; }
-    // První písmeno odstavce je v textové verzi barevný dropcap (mimo .word spany) —
-    // doplň ho zpět na začátek prvního slova, ať titulek není „eonové" místo „Neonové".
-    const dropcap = paras[pIdx].querySelector(".dropcap");
-    if (dropcap) {
-      const d = (dropcap.textContent || "").trim();
-      if (d) words[0] = d + words[0];
+    // Využijeme komiksové časování pro naprostou synchronizaci
+    const sIdx = getActiveSentenceIndex(pIdx, displayTime);
+    if (sIdx === -1) {
+      setSubtitles(paras[pIdx].textContent.trim(), false);
+      return;
     }
 
-    // Progress within the paragraph → active word index
+    const di = paras[pIdx].dataset.i;
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
+    const panel = matchingPanels[sIdx];
+    
+    if (!panel) return;
+    
+    const textEl = panel.querySelector(".comic-text");
+    if (!textEl) {
+      setSubtitles("", false);
+      return;
+    }
+
+    const panelText = textEl.textContent.trim();
+    // Rozdělíme na slova pro karaoke efekt, ale zachováme přesnou větu z komiksu
+    const words = panelText.split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      setSubtitles("", false);
+      return;
+    }
+
     const tStart = cues[pIdx];
     const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
-    const dur = Math.max(0.1, tEnd - tStart);
-    const progress = Math.max(0, Math.min(1, (displayTime - tStart) / dur));
+    const pDuration = Math.max(0.1, tEnd - tStart);
+    
+    // Lineární rozložení v rámci celého odstavce (odpovídá logice v getActiveSentenceIndex)
+    const panelDuration = pDuration / matchingPanels.length;
+    const panelStartTime = tStart + (sIdx * panelDuration);
+    
+    const progress = Math.max(0, Math.min(1, (displayTime - panelStartTime) / panelDuration));
     const activeWordIdx = Math.max(0, Math.min(words.length - 1, Math.floor(progress * words.length)));
 
-    // Split the paragraph into sentences (lists of word indices)
-    const sentences = [];
-    let cur = [];
-    words.forEach((w, i) => {
-      cur.push(i);
-      if (SENTENCE_END.test(w)) { sentences.push(cur); cur = []; }
-    });
-    if (cur.length) sentences.push(cur);
-
-    // The sentence that contains the active word
-    const sent = sentences.find(s => activeWordIdx >= s[0] && activeWordIdx <= s[s.length - 1])
-      || sentences[sentences.length - 1];
-
-    const html = sent
-      .map(i => `<span class="cin-word${i <= activeWordIdx ? " read" : ""}">${escapeHtml(words[i])}</span>`)
+    const html = words
+      .map((w, i) => `<span class="cin-word${i <= activeWordIdx ? " read" : ""}">${escapeHtml(w)}</span>`)
       .join(" ");
+      
     setSubtitles(html, true);
   };
 
