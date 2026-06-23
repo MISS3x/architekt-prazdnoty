@@ -444,6 +444,7 @@ body::after {
   background: none !important;
   z-index: 3;
 }
+.fullscreen-overlay .ch-poster-hero { display: none !important; }
 .ch-poster-hero .ch-title {
   font-size: clamp(28px, 5.5vw, 62px) !important;
 }
@@ -663,7 +664,6 @@ body.comic-fs .comic-grid { height: 100% !important; }
 .fullscreen-screen { z-index: 1 !important; }
 .fullscreen-subtitles, .fullscreen-shot-id, .ap-filmtop { z-index: 20 !important; }
 /* Dokud běží úvodní poster, neukazuj modrý titulek/kód/HUD (jinak text prosvítá přes intro) */
-.fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-subtitles,
 .fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-shot-id,
 .fullscreen-overlay:has(#fullscreen-poster.active) .ap-filmtop { display: none !important; }
 
@@ -848,4 +848,20 @@ body.comic-fs .footer { display: none !important; }
   .ap-ep { min-width: 36px; height: 40px; font-size: 14px; }
   .ap-time { font-size: 10px; }
   .story-img.img-circle, .story-img.img-circle-amber { width: 82vw; height: 82vw; }
+}
+
+/* ===== Žádný prázdný vertikální scroll mimo TEXT režim =====
+   Film / Audio / Komiks jsou celoobrazovkové overlaye — obsah v toku za nimi
+   (story-container, footer) jinak tvořil prázdné místo „kam není kam skrolovat".
+   Jen TEXT režim smí scrollovat (čtení). */
+body.mode-movie,
+body.mode-audio,
+body.comic-fs {
+  overflow: hidden !important;
+}
+/* pro jistotu i na html, aby nevznikl scrollbar na kořeni */
+html:has(body.mode-movie),
+html:has(body.mode-audio),
+html:has(body.comic-fs) {
+  overflow: hidden !important;
 }

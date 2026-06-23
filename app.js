@@ -1246,6 +1246,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const playerWrapperEl = document.querySelector(".player-wrapper");
       // reset all mode buttons; the active branch re-adds its own
       [btnModeText, btnModeComic, btnModeMovie, btnModeAudio].forEach(b => b?.classList.remove("active"));
+      // jednotná body třída režimu → CSS řídí scroll (jen text scrolluje, ostatní jsou overlay)
+      document.body.classList.remove("mode-text", "mode-comic", "mode-movie", "mode-audio");
+      document.body.classList.add("mode-" + mode);
       state.audioMode = (mode === "audio");
       if (mode !== "audio") showAudioStage(false);
 
@@ -1616,6 +1619,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const updateCinemaSubtitle = (pIdx, displayTime) => {
+    if (displayTime < 10.0) {
+      if (previewSubtitles) previewSubtitles.style.color = "var(--cyan-hi)";
+      const phd = POSTER_HERO_DATA[state.activePart] || POSTER_HERO_DATA[1];
+      setSubtitles(`${phd.rom} - ${phd.title.replace("<br>", " ")}`, false);
+      return;
+    }
+
     if (pIdx < 0 || !paras[pIdx] || !cues) {
       if (previewSubtitles) previewSubtitles.style.color = "var(--muted)";
       // Při přehrávání bez aktivního odstavce nech titulek prázdný (nikdy „FEED ACTIVE").
