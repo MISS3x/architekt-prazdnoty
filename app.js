@@ -57,20 +57,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let videoTimer = null;
 
-  const PART1_CUES = [
-    6.40, 29.00, 57.00, 78.00, 95.00, 119.00, 154.00, 175.00, 196.00, 203.00,
-    220.00, 225.00, 247.00, 265.00, 279.00, 295.00, 316.00, 348.00, 376.00
-  ];
+  // Časování odvozené z REÁLNÉHO zarovnání audia (Whisper přepis → difflib).
+  // PARTx_CUES = start každého odstavce; PART_PANEL_TIMES = start každého panelu/věty
+  // (v pořadí komiksu). Tím odpadá lineární odhad, který v rámci odstavce driftoval.
+  const PART1_CUES = [6.40, 28.90, 62.10, 78.06, 86.79, 95.80, 119.62, 162.60, 175.94, 200.16, 207.58, 219.96, 229.32, 247.52, 264.76, 278.84, 294.54, 324.46, 354.06, 376.46];
+  const PART2_CUES = [10.18, 39.68, 64.60, 106.70, 123.83, 150.66, 163.68, 185.42, 225.12, 257.00, 293.74, 301.34];
+  const PART3_CUES = [10.46, 47.38, 85.92, 125.92, 145.94, 182.38, 217.38, 247.98, 259.54, 265.28, 298.68, 318.42, 346.62, 374.04, 402.42];
 
-  const PART2_CUES = [
-    1.00, 4.00, 10.00, 39.00, 64.00, 106.00, 130.00, 150.00, 163.00, 185.00, 224.00, 257.00, 293.00, 301.00
-  ];
-
-  const PART3_CUES = [
-    1.00, 4.00, 10.34, 47.64, 86.44, 126.94, 146.04, 182.24, 217.34, 247.94, 259.54, 265.14, 298.04, 319.44, 347.64, 372.94, 402.44
-  ];
+  const PART_PANEL_TIMES = {
+    1: [6.40, 20.63, 28.90, 30.74, 41.40, 50.14, 55.46, 62.10, 64.14, 74.24, 78.06, 86.79, 88.24, 91.14, 95.80, 101.58, 107.70, 109.80, 119.62, 122.14, 124.80, 132.08, 136.66, 141.66, 149.86, 154.26, 162.60, 164.26, 175.94, 179.92, 191.84, 200.16, 203.02, 207.58, 210.82, 219.96, 229.32, 231.50, 236.30, 247.52, 249.54, 255.90, 264.76, 266.96, 278.84, 283.98, 294.54, 299.24, 302.80, 311.04, 316.60, 324.46, 327.56, 337.62, 348.36, 354.06, 356.78, 360.16, 368.34, 376.46],
+    2: [10.18, 17.94, 27.62, 31.02, 39.68, 43.34, 50.14, 52.24, 59.50, 64.60, 67.82, 72.52, 73.76, 83.30, 89.50, 92.96, 106.70, 110.42, 114.12, 120.14, 123.83, 127.52, 131.21, 134.90, 136.50, 145.18, 150.66, 152.78, 158.18, 163.68, 166.14, 172.76, 180.98, 185.42, 187.62, 194.32, 204.32, 206.92, 213.70, 225.12, 228.78, 236.04, 239.42, 246.28, 250.50, 257.00, 263.42, 267.26, 272.42, 275.56, 278.48, 288.06, 293.74, 301.34, 308.34, 313.42, 319.52, 323.36, 326.32, 330.72, 334.26, 342.90, 342.90],
+    3: [10.46, 16.68, 21.68, 30.62, 38.98, 47.38, 54.10, 57.78, 62.72, 66.96, 68.68, 77.30, 85.92, 89.92, 92.40, 95.20, 103.70, 112.88, 119.30, 121.12, 125.92, 131.46, 135.24, 140.59, 145.94, 149.40, 157.30, 167.54, 175.98, 181.06, 182.38, 188.04, 196.44, 201.26, 203.60, 209.08, 217.38, 220.76, 226.70, 228.88, 241.92, 247.98, 253.60, 259.54, 261.14, 265.28, 269.22, 273.50, 284.44, 290.16, 298.68, 302.38, 306.10, 311.66, 318.42, 325.86, 332.46, 336.16, 342.54, 346.62, 349.72, 358.16, 366.92, 374.04, 376.61, 379.18, 389.12, 393.66, 396.90, 402.42, 406.50, 410.54],
+  };
 
   let cues = null;
+  // Index panelů aktuálního dílu (pro reálné časování vět) — staví se při setPart.
+  let panelTimes = null;        // pole časů panelů v pořadí dílu
+  let paraPanelOffset = [];      // pIdx -> globální index 1. panelu odstavce v dílu
+  let paraPanelCount = [];       // pIdx -> počet panelů odstavce
+  let filmIntroShown = null;     // stav úvodního posteru (idempotentní přepínání)
   let N = 0;
   let paras = [];
   let activeWordEl = null;     // aktuálně čtené slovo (text režim) — pro centrování po řádcích
@@ -817,6 +822,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     N = paras.length;
+    buildPanelTimeIndex(partNum);
     updateFilmHud(-1);
     state.curIdx = -1;
     state.duration = 0;
@@ -882,14 +888,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadCues = (partNum) => {
     let stored = null;
     try {
-      const s = localStorage.getItem(`ruda_cues_v3_part${partNum}`);
+      const s = localStorage.getItem(`ruda_cues_v4_part${partNum}`);
       if (s) stored = JSON.parse(s);
     } catch (e) {
       console.warn("Could not parse cues from localStorage", e);
     }
 
     const defaultCues = partNum === 1 ? PART1_CUES : (partNum === 2 ? PART2_CUES : PART3_CUES);
-    const partLength = partNum === 1 ? 19 : (partNum === 2 ? 14 : 17);
+    const partLength = partNum === 1 ? 20 : (partNum === 2 ? 12 : 15);
 
     if (stored && stored.length === partLength && stored.some(x => typeof x === "number")) {
       cues = stored;
@@ -1664,14 +1670,19 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const tStart = cues[pIdx];
-    const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
-    const pDuration = Math.max(0.1, tEnd - tStart);
-    
-    // Lineární rozložení v rámci celého odstavce (odpovídá logice v getActiveSentenceIndex)
-    const panelDuration = pDuration / matchingPanels.length;
-    const panelStartTime = tStart + (sIdx * panelDuration);
-    
+    // Reálný čas panelu (z audio-zarovnání); jinak fallback na lineární rozklad odstavce.
+    let panelStartTime, panelDuration;
+    const bracket = paraPanelCount[pIdx] ? getPanelTimeBracket(paraPanelOffset[pIdx] + sIdx) : null;
+    if (bracket) {
+      panelStartTime = bracket[0];
+      panelDuration = Math.max(0.1, bracket[1] - bracket[0]);
+    } else {
+      const tStart = cues[pIdx];
+      const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
+      panelDuration = Math.max(0.1, (tEnd - tStart) / matchingPanels.length);
+      panelStartTime = tStart + (sIdx * panelDuration);
+    }
+
     const progress = Math.max(0, Math.min(1, (displayTime - panelStartTime) / panelDuration));
     const activeWordIdx = Math.max(0, Math.min(words.length - 1, Math.floor(progress * words.length)));
 
@@ -1768,23 +1779,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (activeIdx !== state.curIdx) {
       state.curIdx = activeIdx;
-
-      const previewPoster = document.getElementById("preview-poster");
-      const fullscreenPoster = document.getElementById("fullscreen-poster");
-
-      if (activeIdx !== -1) {
-        // Hide initial poster overlays when video playback sync begins
-        if (previewPoster) previewPoster.classList.remove("active");
-        if (fullscreenPoster) fullscreenPoster.classList.remove("active");
-      } else {
-        isPlayingCustom = false;
-        // Reactivate poster during intro phase (when rewinding)
-        if (displayTime < introDuration) {
-          if (previewPoster) previewPoster.classList.add("active");
-          if (fullscreenPoster) fullscreenPoster.classList.add("active");
-        }
-      }
+      if (activeIdx === -1) isPlayingCustom = false;
     }
+    // Úvodní poster + titulek řídíme PODLE ČASU (ne jen při změně odstavce), aby
+    // posun slideru do oblasti intra (0..cues[0]) vždy spustil intro + titulek.
+    setFilmIntroVisible(displayTime < introDuration);
 
     // Sentence-level video sync trigger
     if (activeIdx !== -1) {
@@ -2012,13 +2011,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
       if (matchingPanels.length > 0) {
         const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4);
-        const tStart = cues[idx];
-        const tEnd = (idx < N - 1 && cues[idx + 1] != null) ? cues[idx + 1] : state.duration;
-        const pDuration = Math.max(0.1, tEnd - tStart);
-        const progress = Math.max(0, Math.min(1, (displayTime - tStart) / pDuration));
-
-        // Proportional index
-        const activePanelIdx = Math.max(0, Math.min(matchingPanels.length - 1, Math.floor(progress * matchingPanels.length)));
+        // Stejné REÁLNÉ časování jako film/titulky (žádný lineární drift).
+        const activePanelIdx = Math.max(0, Math.min(matchingPanels.length - 1, getActiveSentenceIndex(idx, displayTime)));
 
         const activePanel = matchingPanels[activePanelIdx];
         if (activePanel) {
@@ -2287,18 +2281,80 @@ document.addEventListener("DOMContentLoaded", () => {
     return null; // neznámý počet → fallback na chování řízené error eventem
   };
 
+  // Postaví mapu odstavec→panely v rámci dílu (globální offset + počet) a načte
+  // reálné časy panelů. Volá se při setPart (po naplnění paras).
+  const buildPanelTimeIndex = (partNum) => {
+    panelTimes = PART_PANEL_TIMES[partNum] || null;
+    paraPanelOffset = [];
+    paraPanelCount = [];
+    let off = 0;
+    for (let i = 0; i < paras.length; i++) {
+      const di = paras[i].dataset.i;
+      const cnt = document.querySelectorAll(`#comic-content-part${partNum} .comic-panel[data-i="${di}"]`).length;
+      paraPanelOffset[i] = off;
+      paraPanelCount[i] = cnt;
+      off += cnt;
+    }
+  };
+
+  // Idempotentně přepíná úvodní poster (intro). Volá se každý tick podle času,
+  // takže intro naskočí i při posunu slideru zpět do oblasti 0..cues[0].
+  const setFilmIntroVisible = (on) => {
+    if (filmIntroShown === on) return;
+    filmIntroShown = on;
+    const previewPoster = document.getElementById("preview-poster");
+    const fullscreenPoster = document.getElementById("fullscreen-poster");
+    if (on) {
+      if (previewPoster) previewPoster.classList.add("active");
+      if (fullscreenPoster) fullscreenPoster.classList.add("active");
+      const teaser = document.getElementById("fullscreen-teaser-video");
+      if (teaser) { try { teaser.play().catch(() => {}); } catch (e) {} }
+    } else {
+      if (previewPoster) previewPoster.classList.remove("active");
+      if (fullscreenPoster) fullscreenPoster.classList.remove("active");
+    }
+  };
+
+  // Vrátí [start, end] reálného času panelu (globální index v dílu), nebo null.
+  const getPanelTimeBracket = (gIdx) => {
+    if (!panelTimes || panelTimes[gIdx] == null) return null;
+    const start = panelTimes[gIdx];
+    let end = panelTimes[gIdx + 1];
+    if (end == null || end <= start) end = state.duration || start + 4;
+    return [start, end];
+  };
+
   const getActiveSentenceIndex = (pIdx, displayTime) => {
     if (pIdx < 0 || !paras[pIdx] || !cues) return -1;
-    const di = paras[pIdx].dataset.i;
-    const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
-    if (matchingPanels.length === 0) return -1;
-    
+    const count = paraPanelCount[pIdx];
+    if (!count) {
+      // fallback na původní DOM dotaz, kdyby index nebyl postaven
+      const di = paras[pIdx].dataset.i;
+      const mp = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
+      if (mp.length === 0) return -1;
+      const tS = cues[pIdx];
+      const tE = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
+      const prog = Math.max(0, Math.min(1, (displayTime - tS) / Math.max(0.1, tE - tS)));
+      return Math.max(0, Math.min(mp.length - 1, Math.floor(prog * mp.length)));
+    }
+
+    // REÁLNÉ časy panelů: vyber poslední panel, jehož start už nastal.
+    if (panelTimes) {
+      const base = paraPanelOffset[pIdx];
+      let sIdx = 0;
+      for (let k = 0; k < count; k++) {
+        const t = panelTimes[base + k];
+        if (t != null && displayTime >= t - 0.02) sIdx = k;
+        else if (t != null) break;
+      }
+      return sIdx;
+    }
+
+    // fallback lineární (kdyby chyběla data panelů pro díl)
     const tStart = cues[pIdx];
     const tEnd = (pIdx < N - 1 && cues[pIdx + 1] != null) ? cues[pIdx + 1] : state.duration;
-    const pDuration = Math.max(0.1, tEnd - tStart);
-    const progress = Math.max(0, Math.min(1, (displayTime - tStart) / pDuration));
-    
-    return Math.max(0, Math.min(matchingPanels.length - 1, Math.floor(progress * matchingPanels.length)));
+    const progress = Math.max(0, Math.min(1, (displayTime - tStart) / Math.max(0.1, tEnd - tStart)));
+    return Math.max(0, Math.min(count - 1, Math.floor(progress * count)));
   };
 
   const handlePreviewVideoEnded = (videoEl) => {
@@ -2588,10 +2644,8 @@ document.addEventListener("DOMContentLoaded", () => {
       activeParaIdxForVideo = -1;
       activeSentIdxForVideo = -1;
       // Ve filmu znovu ukaž úvodní poster + hlavní titulek (jako na začátku).
-      const previewPoster = document.getElementById("preview-poster");
-      const fullscreenPoster = document.getElementById("fullscreen-poster");
-      if (previewPoster) previewPoster.classList.add("active");
-      if (fullscreenPoster) fullscreenPoster.classList.add("active");
+      filmIntroShown = null;
+      setFilmIntroVisible(true);
       const teaser = document.getElementById("fullscreen-teaser-video");
       if (teaser) { try { teaser.currentTime = 0; teaser.play().catch(() => {}); } catch (e) {} }
       if (fsVideo1) fsVideo1.classList.remove("active");
@@ -2981,7 +3035,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Persist
     try {
-      localStorage.setItem(`ruda_cues_v3_part${state.activePart}`, JSON.stringify(cues));
+      localStorage.setItem(`ruda_cues_v4_part${state.activePart}`, JSON.stringify(cues));
     } catch (e) {
       console.warn("Could not save cues", e);
     }
@@ -3032,7 +3086,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const defaultCues = state.activePart === 1 ? PART1_CUES : (state.activePart === 2 ? PART2_CUES : PART3_CUES);
     cues = [...defaultCues];
     try {
-      localStorage.setItem(`ruda_cues_v3_part${state.activePart}`, JSON.stringify(cues));
+      localStorage.setItem(`ruda_cues_v4_part${state.activePart}`, JSON.stringify(cues));
     } catch (e) {}
     
     state.curIdx = -1;
