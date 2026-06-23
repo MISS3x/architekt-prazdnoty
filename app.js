@@ -2580,6 +2580,24 @@ document.addEventListener("DOMContentLoaded", () => {
       audio.pause();
       try { audio.currentTime = 0; } catch (e) {}
       state.curIdx = -1;
+      // STOP = návrat na úplný začátek: reset video-řetězce, ať se po dalším
+      // Play rozjede znovu od intra (jinak by navázal uprostřed).
+      isPlayingCustom = false;
+      activeParaIdx = -1;
+      subVideoIdx = 1;
+      activeParaIdxForVideo = -1;
+      activeSentIdxForVideo = -1;
+      // Ve filmu znovu ukaž úvodní poster + hlavní titulek (jako na začátku).
+      const previewPoster = document.getElementById("preview-poster");
+      const fullscreenPoster = document.getElementById("fullscreen-poster");
+      if (previewPoster) previewPoster.classList.add("active");
+      if (fullscreenPoster) fullscreenPoster.classList.add("active");
+      const teaser = document.getElementById("fullscreen-teaser-video");
+      if (teaser) { try { teaser.currentTime = 0; teaser.play().catch(() => {}); } catch (e) {} }
+      if (fsVideo1) fsVideo1.classList.remove("active");
+      if (fsVideo2) fsVideo2.classList.remove("active");
+      updateCinemaSubtitle(-1, 0);
+      updateFilmHud(-1);
       saveState();
       lastSavedTime = 0;
     });

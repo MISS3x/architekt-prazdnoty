@@ -624,20 +624,22 @@ body.comic-fs .comic-grid { height: 100% !important; }
   background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 3px) !important;
 }
 /* subtitle = velký kinotitulek bez boxu (nový design ap-sub) */
+/* Klasické filmové titulky: BÍLÉ písmo BEZ pozadí (jen stín pro čitelnost) */
 .fullscreen-subtitles {
     position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
     bottom: 40px !important; z-index: 20 !important; width: 90% !important; max-width: min(810px, 90vw) !important;
     margin: 0 !important; min-height: 0 !important;
-    background: #f4f7f8 !important; color: #0a0f14 !important;
-    padding: 8px 12px !important; border-radius: 12px !important;
-    border: 2px solid #000 !important;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(10, 15, 20, 0.9) !important;
+    background: none !important; color: #ffffff !important;
+    padding: 8px 12px !important; border-radius: 0 !important;
+    border: 0 !important; box-shadow: none !important;
     font-family: 'Bangers', 'Comic Neue', 'Chakra Petch', sans-serif !important; font-weight: 700 !important;
-    font-size: 20px !important; line-height: 1.2 !important; letter-spacing: 0.6px !important; text-align: center !important; text-transform: uppercase !important;
-    text-shadow: none !important; text-wrap: balance;
+    font-size: 22px !important; line-height: 1.25 !important; letter-spacing: 0.6px !important; text-align: center !important; text-transform: uppercase !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.9), 0 1px 2px #000 !important; text-wrap: balance;
   }
-.fullscreen-subtitles .cin-word { opacity: .4; color: #0a0f14; }
-.fullscreen-subtitles .cin-word.read { opacity: 1; color: #0a0f14; text-shadow: none; }
+.fullscreen-subtitles .cin-word { opacity: .5; color: #ffffff; }
+.fullscreen-subtitles .cin-word.read { opacity: 1; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.9), 0 1px 2px #000; }
+/* Ve FILMU schovej bledě modrý titulek z náhledového monitoru (preview) — duplicita */
+body.mode-movie #preview-subtitles { display: none !important; }
 .fullscreen-shot-id {
   position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
   bottom: 34px !important; z-index: 10 !important; margin: 0 !important;
