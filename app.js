@@ -2260,7 +2260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // (loop v rámci odstavce) bez načítání neexistujícího souboru, který by
   // jinak vyvolal error event a viditelný záblesk/pauzu.
   const PART_VIDEO_COUNTS = {
-    1: [3, 3, 3, 2, 2, 2, 3, 2, 2, 1, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2],
+    1: [2, 5, 3, 1, 3, 4, 8, 2, 3, 2, 2, 1, 3, 3, 2, 2, 5, 4, 4, 1],
     2: [3, 2, 3, 2, 1, 1, 2, 3, 2, 2, 2, 2],
     3: [3, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2],
   };
