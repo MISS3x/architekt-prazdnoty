@@ -619,20 +619,19 @@ body.comic-fs .comic-grid { height: 100% !important; }
 }
 /* subtitle = velký kinotitulek bez boxu (nový design ap-sub) */
 .fullscreen-subtitles {
-  position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
-  bottom: 78px !important; z-index: 10 !important; max-width: min(800px, 90vw) !important; width: auto !important;
-  margin: 0 !important; min-height: 0 !important;
-  background: none !important; color: #f6f8fa !important;
-  padding: 0 18px !important; border-radius: 0 !important;
-  border: none !important;
-  font-family: 'Chakra Petch', sans-serif !important; font-weight: 600 !important;
-  font-size: 31px !important; line-height: 1.28 !important; letter-spacing: .01em; text-align: center !important;
-  box-shadow: none !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 2px 10px rgba(0, 0, 0, .85), 0 0 2px rgba(0, 0, 0, .9) !important;
-  text-wrap: balance;
-}
-.fullscreen-subtitles .cin-word { opacity: .5; color: #cfe6ee; }
-.fullscreen-subtitles .cin-word.read { opacity: 1; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .95); }
+    position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
+    bottom: 40px !important; z-index: 20 !important; width: 90% !important; max-width: min(810px, 90vw) !important;
+    margin: 0 !important; min-height: 0 !important;
+    background: #f4f7f8 !important; color: #0a0f14 !important;
+    padding: 8px 12px !important; border-radius: 12px !important;
+    border: 2px solid #000 !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(10, 15, 20, 0.9) !important;
+    font-family: 'Bangers', 'Comic Neue', 'Chakra Petch', sans-serif !important; font-weight: 700 !important;
+    font-size: 20px !important; line-height: 1.2 !important; letter-spacing: 0.6px !important; text-align: center !important; text-transform: uppercase !important;
+    text-shadow: none !important; text-wrap: balance;
+  }
+.fullscreen-subtitles .cin-word { opacity: .4; color: #0a0f14; }
+.fullscreen-subtitles .cin-word.read { opacity: 1; color: #0a0f14; text-shadow: none; }
 .fullscreen-shot-id {
   position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
   bottom: 34px !important; z-index: 10 !important; margin: 0 !important;
@@ -755,7 +754,6 @@ body.gallery-open .gpp{ display:none; }
   box-shadow:inset 0 0 0 1px rgba(255,178,46,.4); transition:.16s;
   font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
 .ap-micbtn:hover{ color:#fff7e6; background:rgba(255,178,46,.16); box-shadow:inset 0 0 0 1px var(--amber), 0 0 18px -4px var(--amber); }
-.ap-micdot{ width:9px; height:9px; border-radius:50%; background:#6b5a3a; }
 .ap-micbtn.on{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber)); box-shadow:0 0 22px -3px var(--amber); }
 .ap-micbtn.on .ap-micdot{ background:#1a1102; animation:ap-blink 1s infinite; }
 /* hint dole nad statusem — nikdy nekoliduje s (i 2řádkovým) titulem */

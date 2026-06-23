@@ -55,31 +55,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // All video backgrounds to cycle through (using valid Part 1 generated clips as base)
-  const videos = [
-    "video/dil_1/01_01_01.mp4",
-    "video/dil_1/01_01_02.mp4",
-    "video/dil_1/01_02_01.mp4",
-    "video/dil_1/01_03_01.mp4",
-    "video/dil_1/01_04_01.mp4",
-    "video/dil_1/01_05_01.mp4",
-    "video/dil_1/01_06_01.mp4",
-    "video/dil_1/01_07_01.mp4"
-  ];
-  let videoIdx = 0;
   let videoTimer = null;
 
   const PART1_CUES = [
-    6.40, 29.00, 62.00, 78.00, 86.00, 95.00, 119.00, 162.00, 175.00, 200.00,
-    207.00, 220.00, 229.00, 247.00, 265.00, 279.00, 295.00, 324.00, 353.00, 376.00
+    6.40, 29.00, 57.00, 78.00, 95.00, 119.00, 154.00, 175.00, 196.00, 203.00,
+    220.00, 225.00, 247.00, 265.00, 279.00, 295.00, 316.00, 348.00, 376.00
   ];
 
   const PART2_CUES = [
-    10.0, 39.0, 64.0, 106.0, 130.0, 150.0, 163.0, 185.0, 224.0, 257.0, 293.0, 301.0
+    1.00, 4.00, 10.00, 39.00, 64.00, 106.00, 130.00, 150.00, 163.00, 185.00, 224.00, 257.00, 293.00, 301.00
   ];
 
   const PART3_CUES = [
-    10.34, 47.64, 86.44, 126.94, 146.04, 182.24, 217.34, 247.94, 259.54, 265.14, 298.04, 319.44, 347.64, 372.94, 402.44
+    1.00, 4.00, 10.34, 47.64, 86.44, 126.94, 146.04, 182.24, 217.34, 247.94, 259.54, 265.14, 298.04, 319.44, 347.64, 372.94, 402.44
   ];
 
   let cues = null;
@@ -139,7 +127,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const updateFilmHud = (idx) => {
     const sc = document.getElementById("film-hud-scene");
     const ti = document.getElementById("film-hud-title");
-    if (sc) sc.textContent = `SCÉNA ${Math.max(1, (parseInt(idx) || 0) + 1)} / ${N || 1}`;
+    // Počet scén = počet videí dílu + 1 (intro). Aktuální scéna = globální index videa:
+    // intro(1) + videa předchozích odstavců + aktuální sub-video v odstavci.
+    const counts = (typeof PART_VIDEO_COUNTS !== "undefined" && PART_VIDEO_COUNTS[state.activePart]) || [];
+    const total = counts.reduce((a, b) => a + b, 0) + 1; // +1 = intro
+    let scene = 1; // intro
+    const p = parseInt(idx);
+    if (!isNaN(p) && p >= 0) {
+      for (let i = 0; i < p && i < counts.length; i++) scene += counts[i];
+      scene += Math.min(Math.max(1, parseInt(subVideoIdx) || 1), counts[p] || 1);
+    }
+    scene = Math.max(1, Math.min(scene, total));
+    if (sc) sc.textContent = `SCÉNA ${scene} / ${total}`;
     if (ti) { const e = EP_TITLES[state.activePart]; if (e) ti.textContent = `// ${e.t}`; }
   };
 
@@ -678,6 +677,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     
+    
+    if (textBgVideoContainer) {
+      if (state.comicMode || state.fullscreenMode) {
+        textBgVideoContainer.style.display = "none";
+      } else {
+        textBgVideoContainer.style.display = "block";
+      }
+    }
+    
     if (state.comicMode) {
       const activeComic = document.getElementById(`comic-content-part${state.activePart}`);
       if (activeComic) activeComic.classList.remove("hidden");
@@ -726,7 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update teaser video
     const teaserVid = document.getElementById("fullscreen-teaser-video");
     if (teaserVid) {
-      teaserVid.src = getVideoPath(`video/teaser_${partNum}.mp4`);
+      teaserVid.src = getVideoPath(`video/dil_${partNum}/0${partNum}_intro.mp4`);
       teaserVid.play().catch(e => {
         if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
           console.log("Teaser autoplay prevented", e);
@@ -881,7 +889,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const defaultCues = partNum === 1 ? PART1_CUES : (partNum === 2 ? PART2_CUES : PART3_CUES);
-    const partLength = partNum === 1 ? 20 : (partNum === 2 ? 12 : 15);
+    const partLength = partNum === 1 ? 19 : (partNum === 2 ? 14 : 17);
 
     if (stored && stored.length === partLength && stored.some(x => typeof x === "number")) {
       cues = stored;
@@ -1079,29 +1087,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. Build the horizontal comic strip (intro title cards + wheel scrolling)
     setupComicStrip();
 
-    // Restore or Initialize state
-    const savedPart = localStorage.getItem("ap_active_part");
-    const savedTime = localStorage.getItem("ap_current_time");
-    const savedMode = localStorage.getItem("ap_active_mode");
+    // Reload always starts fresh at 0:00, Part 1, movie mode
+    const savedPart = "1";
+    const savedTime = null; // Ignore saved time
+    const savedMode = "movie";
 
-    state.restoring = true;
+    state.restoring = false;
 
-    const partToLoad = savedPart ? parseInt(savedPart) : 1;
+    const partToLoad = 1;
     setPart(partToLoad, false);
-
-    if (savedTime && audio) {
-      const timeVal = parseFloat(savedTime);
-      state.currentTime = timeVal;
-      const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - (state.comicMode ? 0.05 : 0.4));
-      state.curIdx = getActiveIndex(displayTime);
-      
-      // Perform initial highlighting
-      onTimeUpdate();
-    }
 
     // setActiveModeUI je const definovaný níž → odlož aplikaci režimu za konec
     // synchronního initu (jinak TDZ ReferenceError → pád celého initu).
-    queueMicrotask(() => { setActiveModeUI(savedMode || "movie"); });
+    queueMicrotask(() => { setActiveModeUI("movie"); });
 
     if (savedTime && audio) {
       const timeVal = parseFloat(savedTime);
@@ -1145,8 +1143,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // 5. Setup video background rotation (DISABLED - BG rotation removed)
-    // startVideoRotation();
+    // 5. Setup standby intro video
+    startVideoRotation();
 
     // 6. Setup audio listeners
     setupAudioListeners();
@@ -1211,19 +1209,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // posunem po větách kolečkem. Obsah teď sleduje audio JEN jednosměrně
     // (čas → pozice): auto-follow při hře + centerActiveContent po seeku/scrubu.
 
-    // Kolečko myši = posun audio stopy po VĚTÁCH ve VŠECH režimech
-    // (text/komiks/film/audio). Po skoku se příslušný obsah dorovná na aktuální čas.
-    let lastCueScrub = 0;
-    window.addEventListener("wheel", (e) => {
-      if (state.calibMode) return;
-      if (document.body.classList.contains("gallery-open")) return; // galerie → nech nativní scroll
-      if (!cues || !(state.duration > 0)) return;
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastCueScrub < 110) return; // jeden krok na jeden „cvak"
-      lastCueScrub = now;
-      scrubByCue(e.deltaY > 0 ? 1 : -1);
-    }, { passive: false });
+    // Pozn.: posun příběhu KOLEČKEM byl odebrán (matoucí). Po větách se posouvá
+    // jen tlačítky ◀ ▶ a šipkami; kolečko nechává nativní scroll stránky.
 
     // Setup mode switcher listeners
     const btnModeText = document.getElementById("btn-mode-text");
@@ -1758,18 +1745,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayTime = state.calibMode ? state.currentTime : Math.max(0, state.currentTime - (state.comicMode ? 0.05 : 0.4));
 
     // 2. Identify active block index
-    const activeIdx = getActiveIndex(displayTime);
+    let activeIdx = getActiveIndex(displayTime);
+    
+    // Enforce 10s intro phase for the film (ignore paragraphs during this time)
+    if (displayTime < 10.0) {
+      activeIdx = -1;
+    }
+
     if (activeIdx !== state.curIdx) {
       state.curIdx = activeIdx;
 
+      const previewPoster = document.getElementById("preview-poster");
+      const fullscreenPoster = document.getElementById("fullscreen-poster");
+
       if (activeIdx !== -1) {
         // Hide initial poster overlays when video playback sync begins
-        const previewPoster = document.getElementById("preview-poster");
-        const fullscreenPoster = document.getElementById("fullscreen-poster");
         if (previewPoster) previewPoster.classList.remove("active");
         if (fullscreenPoster) fullscreenPoster.classList.remove("active");
       } else {
         isPlayingCustom = false;
+        // Reactivate poster during intro phase (when rewinding)
+        if (displayTime < 10.0) {
+          if (previewPoster) previewPoster.classList.add("active");
+          if (fullscreenPoster) fullscreenPoster.classList.add("active");
+        }
       }
     }
 
@@ -2329,7 +2328,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update teaser video
       const teaserVid = document.getElementById("fullscreen-teaser-video");
       if (teaserVid) {
-        teaserVid.src = getVideoPath(`video/teaser_${state.activePart}.mp4`);
+        teaserVid.src = getVideoPath(`video/dil_${state.activePart}/0${state.activePart}_intro.mp4`);
         teaserVid.play().catch(e => {
           if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
             console.log("Teaser autoplay prevented", e);
@@ -2476,31 +2475,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const startVideoRotation = () => {
     videoBgContainer.classList.add("active");
+    if (videoTimer) clearInterval(videoTimer);
     
-    // Play first video
-    playNextVideo(videos[videoIdx]);
-    
-    // Set timer to change video every 12 seconds
-    videoTimer = setInterval(() => {
-      videoIdx = (videoIdx + 1) % videos.length;
-      playNextVideo(videos[videoIdx]);
-    }, 12000);
+    // Play intro video on loop in preview player, but hero in background
+    const partStr = String(state.activePart).padStart(2, '0');
+    const introSrc = `video/dil_${state.activePart}/${partStr}_intro.mp4`;
+    playNextVideo("video/hero.mp4", introSrc, true);
   };
 
-  const playNextVideo = (src) => {
-    nextVideoEl.loop = false;
-    nextVideoEl.src = getVideoPath(src);
+  const playNextVideo = (bgSrc, prevSrc = bgSrc, loop = true) => {
+    nextVideoEl.loop = loop;
+    nextVideoEl.src = getVideoPath(bgSrc);
     nextVideoEl.load();
     nextVideoEl.play().catch(e => console.error("BG video play failed:", e));
 
     if (!isPlayingCustom && state.activePart !== 3) {
       if (previewShotId) {
-        previewShotId.textContent = "[BG_ROTATION]";
+        previewShotId.textContent = "[INTRO_STANDBY]";
         previewShotId.style.color = "var(--muted)";
       }
       if (nextPrevEl) {
-        nextPrevEl.loop = false;
-        nextPrevEl.src = getVideoPath(src);
+        nextPrevEl.loop = loop;
+        nextPrevEl.src = getVideoPath(prevSrc);
         nextPrevEl.load();
         nextPrevEl.play().catch(e => console.error("Prev video play failed:", e));
       }
@@ -2734,7 +2730,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update teaser video
     const teaserVid = document.getElementById("fullscreen-teaser-video");
     if (teaserVid) {
-      teaserVid.src = getVideoPath(`video/teaser_${state.activePart}.mp4`);
+      teaserVid.src = getVideoPath(`video/dil_${state.activePart}/0${state.activePart}_intro.mp4`);
       teaserVid.play().catch(e => {
         if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
           console.log("Teaser autoplay prevented", e);

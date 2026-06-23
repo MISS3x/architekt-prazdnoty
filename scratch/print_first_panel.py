@@ -1,4 +1,4 @@
-import os
+ideoimport os
 
 def main():
     base_dir = r"z:\MISS3 Dropbox\Server Data\printednest\Antigravity\architekt_prazdnoty"
