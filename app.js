@@ -2261,8 +2261,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // jinak vyvolal error event a viditelný záblesk/pauzu.
   const PART_VIDEO_COUNTS = {
     1: [2, 5, 3, 1, 3, 4, 8, 2, 3, 2, 2, 1, 3, 3, 2, 2, 5, 4, 4, 1],
-    2: [3, 2, 3, 2, 1, 1, 2, 3, 2, 2, 2, 2],
-    3: [3, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2],
+    2: [4, 5, 7, 4, 6, 3, 4, 6, 6, 7, 1, 10],
+    3: [5, 7, 8, 4, 6, 6, 5, 2, 2, 5, 4, 5, 4, 6, 3],
   };
 
   const getParaVideoCount = (part, paraIdx) => {
