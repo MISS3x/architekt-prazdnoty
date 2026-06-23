@@ -1619,7 +1619,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const updateCinemaSubtitle = (pIdx, displayTime) => {
-    if (displayTime < 10.0) {
+    const introDuration = (cues && cues.length > 0) ? cues[0] : 0;
+    if (displayTime < introDuration) {
       if (previewSubtitles) previewSubtitles.style.color = "var(--cyan-hi)";
       const phd = POSTER_HERO_DATA[state.activePart] || POSTER_HERO_DATA[1];
       // Title obsahuje markup (<br>, <span>) — pro titulek z něj uděláme čistý text
@@ -1759,8 +1760,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2. Identify active block index
     let activeIdx = getActiveIndex(displayTime);
     
-    // Enforce 10s intro phase for the film (ignore paragraphs during this time)
-    if (displayTime < 10.0) {
+    // Enforce intro phase for the film (ignore paragraphs until the first cue)
+    const introDuration = (cues && cues.length > 0) ? cues[0] : 0;
+    if (displayTime < introDuration) {
       activeIdx = -1;
     }
 
@@ -1777,7 +1779,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         isPlayingCustom = false;
         // Reactivate poster during intro phase (when rewinding)
-        if (displayTime < 10.0) {
+        if (displayTime < introDuration) {
           if (previewPoster) previewPoster.classList.add("active");
           if (fullscreenPoster) fullscreenPoster.classList.add("active");
         }
