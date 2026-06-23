@@ -1622,7 +1622,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (displayTime < 10.0) {
       if (previewSubtitles) previewSubtitles.style.color = "var(--cyan-hi)";
       const phd = POSTER_HERO_DATA[state.activePart] || POSTER_HERO_DATA[1];
-      setSubtitles(`${phd.rom} - ${phd.title.replace("<br>", " ")}`, false);
+      // Title obsahuje markup (<br>, <span>) — pro titulek z něj uděláme čistý text
+      const cleanTitle = phd.title.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").trim();
+      setSubtitles(`${phd.rom} — ${cleanTitle}`, false);
       return;
     }
 
@@ -1647,7 +1649,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (!panel) return;
     
-    const textEl = panel.querySelector(".comic-text");
+    const textEl = panel.querySelector(".speech-text, .comic-text");
     if (!textEl) {
       setSubtitles("", false);
       return;
