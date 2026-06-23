@@ -134,6 +134,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const progressFill = document.getElementById("progress-fill") || _dummy;
   const timeCurrent = document.getElementById("time-current") || _dummy;
   const timeDuration = document.getElementById("time-total") || _dummy;
+  const playbackOverlay = document.getElementById("playback-overlay");
+  let playbackOverlayTimeout = null;
+
+  const showPlaybackOverlay = (text, autoHide) => {
+    if (!playbackOverlay) return;
+    playbackOverlay.textContent = text;
+    playbackOverlay.classList.add("visible");
+    
+    if (playbackOverlayTimeout) clearTimeout(playbackOverlayTimeout);
+    
+    if (autoHide) {
+      playbackOverlayTimeout = setTimeout(() => {
+        playbackOverlay.classList.remove("visible");
+      }, 1500);
+    }
+  };
 
   // --- TOP BAR TRANSPORT (TRON design) ---
   const barPlay = document.getElementById("bar-play");
@@ -2459,46 +2475,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const handlePreviewVideoError = (videoEl) => {
-    if (!isPlayingCustom) return;
-    
-    if (subVideoIdx > 1) {
-      // Loop back to the first video of this paragraph
-      subVideoIdx = 1;
-      loadAndPlayPreview(videoEl, state.activePart, activeParaIdx, subVideoIdx);
-    } else {
-      // It failed even on the first video. Fallback to standby poster.
-      isPlayingCustom = false;
-      
-      const previewPoster = document.getElementById("preview-poster");
-      const fullscreenPoster = document.getElementById("fullscreen-poster");
-      if (previewPoster) previewPoster.classList.add("active");
-      if (fullscreenPoster) fullscreenPoster.classList.add("active");
-    
-      // Update teaser video
-      const teaserVid = document.getElementById("fullscreen-teaser-video");
-      if (teaserVid) {
-        teaserVid.src = getVideoPath(`video/dil_${state.activePart}/0${state.activePart}_intro.mp4`);
-        teaserVid.play().catch(e => {
-          if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
-            console.log("Teaser autoplay prevented", e);
-          }
-        });
-      }
-
-      // Deactivate any active video element transitions
-      if (currentPrevEl) currentPrevEl.classList.remove("active");
-      if (nextPrevEl) nextPrevEl.classList.remove("active");
-      if (currentFsEl) currentFsEl.classList.remove("active");
-      if (nextFsEl) nextFsEl.classList.remove("active");
-
-      if (previewShotId) {
-        previewShotId.textContent = "[STANDBY]";
-        previewShotId.style.color = "var(--muted)";
-      }
-      if (fullscreenShotId) {
-        fullscreenShotId.textContent = "[STANDBY]";
-      }
-    }
+    // If a sentence video doesn't exist (e.g. 02_01_04.mp4), silently ignore.
+    // The previous looping video will remain on screen automatically.
   };
 
   const loadAndPlayPreview = (videoEl, part, paraIdx, subIdx) => {
@@ -2837,6 +2815,29 @@ document.addEventListener("DOMContentLoaded", () => {
       fullscreenCloseBtn.addEventListener("click", closeFullscreenOverlay);
     }
 
+    // KINO / cinema mode — skutečný fullscreen prohlížeče na film overlay (video + titulky).
+    const cinemaBtn = document.getElementById("fullscreen-cinema-btn");
+    const toggleCinema = () => {
+      const ov = document.getElementById("fullscreen-overlay");
+      if (!ov) return;
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (!fsEl) {
+        const req = ov.requestFullscreen || ov.webkitRequestFullscreen || ov.msRequestFullscreen;
+        if (req) { try { Promise.resolve(req.call(ov)).catch(() => {}); } catch (e) {} }
+      } else {
+        const ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+        if (ex) { try { Promise.resolve(ex.call(document)).catch(() => {}); } catch (e) {} }
+      }
+    };
+    if (cinemaBtn) cinemaBtn.addEventListener("click", toggleCinema);
+    const onFsChange = () => {
+      const on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      document.body.classList.toggle("cinema-on", on);
+      if (cinemaBtn) cinemaBtn.innerHTML = on ? "⤢ UKONČIT KINO" : "⛶ KINO";
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+
     // Mirror ended/error events for fullscreen videos to match preview video sequence loops
     if (fsVideo1) {
       fsVideo1.addEventListener("ended", () => handleFullscreenVideoEnded(fsVideo1));
@@ -2982,10 +2983,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const handleFullscreenVideoError = (videoEl) => {
-    // If fullscreen video fails, fallback to current background source
-    videoEl.src = getVideoPath(currentVideoEl.src);
-    videoEl.load();
-    videoEl.play().catch(() => {});
+    // If fullscreen video fails, silently ignore.
+    // The previous looping video will remain on screen automatically.
   };
 
   const loadAndPlayFullscreenMirror = (videoEl, part, paraIdx, subIdx) => {
@@ -3062,6 +3061,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         audio.play()
           .then(() => {
+            showPlaybackOverlay("KLIKNI PRO PAUZU", true);
             updateStatus();
           })
           .catch(e => {
@@ -3080,6 +3080,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else {
       audio.pause();
+      showPlaybackOverlay("POZASTAVENO // KLIKNI PRO PLAY", false);
+      updateStatus();
     }
   };
 
