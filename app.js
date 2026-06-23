@@ -71,6 +71,39 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   let cues = null;
+  // SRT titulky (přesné timecody) pro filmovou verzi — načítá se z audio/dil_N.srt.
+  let srtCues = null;           // [{start, end, text, words:[]}]
+  const parseSrt = (raw) => {
+    const out = [];
+    const blocks = raw.replace(/\r/g, "").split(/\n\n+/);
+    const tc = (s) => {
+      const m = s.match(/(\d+):(\d+):(\d+)[,.](\d+)/);
+      if (!m) return null;
+      return (+m[1]) * 3600 + (+m[2]) * 60 + (+m[3]) + (+m[4]) / 1000;
+    };
+    for (const blk of blocks) {
+      const lines = blk.split("\n").filter(l => l.trim() !== "");
+      if (lines.length < 2) continue;
+      const arrowLine = lines.find(l => l.includes("-->"));
+      if (!arrowLine) continue;
+      const [a, b] = arrowLine.split("-->");
+      const start = tc(a), end = tc(b);
+      if (start == null || end == null) continue;
+      const textLines = lines.slice(lines.indexOf(arrowLine) + 1);
+      const text = textLines.join(" ").trim();
+      if (!text) continue;
+      out.push({ start, end, text, words: text.split(/\s+/).filter(Boolean) });
+    }
+    return out.sort((x, y) => x.start - y.start);
+  };
+  const loadSrt = (partNum) => {
+    srtCues = null;
+    fetch(`audio/dil_${partNum}.srt`)
+      .then(r => (r.ok ? r.text() : null))
+      .then(t => { if (t) srtCues = parseSrt(t); })
+      .catch(() => { srtCues = null; });
+  };
+
   // Index panelů aktuálního dílu (pro reálné časování vět) — staví se při setPart.
   let panelTimes = null;        // pole časů panelů v pořadí dílu
   let paraPanelOffset = [];      // pIdx -> globální index 1. panelu odstavce v dílu
@@ -865,6 +898,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load cues for this part
     loadCues(partNum);
+    loadSrt(partNum); // přesné filmové titulky (audio/dil_N.srt), pokud existují
 
     // Panel→time timeline depends on this part's cues; rebuild lazily.
     invalidateComicTimelines();
@@ -1657,6 +1691,26 @@ document.addEventListener("DOMContentLoaded", () => {
       // Title obsahuje markup (<br>, <span>) — pro titulek z něj uděláme čistý text
       const cleanTitle = phd.title.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").trim();
       setSubtitles(`${phd.rom} — ${cleanTitle}`, false);
+      return;
+    }
+
+    // FILM: máme-li přesné SRT titulky (audio/dil_N.srt), řiď je PŘÍMO podle nich
+    // (nezávisle na komiksových panelech). Karaoke zvýraznění slov dle progresu věty.
+    if (srtCues && srtCues.length) {
+      const t = state.currentTime; // SRT je přesně načasované na audio
+      let cue = null;
+      for (let i = 0; i < srtCues.length; i++) {
+        if (t >= srtCues[i].start - 0.05 && t < srtCues[i].end + 0.08) { cue = srtCues[i]; break; }
+        if (srtCues[i].start > t) break;
+      }
+      if (previewSubtitles) previewSubtitles.style.color = "var(--cyan)";
+      if (!cue) { setSubtitles("", false); return; }
+      const prog = Math.max(0, Math.min(1, (t - cue.start) / Math.max(0.1, cue.end - cue.start)));
+      const aw = Math.max(0, Math.min(cue.words.length - 1, Math.floor(prog * cue.words.length)));
+      const html = cue.words
+        .map((w, i) => `<span class="cin-word${i <= aw ? " read" : ""}">${escapeHtml(w)}</span>`)
+        .join(" ");
+      setSubtitles(html, true);
       return;
     }
 
