@@ -445,6 +445,11 @@ body::after {
   z-index: 3;
 }
 .fullscreen-overlay .ch-poster-hero { display: none !important; }
+/* Během intra (aktivní poster) ukaž HLAVNÍ titulek jako vrstvu PŘES teaser video.
+   Po intru se celý #fullscreen-poster deaktivuje (skryje), takže hero zmizí sám. */
+.fullscreen-overlay #fullscreen-poster.active .ch-poster-hero { display: flex !important; }
+/* Spodní kinotitulek během intra schovej — hlavní titulek je nahoře přes video */
+.fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-subtitles { display: none !important; }
 .ch-poster-hero .ch-title {
   font-size: clamp(28px, 5.5vw, 62px) !important;
 }
