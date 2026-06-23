@@ -269,16 +269,38 @@ document.addEventListener("DOMContentLoaded", () => {
   // Globální velké play/pauza tlačítko přes hlavní content (audio/film/komiks/text).
   // Auto-hide jako u video přehrávače: při přehrávání skryté, objeví se na pohyb/dotyk
   // (a ukáže pauzu); při pauze (i úvod) je trvale vidět play. Klik na konci = znovu.
+  // Textové stavy velkého tlačítka: přehrávání → „Klikni pro pauzu"; pauza uprostřed
+  // → „Pozastaveno" + „Klikni pro přehrávání"; začátek → „Klikni pro přehrávání".
+  // Na dotykových zařízeních „Klepni" místo „Klikni".
+  const updateGppText = () => {
+    const gpp = document.getElementById("gpp");
+    if (!gpp) return;
+    const main = gpp.querySelector(".gpp-main");
+    const sub = gpp.querySelector(".gpp-sub");
+    if (!main || !sub) return;
+    const tap = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ? "Klepni" : "Klikni";
+    const a = document.getElementById("audio-element");
+    const playing = a ? !a.paused : state.playing; // skutečný stav přehrávače
+    if (playing) {
+      main.textContent = `${tap} pro pauzu`;
+      sub.textContent = "";
+    } else {
+      const started = a && a.currentTime > 0.3 && (!state.duration || a.currentTime < state.duration - 0.3);
+      main.textContent = started ? "Pozastaveno" : `${tap} pro přehrávání`;
+      sub.textContent = started ? `${tap} pro přehrávání` : "";
+    }
+  };
+
   let gppUiTimer = null;
   const setupGlobalPlayButton = () => {
     if (document.getElementById("gpp")) return;
     const gpp = document.createElement("button");
-    gpp.id = "gpp"; gpp.className = "gpp"; gpp.title = "Přehrát / Pauza / Znovu";
+    gpp.id = "gpp"; gpp.className = "gpp"; gpp.title = "Přehrát / Pauza";
     gpp.innerHTML =
-      '<svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
-      '<svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>' +
-      '<span class="gpp-text">PŘEHRÁT / CLICK TO PLAY</span>';
+      '<span class="gpp-main"></span>' +
+      '<span class="gpp-sub"></span>';
     document.body.appendChild(gpp);
+    updateGppText();
     gpp.addEventListener("click", () => {
       if (audio && state.duration && audio.currentTime >= state.duration - 0.3) {
         try { audio.currentTime = 0; } catch (e) {}
@@ -287,6 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const ping = () => {
       document.body.classList.add("ui-active");
+      updateGppText();
       if (gppUiTimer) clearTimeout(gppUiTimer);
       gppUiTimer = setTimeout(() => document.body.classList.remove("ui-active"), 2200);
     };
@@ -1488,6 +1511,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setAudioPlaying(true);
       document.body.classList.add("is-playing"); // globální play/pauza overlay (auto-hide)
       if (playBtnWrapper) playBtnWrapper.classList.add("playing");
+      updateGppText();
       updateStatus();
 
       // Obnov přehrávání videí Z AKTUÁLNÍHO místa (pause je jen zmrazila, nevrací na začátek).
@@ -1502,6 +1526,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setAudioPlaying(false);
       document.body.classList.remove("is-playing"); // pauza → overlay zase ukáže play
       if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
+      updateGppText();
       updateStatus();
       // Pauzni i videa (film/preview) — jinak hrají dál i při pauze audia.
       [currentVideoEl, nextVideoEl, currentPrevEl, nextPrevEl, currentFsEl, nextFsEl]

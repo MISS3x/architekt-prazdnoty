@@ -447,7 +447,11 @@ body::after {
 .fullscreen-overlay .ch-poster-hero { display: none !important; }
 /* Během intra (aktivní poster) ukaž HLAVNÍ titulek jako vrstvu PŘES teaser video.
    Po intru se celý #fullscreen-poster deaktivuje (skryje), takže hero zmizí sám. */
-.fullscreen-overlay #fullscreen-poster.active .ch-poster-hero { display: flex !important; }
+.fullscreen-overlay #fullscreen-poster.active .ch-poster-hero {
+  display: flex !important;
+  justify-content: flex-start !important;  /* titulek do HORNÍ poloviny intra */
+  padding-top: 11vh !important;
+}
 /* Spodní kinotitulek během intra schovej — hlavní titulek je nahoře přes video */
 .fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-subtitles { display: none !important; }
 .ch-poster-hero .ch-title {
@@ -627,13 +631,13 @@ body.comic-fs .comic-grid { height: 100% !important; }
 /* Klasické filmové titulky: BÍLÉ písmo BEZ pozadí (jen stín pro čitelnost) */
 .fullscreen-subtitles {
     position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
-    bottom: 40px !important; z-index: 20 !important; width: 90% !important; max-width: min(810px, 90vw) !important;
+    bottom: 84px !important; z-index: 20 !important; width: 92% !important; max-width: min(880px, 92vw) !important;
     margin: 0 !important; min-height: 0 !important;
     background: none !important; color: #ffffff !important;
     padding: 8px 12px !important; border-radius: 0 !important;
     border: 0 !important; box-shadow: none !important;
     font-family: 'Bangers', 'Comic Neue', 'Chakra Petch', sans-serif !important; font-weight: 700 !important;
-    font-size: 22px !important; line-height: 1.25 !important; letter-spacing: 0.6px !important; text-align: center !important; text-transform: uppercase !important;
+    font-size: 31px !important; line-height: 1.22 !important; letter-spacing: 0.6px !important; text-align: center !important; text-transform: uppercase !important;
     text-shadow: 0 2px 6px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.9), 0 1px 2px #000 !important; text-wrap: balance;
   }
 .fullscreen-subtitles .cin-word { opacity: .5; color: #ffffff; }
@@ -693,34 +697,24 @@ body.mode-movie #preview-subtitles { display: none !important; }
    - pauza (i úvod) → PLAY trvale vidět,
    - přehrávání → skryté; objeví se jen při pohybu/dotyku (body.ui-active) a ukáže PAUZU,
    - klik na konci stopy = přehraje znovu od začátku. */
+/* TEXTOVÉ tlačítko (žádný hexagon) — stavy řídí JS (updateGppText) */
 .gpp{ position:fixed; left:50%; top:calc(50% + var(--ap-barH) / 2); transform:translate(-50%,-50%);
-  z-index:1150; cursor:pointer; border:0; width:118px; height:136px; /* poměr 0.868 = pravidelný hexagon */
-  display:grid; place-items:center; color:#1a1102;
-  background:linear-gradient(180deg, var(--amber-hi), var(--amber));
-  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  box-shadow:0 0 44px -4px rgba(255,178,46,.6);
-  transition:opacity .3s ease, transform .18s cubic-bezier(.165,.84,.44,1), box-shadow .2s ease;
+  z-index:1150; cursor:pointer; border:0; background:none; color:var(--amber-hi);
+  display:flex; flex-direction:column; align-items:center; gap:7px; padding:18px 34px; text-align:center;
+  transition:opacity .3s ease, transform .18s cubic-bezier(.165,.84,.44,1);
   opacity:0; pointer-events:none; }
-.gpp svg{ width:50px; height:50px; }
-.gpp .ic-pause{ display:none; }
-.gpp:hover{ transform:translate(-50%,-50%) scale(1.06);
-  box-shadow:0 0 64px 0 rgba(255,178,46,.85); }
-.gpp-text {
-  position: absolute;
-  top: 108%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px;
-  color: var(--amber);
-  text-shadow: 0 0 8px rgba(255, 181, 46, 0.6);
-  white-space: nowrap;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-/* viditelnost */
+.gpp-main{ font-family:'Orbitron',sans-serif; font-weight:800;
+  font-size:clamp(22px, 4.4vw, 40px); letter-spacing:.12em; text-transform:uppercase; line-height:1;
+  color:var(--amber-hi); text-shadow:0 2px 12px rgba(0,0,0,.92), 0 0 28px rgba(255,178,46,.7); }
+.gpp-sub{ font-family:'Share Tech Mono',monospace; font-size:clamp(11px, 1.5vw, 14px);
+  letter-spacing:.24em; text-transform:uppercase; color:var(--amber);
+  text-shadow:0 2px 8px rgba(0,0,0,.92), 0 0 12px rgba(255,178,46,.5); }
+.gpp-sub:empty{ display:none; }
+.gpp:hover{ transform:translate(-50%,-50%) scale(1.05); }
+/* viditelnost: při pauze trvale, při přehrávání jen na pohyb/dotyk (ui-active) */
 body:not(.is-playing) .gpp { opacity:1; pointer-events:auto; }
-body.is-playing .gpp { opacity:0; pointer-events:none; display:none !important; }
+body.is-playing .gpp { opacity:0; pointer-events:none; }
+body.is-playing.ui-active .gpp { opacity:1; pointer-events:auto; }
 /* skryj v galerii */
 body.gallery-open .gpp{ display:none; }
 
