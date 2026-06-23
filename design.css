@@ -670,6 +670,28 @@ body.mode-movie #preview-subtitles { display: none !important; }
   border: 1px solid rgba(45, 226, 255, .3) !important; background: rgba(45, 226, 255, .06) !important; z-index: 11;
 }
 
+/* KINO / cinema mode tlačítko (pravý horní roh film overlaye) */
+.fullscreen-cinema-btn {
+  position: absolute; top: 16px; right: 24px; z-index: 30; cursor: pointer; -webkit-user-select: none; user-select: none;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--cyan-hi); border: 1px solid rgba(45, 226, 255, .35); background: rgba(45, 226, 255, .07);
+  padding: 7px 13px; border-radius: 6px; transition: .15s; white-space: nowrap;
+}
+.fullscreen-cinema-btn:hover { background: rgba(45, 226, 255, .16);
+  box-shadow: 0 0 16px -4px var(--cyan); color: #fff; }
+
+/* SKUTEČNÝ fullscreen (Fullscreen API): video zvětši na celou obrazovku, titulky níž a větší */
+#fullscreen-overlay:fullscreen { width: 100vw !important; height: 100vh !important; padding: 0 !important; background: #000 !important; }
+#fullscreen-overlay:fullscreen .fullscreen-screen {
+  width: min(99vw, 178vh) !important; max-width: min(99vw, 178vh) !important;
+  height: 100vh !important; max-height: 100vh !important; }
+#fullscreen-overlay:fullscreen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(26px, 3.2vw, 44px) !important; }
+#fullscreen-overlay:-webkit-full-screen { width: 100vw !important; height: 100vh !important; background: #000 !important; }
+#fullscreen-overlay:-webkit-full-screen .fullscreen-screen {
+  width: min(99vw, 178vh) !important; max-width: min(99vw, 178vh) !important;
+  height: 100vh !important; max-height: 100vh !important; }
+#fullscreen-overlay:-webkit-full-screen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(26px, 3.2vw, 44px) !important; }
+
 /* FILM: titulky zůstávají klasicky dole PŘES video, ale vždy NAD ním
    (dřív se schovávaly pod video — chyba vrstvení). Stačí zvednout z-index. */
 .fullscreen-screen { z-index: 1 !important; }
