@@ -539,6 +539,7 @@
           <button class="btn-filter" id="tab-btn-generate" onclick="switchSourceTab('generate')" style="font-size: 11px;" disabled>3. Generování (Gemini)</button>
           <button class="btn-filter" id="tab-btn-mask" onclick="switchSourceTab('mask')" style="font-size: 11px;" disabled>4. Maska (Zobrazení)</button>
           <button class="btn-filter" id="tab-btn-inject" onclick="switchSourceTab('inject')" style="font-size: 11px;" disabled>5. Vložit video (Film)</button>
+          <button class="btn-filter" id="tab-btn-kling" onclick="switchSourceTab('kling')" style="font-size: 11px; border-color: #2de2ff; color: #2de2ff;" disabled>6. Kling (MCP)</button>
         </div>
 
         <!-- Tab Content 1: Image & Crop -->
@@ -692,6 +693,94 @@
           </div>
         </div>
 
+        <!-- Tab Content 6: KLING (MCP) -->
+        <div id="tab-content-kling" class="tab-content hidden" style="display: flex; flex-direction: column; gap: 15px;">
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+            Pošle tento frame + prompt do fronty pro <b style="color: #2de2ff;">Kling Omni 3.0</b> (přes MCP / subscription).
+            Agent (Claude Code) frontu na „ping" zpracuje, video/obrázek stáhne a pojmenuje podle framu.
+          </div>
+
+          <div class="control-box">
+            <label>Režim generování</label>
+            <div style="display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap;">
+              <button class="btn-filter active" id="kling-mode-video" onclick="setKlingMode('video')">🎬 Video (image→video)</button>
+              <button class="btn-filter" id="kling-mode-image" onclick="setKlingMode('image')">🖼️ Obrázek (remake)</button>
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label>Vložit referenci do promptu</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter" onclick="insertKlingRef('@Image')" title="Tento frame">@Image</button>
+              <button class="btn-filter" onclick="insertKlingRef('@Mia')" title="Postava Mia">@Mia</button>
+              <button class="btn-filter" onclick="insertKlingRef('@Krtek')" title="Postava Krtek">@Krtek</button>
+              <button class="btn-filter" onclick="insertKlingRef('@Ruda')" title="Postava Ruda">@Ruda</button>
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label>Vizuální styl (předvyplní prompt)</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter active" id="kling-preset-comic" onclick="setKlingPreset('comic')">Komiksový (2D)</button>
+              <button class="btn-filter" id="kling-preset-filmic" onclick="setKlingPreset('filmic')">Filmový (3D)</button>
+              <button class="btn-filter" id="kling-preset-cartoon" onclick="setKlingPreset('cartoon')">Cartoon</button>
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label>Prompt (vč. stylu a @referencí)</label>
+            <textarea id="kling-prompt" placeholder="Prompt pro Kling..." oninput="updateKlingPreview()"></textarea>
+          </div>
+
+          <div class="control-box">
+            <label>Parametry výstupu</label>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; font-size: 11px;">
+              <div>
+                <div style="color: var(--text-muted); margin-bottom: 4px;">Poměr</div>
+                <select id="kling-aspect" title="Poměr stran" onchange="updateKlingPreview()" style="padding: 6px; background: rgba(1,4,8,0.6); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  <option value="1:1" selected>1:1</option>
+                  <option value="9:16">9:16 (mobil)</option>
+                  <option value="16:9">16:9</option>
+                </select>
+              </div>
+              <div id="kling-duration-wrap">
+                <div style="color: var(--text-muted); margin-bottom: 4px;">Délka</div>
+                <select id="kling-duration" title="Délka videa" onchange="updateKlingPreview()" style="padding: 6px; background: rgba(1,4,8,0.6); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  <option value="5" selected>5s</option>
+                  <option value="10">10s</option>
+                </select>
+              </div>
+              <div>
+                <div style="color: var(--text-muted); margin-bottom: 4px;">Rozlišení</div>
+                <select id="kling-resolution" title="Rozlišení" onchange="updateKlingPreview()" style="padding: 6px; background: rgba(1,4,8,0.6); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  <option value="1080p" selected>1080p</option>
+                  <option value="720p">720p</option>
+                  <option value="4k">4K</option>
+                </select>
+              </div>
+              <div>
+                <div style="color: var(--text-muted); margin-bottom: 4px;">Výstupů</div>
+                <select id="kling-count" title="Počet výstupů" onchange="updateKlingPreview()" style="padding: 6px; background: rgba(1,4,8,0.6); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  <option value="1" selected>1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label>Náhled zadání do fronty</label>
+            <div id="kling-preview" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-muted); background: rgba(1,4,8,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; line-height: 1.4; word-break: break-all;">---</div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-kling-queue" onclick="sendToKlingQueue()" style="width: 100%; border-color: #2de2ff; box-shadow: 0 0 12px rgba(45,226,255,0.2);" disabled>
+            📤 Pošli do fronty (Kling)
+          </button>
+          <div id="kling-queue-status" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #2de2ff; text-align: center; min-height: 14px;"></div>
+        </div>
+
         <!-- Section: Přejmenování souborů -->
         <div class="control-box" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
           <label>Přejmenovat soubory panelu</label>
@@ -816,6 +905,7 @@
       document.getElementById('tab-btn-generate').disabled = false;
       document.getElementById('tab-btn-mask').disabled = false;
       document.getElementById('tab-btn-inject').disabled = false;
+      document.getElementById('tab-btn-kling').disabled = false;
 
       // Update original pane contents
       document.getElementById('orig-filename-label').textContent = panel.filename;
@@ -832,6 +922,12 @@
       document.getElementById('btn-generate').disabled = false;
       document.getElementById('btn-cartoonize').disabled = false;
       document.getElementById('btn-crop-toggle').disabled = false;
+      // KLING room: povol tlačítko a předvyplň prompt podle panelu
+      document.getElementById('btn-kling-queue').disabled = false;
+      const klingPrompt = document.getElementById('kling-prompt');
+      if (klingPrompt) klingPrompt.value = getDefaultPromptForPreset(klingPreset, panel.filename);
+      document.getElementById('kling-queue-status').textContent = '';
+      updateKlingPreview();
 
       // Set panel mask to current panel's aspect value
       setPanelMask(panel.aspect || '');
@@ -1225,6 +1321,101 @@
         return `A playful cartoon illustration style, vibrant colors, clean line art, stylized character features, animated series aesthetic. Bold outlines, cel shading, expressive visual style, with selective ${neonColor} accents.`;
       } else {
         return '';
+      }
+    }
+
+    // ===================== KLING (MCP) ROOM =====================
+    let klingMode = 'video';     // 'video' | 'image'
+    let klingPreset = 'comic';
+
+    function setKlingMode(mode) {
+      klingMode = (mode === 'image') ? 'image' : 'video';
+      document.getElementById('kling-mode-video').classList.toggle('active', klingMode === 'video');
+      document.getElementById('kling-mode-image').classList.toggle('active', klingMode === 'image');
+      const durWrap = document.getElementById('kling-duration-wrap');
+      if (durWrap) durWrap.style.opacity = (klingMode === 'video') ? '1' : '0.35';
+      updateKlingPreview();
+    }
+
+    function setKlingPreset(preset) {
+      klingPreset = preset;
+      ['comic', 'filmic', 'cartoon'].forEach(p => {
+        const b = document.getElementById('kling-preset-' + p);
+        if (b) b.classList.toggle('active', p === preset);
+      });
+      const ta = document.getElementById('kling-prompt');
+      if (ta && currentPanel) ta.value = getDefaultPromptForPreset(preset, currentPanel.filename);
+      updateKlingPreview();
+    }
+
+    function insertKlingRef(token) {
+      const ta = document.getElementById('kling-prompt');
+      if (!ta) return;
+      const start = (ta.selectionStart != null) ? ta.selectionStart : ta.value.length;
+      const end = (ta.selectionEnd != null) ? ta.selectionEnd : ta.value.length;
+      const before = ta.value.slice(0, start);
+      const after = ta.value.slice(end);
+      const pad = (before && !before.endsWith(' ')) ? ' ' : '';
+      const insert = pad + token + ' ';
+      ta.value = before + insert + after;
+      ta.focus();
+      const pos = (before + insert).length;
+      ta.setSelectionRange(pos, pos);
+      updateKlingPreview();
+    }
+
+    function updateKlingPreview() {
+      const el = document.getElementById('kling-preview');
+      if (!el) return;
+      if (!currentPanel) { el.textContent = '---'; return; }
+      const prompt = (document.getElementById('kling-prompt').value || '').trim();
+      const aspect = document.getElementById('kling-aspect').value;
+      const dur = document.getElementById('kling-duration').value;
+      const reso = document.getElementById('kling-resolution').value;
+      const cnt = document.getElementById('kling-count').value;
+      const model = klingMode === 'image' ? 'kling-image-v3_0_omni' : 'kling-video-v3_0_omni';
+      el.textContent = klingMode === 'image'
+        ? `${currentPanel.filename}  →  Kling IMAGE (${model})  ·  ${aspect} · ${reso} · ${cnt}×\n${prompt}`
+        : `${currentPanel.filename}  →  Kling VIDEO (${model})  ·  ${aspect} · ${dur}s · ${reso} · ${cnt}×\n${prompt}`;
+    }
+
+    async function sendToKlingQueue() {
+      if (!currentPanel) return;
+      const btn = document.getElementById('btn-kling-queue');
+      const status = document.getElementById('kling-queue-status');
+      const payload = {
+        filename: currentPanel.filename,
+        image: currentPanel.imgSrc,
+        prompt: (document.getElementById('kling-prompt').value || '').trim(),
+        mode: klingMode,
+        model: klingMode === 'image' ? 'kling-image-v3_0_omni' : 'kling-video-v3_0_omni',
+        aspect: document.getElementById('kling-aspect').value,
+        duration: document.getElementById('kling-duration').value,
+        resolution: document.getElementById('kling-resolution').value,
+        imageCount: document.getElementById('kling-count').value
+      };
+      btn.disabled = true;
+      status.style.color = '#2de2ff';
+      status.textContent = 'Odesílám do fronty…';
+      try {
+        const r = await fetch('/api/queue-kling', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        if (r.ok && data.success) {
+          status.style.color = '#3ee37a';
+          status.textContent = `✓ Ve frontě (${data.pending} čeká). Řekni Claudovi: „zpracuj Kling frontu".`;
+        } else {
+          status.style.color = '#ff4a4a';
+          status.textContent = 'Chyba: ' + (data.error || 'neznámá');
+        }
+      } catch (e) {
+        status.style.color = '#ff4a4a';
+        status.textContent = 'Chyba spojení: ' + e.message;
+      } finally {
+        btn.disabled = false;
       }
     }
 

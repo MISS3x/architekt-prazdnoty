@@ -15,6 +15,24 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
+// Server-Sent Events (SSE) for real-time frontend updates
+let sseClients = [];
+app.get('/api/updates', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  
+  sseClients.push(res);
+  req.on('close', () => {
+    sseClients = sseClients.filter(client => client !== res);
+  });
+});
+function notifyFrontend(filename) {
+  sseClients.forEach(client => client.write(`data: ${filename}\n\n`));
+}
+
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -376,6 +394,7 @@ app.post('/api/approve', (req, res) => {
     // Make backups of existing files if they exist
     if (fs.existsSync(targetImagePath)) {
       const backupImagePath = path.join(BACKUP_DIR, `${baseName}_backup_${Date.now()}.jpg`);
+      notifyFrontend(filename);
       fs.copyFileSync(targetImagePath, backupImagePath);
       console.log(`Backed up original image to ${backupImagePath}`);
     }
@@ -560,6 +579,7 @@ app.post('/api/inject-video', async (req, res) => {
     // Back up existing video if it exists
     if (fs.existsSync(targetVideoPath)) {
       const backupVideoPath = path.join(BACKUP_DIR, `${path.basename(videoFilename, '.mp4')}_backup_${Date.now()}.mp4`);
+      notifyFrontend(videoFilename);
       fs.copyFileSync(targetVideoPath, backupVideoPath);
       console.log(`Backed up original movie video to ${backupVideoPath}`);
     }
@@ -721,6 +741,64 @@ app.post('/api/rename-panel-files', (req, res) => {
   } catch (error) {
     console.error('File renaming failed:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ===================== KLING MCP FRONTA =====================
+// Editor sem zapisuje požadavky; agent (Claude Code) je na "ping" zpracuje přes
+// Kling MCP (subscription kredity), stáhne výsledek a pojmenuje podle framu.
+const KLING_QUEUE_PATH = path.join(__dirname, 'kling_queue.json');
+
+function readKlingQueue() {
+  if (!fs.existsSync(KLING_QUEUE_PATH)) return [];
+  try { return JSON.parse(fs.readFileSync(KLING_QUEUE_PATH, 'utf8')) || []; }
+  catch (e) { return []; }
+}
+
+// Přidat panel do fronty pro Kling
+app.post('/api/queue-kling', (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.filename || !b.image) {
+      return res.status(400).json({ error: 'filename a image jsou povinné' });
+    }
+    const queue = readKlingQueue();
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      filename: b.filename,                 // např. 02_01_01.jpg (podle něj se pojmenuje výstup)
+      image: b.image,                       // cesta k framu (relativní k projektu)
+      prompt: b.prompt || '',               // prompt vč. @Image/@Mia/@Krtek/@Ruda
+      mode: b.mode === 'image' ? 'image' : 'video',   // 'video' | 'image'
+      model: b.model || (b.mode === 'image' ? 'kling-image-v3_0_omni' : 'kling-video-v3_0_omni'),
+      aspect: b.aspect || '1:1',
+      duration: String(b.duration || '5'),
+      resolution: b.resolution || '1080p',
+      imageCount: String(b.imageCount || '1'),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    queue.push(entry);
+    fs.writeFileSync(KLING_QUEUE_PATH, JSON.stringify(queue, null, 2), 'utf8');
+    const pending = queue.filter(q => q.status === 'pending').length;
+    console.log(`📥 KLING fronta +1: ${entry.filename} (${entry.mode}) — ${pending} pending`);
+    res.json({ success: true, id: entry.id, pending });
+  } catch (error) {
+    console.error('queue-kling failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Stav fronty (pro editor)
+app.get('/api/kling-queue', (req, res) => {
+  try {
+    const queue = readKlingQueue();
+    res.json({
+      queue,
+      pending: queue.filter(q => q.status === 'pending').length,
+      done: queue.filter(q => q.status === 'done').length
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
