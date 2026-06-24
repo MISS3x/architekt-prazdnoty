@@ -728,8 +728,13 @@
           </div>
 
           <div class="control-box">
-            <label>Prompt (vč. stylu a @referencí)</label>
-            <textarea id="kling-prompt" placeholder="Prompt pro Kling..." oninput="updateKlingPreview()"></textarea>
+            <label>Děj a kamera (co se děje + pohyb kamery)</label>
+            <textarea id="kling-action" placeholder="Např. Mia pomalu otáčí hlavu k divákovi, kamera se zvolna přibližuje, jemný déšť…" oninput="updateKlingPreview()" onfocus="klingActiveField='action'"></textarea>
+          </div>
+
+          <div class="control-box">
+            <label>Popis stylu (předvyplní se podle stylu výše)</label>
+            <textarea id="kling-style" placeholder="Popis vizuálního stylu…" oninput="updateKlingPreview()" onfocus="klingActiveField='style'"></textarea>
           </div>
 
           <div class="control-box">
@@ -924,8 +929,10 @@
       document.getElementById('btn-crop-toggle').disabled = false;
       // KLING room: povol tlačítko a předvyplň prompt podle panelu
       document.getElementById('btn-kling-queue').disabled = false;
-      const klingPrompt = document.getElementById('kling-prompt');
-      if (klingPrompt) klingPrompt.value = getDefaultPromptForPreset(klingPreset, panel.filename);
+      const klingStyle = document.getElementById('kling-style');
+      if (klingStyle) klingStyle.value = getDefaultPromptForPreset(klingPreset, panel.filename);
+      const klingAction = document.getElementById('kling-action');
+      if (klingAction) klingAction.value = '';
       document.getElementById('kling-queue-status').textContent = '';
       updateKlingPreview();
 
@@ -1327,6 +1334,14 @@
     // ===================== KLING (MCP) ROOM =====================
     let klingMode = 'video';     // 'video' | 'image'
     let klingPreset = 'comic';
+    let klingActiveField = 'action';   // kam vkládat @-reference (action | style)
+
+    // Spojí "děj a kamera" + "popis stylu" do jednoho promptu (děj první, pak styl)
+    function klingComposedPrompt() {
+      const action = (document.getElementById('kling-action').value || '').trim();
+      const style = (document.getElementById('kling-style').value || '').trim();
+      return [action, style].filter(Boolean).join('\n');
+    }
 
     function setKlingMode(mode) {
       klingMode = (mode === 'image') ? 'image' : 'video';
@@ -1343,13 +1358,13 @@
         const b = document.getElementById('kling-preset-' + p);
         if (b) b.classList.toggle('active', p === preset);
       });
-      const ta = document.getElementById('kling-prompt');
+      const ta = document.getElementById('kling-style');
       if (ta && currentPanel) ta.value = getDefaultPromptForPreset(preset, currentPanel.filename);
       updateKlingPreview();
     }
 
     function insertKlingRef(token) {
-      const ta = document.getElementById('kling-prompt');
+      const ta = document.getElementById('kling-' + klingActiveField) || document.getElementById('kling-action');
       if (!ta) return;
       const start = (ta.selectionStart != null) ? ta.selectionStart : ta.value.length;
       const end = (ta.selectionEnd != null) ? ta.selectionEnd : ta.value.length;
@@ -1368,7 +1383,7 @@
       const el = document.getElementById('kling-preview');
       if (!el) return;
       if (!currentPanel) { el.textContent = '---'; return; }
-      const prompt = (document.getElementById('kling-prompt').value || '').trim();
+      const prompt = klingComposedPrompt();
       const aspect = document.getElementById('kling-aspect').value;
       const dur = document.getElementById('kling-duration').value;
       const reso = document.getElementById('kling-resolution').value;
@@ -1386,7 +1401,7 @@
       const payload = {
         filename: currentPanel.filename,
         image: currentPanel.imgSrc,
-        prompt: (document.getElementById('kling-prompt').value || '').trim(),
+        prompt: klingComposedPrompt(),
         mode: klingMode,
         model: klingMode === 'image' ? 'kling-image-v3_0_omni' : 'kling-video-v3_0_omni',
         aspect: document.getElementById('kling-aspect').value,
