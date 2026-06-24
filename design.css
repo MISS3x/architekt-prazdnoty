@@ -404,6 +404,9 @@ body::after {
 }
 
 /* ===================== COMIC CHAPTER HERO ===================== */
+/* Druhý úvodní titulkový frame (text-only) je nadbytečný — úvodní kartu už dělá
+   .comic-title-card (s obrázkem). Skryto ve všech dílech. */
+.comic-chapter-hero { display: none !important; }
 /* Title card at the start of each comic strip (horizontal scroll) */
 .comic-chapter-hero {
   flex: 0 0 auto;
