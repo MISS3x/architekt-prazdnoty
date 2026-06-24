@@ -729,6 +729,48 @@ app.post('/api/rename-panel-files', (req, res) => {
   }
 });
 
+// Vložit obrázek z disku — přepíše obrázek (frame) aktuálního panelu.
+app.post('/api/inject-image', (req, res) => {
+  const { filename, imageData } = req.body || {};
+  if (!filename || !imageData) {
+    return res.status(400).json({ error: 'Missing filename or imageData' });
+  }
+  try {
+    const imgBase = path.basename(filename, path.extname(filename)).replace(/(_s\d+|_custom)+$/, '');
+    const partFolder = imgBase.startsWith('03_') ? 'dil_3' : (imgBase.startsWith('02_') ? 'dil_2' : 'dil_1');
+    const targetPath = path.join(__dirname, 'img', 'comic', partFolder, `${imgBase}.jpg`);
+
+    // záloha původního obrázku
+    if (fs.existsSync(targetPath)) {
+      const backupPath = path.join(BACKUP_DIR, `${imgBase}_imgbak_${Date.now()}.jpg`);
+      fs.copyFileSync(targetPath, backupPath);
+    }
+
+    // dekóduj base64 a zapiš do temp, pak přes ffmpeg konvertuj na .jpg (jistota platného JPG)
+    const base64 = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64, 'base64');
+    const tmpPath = path.join(__dirname, 'img', 'comic', partFolder, `${imgBase}_uploadtmp`);
+    fs.writeFileSync(tmpPath, buffer);
+
+    exec(`ffmpeg -y -i "${tmpPath}" -q:v 2 "${targetPath}"`, (error) => {
+      try { fs.unlinkSync(tmpPath); } catch (e) {}
+      if (error) {
+        console.error(`inject-image ffmpeg error: ${error.message}`);
+        // fallback: zapiš bajty přímo
+        try { fs.writeFileSync(targetPath, buffer); } catch (e2) {
+          return res.status(500).json({ error: 'Uložení obrázku selhalo' });
+        }
+      }
+      notifyFrontend(`${imgBase}.jpg`);
+      console.log(`Injected image: ${targetPath}`);
+      res.json({ success: true, targetPath: `img/comic/${partFolder}/${imgBase}.jpg` });
+    });
+  } catch (error) {
+    console.error('inject-image failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ===================== KLING MCP FRONTA =====================
 // Editor sem zapisuje požadavky; agent (Claude Code) je na "ping" zpracuje přes
 // Kling MCP (subscription kredity), stáhne výsledek a pojmenuje podle framu.

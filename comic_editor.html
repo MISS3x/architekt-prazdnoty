@@ -714,6 +714,28 @@
               ⚡ Vložit video do filmu
             </button>
           </div>
+
+          <label style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 4px;">Vložit obrázek (přepíše frame z disku)</label>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+            Nahraje obrázek (.jpg/.png/.webp) z disku a přepíše jím obrázek tohoto panelu (komiks).
+          </div>
+
+          <div style="border: 2px dashed var(--border-color); border-radius: 6px; padding: 25px; text-align: center; background: rgba(1, 4, 8, 0.4); display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; position: relative;" id="image-dropzone" onclick="document.getElementById('image-upload-input').click()">
+            <span style="font-size: 28px;">🖼️</span>
+            <span id="image-upload-label" style="font-size: 13px; font-family: 'Share Tech Mono', monospace; color: var(--text-muted);">Vyberte nebo přetáhněte obrázek</span>
+            <input type="file" id="image-upload-input" accept="image/*" style="display: none;" onchange="handleInjectImageFileSelect(this)">
+          </div>
+
+          <div id="inject-image-info" class="hidden" style="background: rgba(45, 226, 255, 0.05); border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px;">
+            <div>Název: <span id="inject-image-name" style="color: var(--cyan);">---</span></div>
+            <div>Velikost: <span id="inject-image-size" style="color: var(--amber);">---</span></div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button class="btn btn-primary" id="btn-inject-image" onclick="injectImageToFrame()" style="padding: 10px 20px; font-size: 12px; border-color: #2de2ff;" disabled>
+              🖼️ Vložit obrázek (přepsat frame)
+            </button>
+          </div>
         </div>
 
         <!-- Tab Content 6: KLING (MCP) -->
@@ -1024,6 +1046,16 @@
       if (info) info.classList.add('hidden');
       const injectBtn = document.getElementById('btn-inject-video');
       if (injectBtn) injectBtn.disabled = true;
+
+      // Reset inject image tab upload state
+      const imgInput = document.getElementById('image-upload-input');
+      if (imgInput) imgInput.value = '';
+      const imgLabel = document.getElementById('image-upload-label');
+      if (imgLabel) imgLabel.textContent = 'Vyberte nebo přetáhněte obrázek';
+      const imgInfo = document.getElementById('inject-image-info');
+      if (imgInfo) imgInfo.classList.add('hidden');
+      const imgBtn = document.getElementById('btn-inject-image');
+      if (imgBtn) imgBtn.disabled = true;
 
       // Reset preview pane
       resetPreviewPane();
@@ -1865,6 +1897,55 @@
         showOverlay(false);
         showToast('Chyba při ukládání masky: ' + err.message, false);
       }
+    }
+
+    // Image Injection (přepsání framu) helper functions
+    function handleInjectImageFileSelect(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        document.getElementById('image-upload-label').textContent = 'Obrázek připraven';
+        document.getElementById('inject-image-name').textContent = file.name;
+        document.getElementById('inject-image-size').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        document.getElementById('inject-image-info').classList.remove('hidden');
+        document.getElementById('btn-inject-image').disabled = false;
+      }
+    }
+
+    async function injectImageToFrame() {
+      if (!currentPanel) return;
+      const input = document.getElementById('image-upload-input');
+      if (!input || !input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        showOverlay(true, 'Nahrávám a přepisuji frame...', 'Ukládám obrázek do komiksu...');
+        try {
+          const response = await fetch('http://localhost:3000/api/inject-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: currentPanel.filename, imageData: e.target.result })
+          });
+          const resData = await response.json();
+          if (!response.ok) throw new Error(resData.error || 'Server error');
+          showOverlay(false);
+          showToast('Frame byl přepsán novým obrázkem!', true);
+          // reset
+          input.value = '';
+          document.getElementById('image-upload-label').textContent = 'Vyberte nebo přetáhněte obrázek';
+          document.getElementById('inject-image-info').classList.add('hidden');
+          document.getElementById('btn-inject-image').disabled = true;
+          // znovu načti panely + zůstaň na aktuálním + obnov náhledy (cache-bust)
+          const savedFilename = currentPanel.filename;
+          await loadPanels();
+          const updated = panels.find(p => p.filename === savedFilename);
+          if (updated) { selectPanel(updated); }
+          relinkPanelMedia(savedFilename);
+        } catch (err) {
+          showOverlay(false);
+          showToast('Chyba při přepisu framu: ' + err.message, false);
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
     // Video Injection helper functions
