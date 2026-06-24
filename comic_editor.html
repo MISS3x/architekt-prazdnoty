@@ -615,8 +615,31 @@
           </div>
 
           <div class="control-box">
-            <label id="label-custom-detail">Doplňující detail / akce (např. detail na ústa, detail na rover)</label>
-            <input type="text" id="custom-detail" placeholder="Udejte detail záběru nebo specifickou akci..." oninput="updateComposedPromptPreview()">
+            <label>Záběr (statický — vloží do detailu)</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter" onclick="insertGeminiDetail('wide establishing shot')">Celkový</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('close-up shot')">Detail</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('over-the-shoulder shot')">Přes rameno</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('high-angle view from above')">Nadhled</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('low-angle shot from below')">Podhled</button>
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label>Scéna (cyberpunk prostředí — vloží do detailu)</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter" onclick="insertGeminiDetail('dark cyberpunk megacity at night, towering neon skyscrapers, rain-soaked streets, holographic ads, dense fog')">Temné město</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('underground cyber-city (subcity), dim industrial tunnels, pipes and cables, flickering neon, layered subterranean levels')">Podzemí</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('massive industrial cyber-factory, heavy machinery, sparks and steam, gantries and conveyors')">Fabrika</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('toxic post-industrial wasteland, ruins, rusted structures, ash and smog, broken machines')">Pustina</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('bleak neuro-contaminated mountains of the old world, jagged peaks, cold mist, snow')">Hory</button>
+              <button class="btn-filter" onclick="insertGeminiDetail('deep rocky ravine and canyon, sheer dark walls, shadowed misty depths')">Rokle</button>
+            </div>
+          </div>
+
+          <div class="control-box">
+            <label id="label-custom-detail">Doplňující detail / akce / scéna (spojí se do promptu)</label>
+            <input type="text" id="custom-detail" placeholder="Klikni záběr/scénu výše nebo napiš detail…" oninput="updateComposedPromptPreview()">
           </div>
 
           <div class="control-box">
@@ -1552,6 +1575,16 @@
           genPromptTextarea.value = getDefaultPromptForPreset(currentStylePreset, currentPanel.filename);
         }
       }
+      updateComposedPromptPreview();
+    }
+
+    // Vloží frázi (záběr/scéna) do pole „Doplňující detail" (Gemini room).
+    function insertGeminiDetail(phrase) {
+      const inp = document.getElementById('custom-detail');
+      if (!inp) return;
+      const cur = inp.value.trim().replace(/[.,;\s]+$/, '');
+      inp.value = cur ? (cur + ', ' + phrase) : phrase;
+      inp.focus();
       updateComposedPromptPreview();
     }
 
