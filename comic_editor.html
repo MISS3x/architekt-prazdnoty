@@ -758,7 +758,7 @@
     // Load initial panels
     async function loadPanels() {
       try {
-        const response = await fetch('/api/panels');
+        const response = await fetch('http://localhost:3000/api/panels');
         if (!response.ok) throw new Error('Failed to fetch panels');
         panels = await response.json();
         renderPanelList();

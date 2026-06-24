@@ -160,30 +160,21 @@ body::after {
 /* Tlačítka ◀ ▶ (posun po větách) — zobrazená i na desktopu */
 .ap-step { display: grid; }
 
-/* MOBIL: slider pod stop/play na celou šířku mezi ◀ ▶, větší posuvník */
+/* MOBIL: transport na JEDNOM řádku (stop · play · ◀ · slider · ▶ · čas) →
+   celkem 2 řádky lišty jako na desktopu. Tlačítka kompaktnější, slider flexuje. */
 @media (max-width: 768px) {
-  .ap-row2 {
-    display: grid;
-    grid-template-columns: auto auto 1fr auto;
-    grid-template-areas:
-      "stop play time gal"
-      "prev scrub scrub next";
-    gap: 12px 8px; align-items: center; width: 100%; max-width: 100%;
-  }
-  .ap-trans { display: contents; }
-  #bar-stop { grid-area: stop; }
-  #bar-play { grid-area: play; }
-  .ap-time  { grid-area: time; justify-self: end; }
-  #btn-nav-gallery { grid-area: gal; }
-  #bar-prev { grid-area: prev; }
-  #bar-scrub { grid-area: scrub; width: auto !important; }
-  #bar-next { grid-area: next; }
-  .ap-step { display: grid !important; width: 46px; height: 46px; }
-  .ap-step svg { width: 18px; height: 18px; }
-  /* větší slider + posuvník pro pohodlné tažení */
-  .ap-scrub { height: 32px; }
+  .ap-row2 { display: flex; align-items: center; gap: 7px; width: 100%; max-width: 100%; flex-wrap: nowrap; }
+  .ap-trans { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
+  .ap-tb { width: 38px; height: 38px; flex: 0 0 auto; }
+  .ap-play { width: 40px; height: 46px; flex: 0 0 auto; }
+  .ap-step { display: grid !important; width: 38px; height: 38px; }
+  .ap-step svg { width: 17px; height: 17px; }
+  #bar-scrub { flex: 1 1 auto; width: auto !important; min-width: 50px; }
+  .ap-time { flex: 0 0 auto; white-space: nowrap; }
+  /* větší posuvník pro pohodlné tažení */
+  .ap-scrub { height: 30px; }
   .ap-track, .ap-fill { height: 5px; }
-  .ap-knob { width: 12px; height: 30px; box-shadow: 0 0 12px var(--cyan-hi), 0 0 22px var(--cyan); }
+  .ap-knob { width: 12px; height: 28px; box-shadow: 0 0 12px var(--cyan-hi), 0 0 22px var(--cyan); }
 }
 
 /* ===================== START SCREEN (version pick) ===================== */
