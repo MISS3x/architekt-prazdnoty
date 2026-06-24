@@ -688,6 +688,10 @@ body.mode-movie #preview-subtitles { display: none !important; }
   width: min(99vw, 178vh) !important; max-width: min(99vw, 178vh) !important;
   height: 100vh !important; max-height: 100vh !important; }
 #fullscreen-overlay:fullscreen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(26px, 3.2vw, 44px) !important; }
+/* V kino módu schovej spodní HUD popisky (necháme jen video + titulky) */
+body.cinema-on .ap-filmtop,
+#fullscreen-overlay:fullscreen .ap-filmtop,
+#fullscreen-overlay:-webkit-full-screen .ap-filmtop { display: none !important; }
 #fullscreen-overlay:-webkit-full-screen { width: 100vw !important; height: 100vh !important; background: #000 !important; }
 #fullscreen-overlay:-webkit-full-screen .fullscreen-screen {
   width: min(99vw, 178vh) !important; max-width: min(99vw, 178vh) !important;
