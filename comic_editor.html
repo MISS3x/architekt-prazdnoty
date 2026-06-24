@@ -1526,7 +1526,7 @@
       status.style.color = '#2de2ff';
       status.textContent = 'Odesílám do fronty…';
       try {
-        const r = await fetch('/api/queue-kling', {
+        const r = await fetch('http://localhost:3000/api/queue-kling', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2006,9 +2006,54 @@
       }
     }
 
+    // ===== Auto re-link: po dokončení Kling generace (status 'done' ve frontě)
+    // editor sám obnoví obrázek i video daného panelu (cache-bust), bez F5. =====
+    const klingDoneSeen = new Set();
+    let klingFirstPoll = true;
+
+    function relinkPanelMedia(filename) {
+      if (!filename) return;
+      const bust = '?t=' + Date.now();
+      // thumbnail v seznamu
+      document.querySelectorAll('#panel-list .panel-card').forEach(card => {
+        const id = card.querySelector('.panel-card-id');
+        if (id && id.textContent === filename) {
+          const img = card.querySelector('img');
+          if (img) img.src = img.src.split('?')[0] + bust;
+        }
+      });
+      // aktuální panel: obnov náhled obrázku, masky i video
+      if (currentPanel && currentPanel.filename === filename) {
+        const oi = document.getElementById('orig-image'); if (oi) oi.src = oi.src.split('?')[0] + bust;
+        const mi = document.getElementById('mask-image'); if (mi && currentPanel.imgSrc) mi.src = currentPanel.imgSrc + bust;
+        loadCaptureVideo(currentPanel);
+      }
+    }
+
+    async function pollKlingQueue() {
+      try {
+        const r = await fetch('http://localhost:3000/api/kling-queue');
+        if (!r.ok) return;
+        const data = await r.json();
+        (data.queue || []).forEach(e => {
+          const key = e.generation_id || e.id || (e.filename + '|' + (e.createdAt || ''));
+          if (e.status === 'done' && key && !klingDoneSeen.has(key)) {
+            klingDoneSeen.add(key);
+            if (!klingFirstPoll) {     // při startu jen zaeviduj, neobnovuj staré
+              relinkPanelMedia(e.filename);
+              showToast('Kling hotovo: ' + e.filename + ' — obrázek/video aktualizováno', true);
+            }
+          }
+        });
+        klingFirstPoll = false;
+      } catch (e) { /* server možná neběží */ }
+    }
+
     // Init
     setupVideoDropzone();
     loadPanels();
+    pollKlingQueue();
+    setInterval(pollKlingQueue, 4000);
   </script>
 </body>
 </html>

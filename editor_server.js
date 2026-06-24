@@ -11,6 +11,14 @@ const { exec } = require('child_process');
 const app = express();
 const PORT = process.env.EDITOR_PORT || 3000;
 
+// CORS — editor frontend může běžet na jiném portu (8080) a volat API na 3000.
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
