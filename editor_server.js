@@ -547,38 +547,21 @@ app.post('/api/save-mask', (req, res) => {
 
 // 12. Inject Video for Film version
 app.post('/api/inject-video', async (req, res) => {
-  const { filename, globalI, sentenceIdx, videoData, video } = req.body;
-  if (globalI == null || sentenceIdx == null || !videoData) {
-    return res.status(400).json({ error: 'Missing parameters or videoData' });
+  const { filename, globalI, sentenceIdx, videoData } = req.body;
+  if (!filename || !videoData) {
+    return res.status(400).json({ error: 'Missing filename or videoData' });
   }
 
   try {
-    const part = getPartFromGlobalI(globalI);
-    const partStr = String(part).padStart(2, '0');
-    const paraStr = String(getLocalParaFromGlobalI(globalI)).padStart(2, '0');
-    const subStr = String(parseInt(sentenceIdx) + 1).padStart(2, '0');
+    // Cílové video VŽDY podle názvu AKTUÁLNÍHO panelu (obrázku), ne podle indexů.
+    // Tím se vždy trefí do správného panelu, ať se obrázek jmenuje jakkoli.
+    const imgBase = path.basename(filename, path.extname(filename)).replace(/(_s\d+|_custom)+$/, '');
+    const imgFile = path.basename(filename); // např. 02_01_02.jpg
+    const partFolder = imgBase.startsWith('03_') ? 'dil_3' : (imgBase.startsWith('02_') ? 'dil_2' : 'dil_1');
+    const videoFilename = `${imgBase}.mp4`;
 
-    let targetVideoPath;
-    let targetMobileVideoPath;
-    let videoFilename;
-    let partFolder;
-    
-    if (video) {
-      targetVideoPath = path.join(__dirname, video);
-      partFolder = video.split('/')[1] || `dil_${part}`;
-      videoFilename = path.basename(video);
-      
-      const ext = path.extname(videoFilename);
-      const base = path.basename(videoFilename, ext);
-      targetMobileVideoPath = path.join(__dirname, 'video', partFolder, `${base}_mobile${ext}`);
-    } else {
-      partFolder = `dil_${part}`;
-      videoFilename = `${partStr}_${paraStr}_${subStr}.mp4`;
-      const mobileVideoFilename = `${partStr}_${paraStr}_${subStr}_mobile.mp4`;
-      
-      targetVideoPath = path.join(__dirname, 'video', partFolder, videoFilename);
-      targetMobileVideoPath = path.join(__dirname, 'video', partFolder, mobileVideoFilename);
-    }
+    const targetVideoPath = path.join(__dirname, 'video', partFolder, videoFilename);
+    const targetMobileVideoPath = path.join(__dirname, 'video', partFolder, `${imgBase}_mobile.mp4`);
 
     // Decode base64
     const base64Data = videoData.replace(/^data:video\/\w+;base64,/, "");
@@ -614,22 +597,16 @@ app.post('/api/inject-video', async (req, res) => {
       let htmlContent = fs.readFileSync(indexPath, 'utf8');
       let changed = false;
       
-      htmlContent = htmlContent.replace(/<div\s+([^>]*?class="[^"]*comic-panel[^"]*"[^>]*?)>/g, (match, attrs) => {
-        const iMatch = attrs.match(/data-i="(\d+)"/);
-        const sMatch = attrs.match(/data-sentence="(\d+)"/);
-        if (iMatch && parseInt(iMatch[1]) === parseInt(globalI) && 
-            sMatch && parseInt(sMatch[1]) === parseInt(sentenceIdx)) {
-          
-          let newAttrs = attrs;
-          if (attrs.includes('data-video=')) {
-            newAttrs = attrs.replace(/data-video="[^"]*"/, `data-video="${videoAttrValue}"`);
-          } else {
-            newAttrs = attrs + ` data-video="${videoAttrValue}"`;
-          }
-          changed = true;
-          return `<div ${newAttrs}>`;
-        }
-        return match;
+      // Match panel podle NÁZVU OBRÁZKU (jeho <img> má daný soubor) — ne podle indexů.
+      const escImg = imgFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const panelRe = new RegExp('(<div\\s+[^>]*?comic-panel[^>]*?>)(\\s*<img\\s+[^>]*?src="[^"]*\\/' + escImg + '")', 'g');
+      htmlContent = htmlContent.replace(panelRe, (match, divTag, imgPart) => {
+        const attrs = divTag.slice(4, -1).trim(); // bez "<div" a ">"
+        const newAttrs = attrs.includes('data-video=')
+          ? attrs.replace(/data-video="[^"]*"/, `data-video="${videoAttrValue}"`)
+          : attrs + ` data-video="${videoAttrValue}"`;
+        changed = true;
+        return `<div ${newAttrs}>${imgPart}`;
       });
       
       if (changed) {
