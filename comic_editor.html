@@ -607,8 +607,8 @@
           <div class="control-box">
             <label>Vizuální styl panelu</label>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
-              <button class="btn-filter active" id="preset-btn-comic" onclick="setStylePreset('comic')">Komiksový (2D)</button>
-              <button class="btn-filter" id="preset-btn-filmic" onclick="setStylePreset('filmic')">Filmový (3D)</button>
+              <button class="btn-filter" id="preset-btn-comic" onclick="setStylePreset('comic')">Komiksový (2D)</button>
+              <button class="btn-filter active" id="preset-btn-filmic" onclick="setStylePreset('filmic')">Filmový (3D)</button>
               <button class="btn-filter" id="preset-btn-cartoon" onclick="setStylePreset('cartoon')">Cartoon</button>
               <button class="btn-filter" id="preset-btn-none" onclick="setStylePreset('none')">Bez stylu (Vypnuto)</button>
             </div>
@@ -1013,7 +1013,7 @@
       }
 
       // Set style preset to comic by default
-      setStylePreset('comic');
+      setStylePreset('filmic');
 
       // Reset inject video tab upload state
       const fileInput = document.getElementById('video-upload-input');
@@ -1324,7 +1324,7 @@
       }
     }
 
-    let currentStylePreset = 'comic';
+    let currentStylePreset = 'filmic';
 
     function setStylePreset(preset) {
       currentStylePreset = preset;
