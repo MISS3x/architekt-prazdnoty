@@ -745,6 +745,8 @@ body.is-playing .gpp { opacity:0; pointer-events:none; }
 body.is-playing.ui-active .gpp { opacity:1; pointer-events:auto; }
 /* skryj v galerii */
 body.gallery-open .gpp{ display:none; }
+/* FILM: tlačítko stavu přehrávání do SPODNÍ TŘETINY videa (desktop i mobil) */
+body.mode-movie .gpp{ top:72% !important; }
 
 /* 3D karusel slov v audio rezimu — slova prileti zepredu a odplují dozadu (mizí). */
 .ap-words { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
@@ -842,6 +844,68 @@ body.gallery-open .gallery-section { display: block; }
 .gallery-card:hover { box-shadow: 0 0 0 1px var(--cyan), 0 0 24px -6px rgba(45, 226, 255, .6) !important; }
 .gallery-card-id { font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important; }
 .gallery-card-label { font-family: 'Share Tech Mono', monospace !important; color: #dff6fb !important; }
+.gallery-card { cursor: zoom-in; }
+
+/* V galerii nemá smysl transport (play/scrub/věty) — vizuálně i funkčně utlumit. */
+body.gallery-open .ap-row2 { opacity: .25; pointer-events: none; filter: grayscale(1); }
+
+/* ===================== GALLERY LIGHTBOX (maximalizace + slideování) ===================== */
+.gallery-lightbox {
+  position: fixed; inset: 0; z-index: 1300;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(2, 8, 12, .94);
+  backdrop-filter: blur(6px);
+}
+.gallery-lightbox.active { display: flex; }
+.glb-stage {
+  flex: 1; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  padding: 56px 12px 84px; overflow: hidden;
+  touch-action: pan-y;
+}
+.glb-img {
+  max-width: min(94vw, 1500px); max-height: 84vh;
+  object-fit: contain; border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(45, 226, 255, .35), 0 24px 90px -20px rgba(0, 0, 0, .9), 0 0 60px -20px rgba(45, 226, 255, .5);
+  animation: glb-fade .22s ease;
+}
+@keyframes glb-fade { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+.glb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 56px; height: 56px; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-size: 30px; line-height: 1;
+  color: var(--cyan-hi); background: rgba(45, 226, 255, .08);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  box-shadow: inset 0 0 0 1px rgba(45, 226, 255, .35); transition: .15s;
+}
+.glb-nav:hover { color: #02121a; background: var(--cyan); box-shadow: 0 0 22px -3px var(--cyan); }
+.glb-prev { left: 18px; }
+.glb-next { right: 18px; }
+.glb-close {
+  position: absolute; top: 18px; right: 18px; z-index: 3;
+  width: 44px; height: 44px; border: 0; cursor: pointer;
+  font-family: 'Share Tech Mono', monospace; font-size: 18px;
+  color: var(--amber-hi); background: rgba(255, 178, 46, .08);
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  box-shadow: inset 0 0 0 1px rgba(255, 178, 46, .4); transition: .15s;
+}
+.glb-close:hover { color: #fff7e6; background: rgba(255, 178, 46, .18); box-shadow: inset 0 0 0 1px var(--amber), 0 0 16px -4px var(--amber); }
+.glb-caption {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;
+  padding: 16px 20px 22px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: .12em;
+  background: linear-gradient(0deg, rgba(2, 8, 12, .85), transparent);
+}
+.glb-id { color: var(--cyan-hi); }
+.glb-label { color: #dff6fb; text-transform: uppercase; }
+.glb-counter { color: var(--amber-hi); }
+@media (max-width: 768px) {
+  .glb-nav { width: 44px; height: 44px; font-size: 24px; }
+  .glb-prev { left: 8px; } .glb-next { right: 8px; }
+  .glb-stage { padding: 48px 6px 76px; }
+}
 
 /* ===================== FOOTER ===================== */
 .footer { font-family: 'Share Tech Mono', monospace !important; color: var(--ap-txt-dim) !important; border-top: 1px solid var(--ap-line); }

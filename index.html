@@ -14,7 +14,7 @@
   
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="style.css?v=2.0">
-  <link rel="stylesheet" href="design.css?v=2.24">
+  <link rel="stylesheet" href="design.css?v=2.25">
 </head>
 <body>
   
@@ -2873,8 +2873,23 @@
       </div>
     </section>
 
-    
-      
+    <!-- Gallery Lightbox (klasická galerie — maximalizace + slideování) -->
+    <div id="gallery-lightbox" class="gallery-lightbox">
+      <button class="glb-close" id="glb-close" title="Zavřít">✕</button>
+      <button class="glb-nav glb-prev" id="glb-prev" title="Předchozí">‹</button>
+      <div class="glb-stage" id="glb-stage">
+        <img id="glb-img" class="glb-img" src="" alt="">
+      </div>
+      <button class="glb-nav glb-next" id="glb-next" title="Další">›</button>
+      <div class="glb-caption">
+        <span class="glb-id" id="glb-id"></span>
+        <span class="glb-label" id="glb-label"></span>
+        <span class="glb-counter" id="glb-counter"></span>
+      </div>
+    </div>
+
+
+
 
     
       
@@ -3758,6 +3773,6 @@
   <audio id="audio-element" src="audio/dil_1.mp3" preload="auto">
   
   <!-- JavaScript logic -->
-  <script src="app.js?v=2.35"></script>
+  <script src="app.js?v=2.36"></script>
 </body>
 </html>
