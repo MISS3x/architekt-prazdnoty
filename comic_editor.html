@@ -720,22 +720,43 @@
           </div>
 
           <div class="control-box">
-            <label>Vizuální styl (předvyplní prompt)</label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
-              <button class="btn-filter active" id="kling-preset-comic" onclick="setKlingPreset('comic')">Komiksový (2D)</button>
-              <button class="btn-filter" id="kling-preset-filmic" onclick="setKlingPreset('filmic')">Filmový (3D)</button>
-              <button class="btn-filter" id="kling-preset-cartoon" onclick="setKlingPreset('cartoon')">Cartoon</button>
+            <label>Kamera (filmový záběr — vloží do děje)</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter" onclick="insertKlingPhrase('wide establishing shot')">Celkový</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('close-up shot')">Detail</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('over-the-shoulder shot')">Přes rameno</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('slow dolly-in toward the subject')">Nájezd</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('slow dolly-out away from the subject')">Odjezd</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('smooth zoom in')">Zoom in</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('smooth zoom out')">Zoom out</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('camera pans left')">Švenk ◀</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('camera pans right')">Švenk ▶</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('high-angle aerial view')">Nadhled</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('low-angle shot')">Podhled</button>
+              <button class="btn-filter" onclick="insertKlingPhrase('camera slowly orbits 360 around the subject')">Obíhání</button>
             </div>
           </div>
 
           <div class="control-box">
-            <label>Děj a kamera (co se děje + pohyb kamery)</label>
-            <textarea id="kling-action" placeholder="Např. Mia pomalu otáčí hlavu k divákovi, kamera se zvolna přibližuje, jemný déšť…" oninput="updateKlingPreview()" onfocus="klingActiveField='action'"></textarea>
+            <label>Scéna (cyberpunk prostředí — vloží do děje)</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+              <button class="btn-filter" onclick="insertKlingScene('dark cyberpunk megacity at night, towering neon skyscrapers, rain-soaked streets, holographic ads, dense fog')">Temné město</button>
+              <button class="btn-filter" onclick="insertKlingScene('underground cyber-city (subcity), dim industrial tunnels, pipes and cables, flickering neon, layered subterranean levels')">Podzemí</button>
+              <button class="btn-filter" onclick="insertKlingScene('massive industrial cyber-factory, heavy machinery, sparks and steam, gantries and conveyors')">Fabrika</button>
+              <button class="btn-filter" onclick="insertKlingScene('toxic post-industrial wasteland, ruins, rusted structures, ash and smog, broken machines')">Pustina</button>
+              <button class="btn-filter" onclick="insertKlingScene('bleak neuro-contaminated mountains of the old world, jagged peaks, cold mist, snow')">Hory</button>
+              <button class="btn-filter" onclick="insertKlingScene('deep rocky ravine and canyon, sheer dark walls, shadowed misty depths')">Rokle</button>
+            </div>
           </div>
 
           <div class="control-box">
-            <label>Popis stylu (předvyplní se podle stylu výše)</label>
-            <textarea id="kling-style" placeholder="Popis vizuálního stylu…" oninput="updateKlingPreview()" onfocus="klingActiveField='style'"></textarea>
+            <label>Děj a kamera (scéna + pohyb kamery + co se děje)</label>
+            <textarea id="kling-action" placeholder="Vlož kameru a scénu výše, pak doplň postavu/akci. Např. @Ruda stojí a dívá se do dálky…" oninput="updateKlingPreview()" onfocus="klingActiveField='action'"></textarea>
+          </div>
+
+          <div class="control-box">
+            <label>Film look (pevný — cyberpunk filmový styl)</label>
+            <textarea id="kling-style" placeholder="Film look…" oninput="updateKlingPreview()" onfocus="klingActiveField='style'"></textarea>
           </div>
 
           <div class="control-box">
@@ -1351,7 +1372,18 @@
     }
 
     let klingMode = 'video';     // 'video' | 'image'
-    let klingPreset = 'comic';
+    let klingPreset = 'filmic';  // jen film look
+
+    // Vloží frázi (kamera/scéna) do pole „Děj a kamera".
+    function insertKlingPhrase(phrase) {
+      const ta = document.getElementById('kling-action');
+      if (!ta) return;
+      const cur = ta.value.trim().replace(/[.,;\s]+$/, '');
+      ta.value = cur ? (cur + ', ' + phrase) : phrase;
+      ta.focus();
+      updateKlingPreview();
+    }
+    function insertKlingScene(phrase) { insertKlingPhrase(phrase); }
     let klingActiveField = 'action';   // kam vkládat @-reference (action | style)
 
     // Spojí "děj a kamera" + "popis stylu" do jednoho promptu (děj první, pak styl)
