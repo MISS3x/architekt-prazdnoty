@@ -14,7 +14,7 @@
   
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="style.css?v=2.0">
-  <link rel="stylesheet" href="design.css?v=2.20">
+  <link rel="stylesheet" href="design.css?v=2.21">
 </head>
 <body>
   
@@ -3718,7 +3718,6 @@
     <div class="time-display" id="time-total">0:00</div>
   </div>
 
-  <div id="playback-overlay" class="playback-overlay visible">POZASTAVENO // KLIKNI PRO PLAY</div>
 
   <!-- Fullscreen video overlay with subtitles -->
   <div id="fullscreen-overlay" class="fullscreen-overlay">
@@ -3726,7 +3725,12 @@
     <div class="fullscreen-close-btn" id="fullscreen-close-btn">✕ ZAVŘÍT // CLOSE</div>
     <div class="ap-filmtop" id="film-hud">
       <span class="film-hud-title" id="film-hud-title">// ARCHITEKT PRÁZDNOTY</span>
-      <span class="ap-filmhud" id="film-hud-scene">SCÉNA 1 / 20</span>
+      <span class="film-hud-sep">/</span>
+      <span class="film-hud-part" id="film-hud-part">DÍL I</span>
+      <span class="film-hud-sep">/</span>
+      <span class="ap-filmhud" id="film-hud-scene">SCÉNA 1 / 61</span>
+      <span class="film-hud-sep">/</span>
+      <span class="fullscreen-shot-id" id="fullscreen-shot-id">[01_01_01]</span>
     </div>
     <div class="fullscreen-screen">
       <video id="fs-video-1" muted playsinline class="fs-video"></video>
@@ -3747,13 +3751,12 @@
       <div class="preview-scanlines"></div>
     </div>
     <div id="fullscreen-subtitles" class="fullscreen-subtitles">// SYSTEM STANDBY</div>
-    <div id="fullscreen-shot-id" class="fullscreen-shot-id">[STANDBY]</div>
   </div>
 
   <!-- Audio element -->
   <audio id="audio-element" src="audio/dil_1.mp3" preload="auto">
   
   <!-- JavaScript logic -->
-  <script src="app.js?v=2.33"></script>
+  <script src="app.js?v=2.34"></script>
 </body>
 </html>

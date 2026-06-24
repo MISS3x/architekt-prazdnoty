@@ -193,7 +193,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     scene = Math.max(1, Math.min(scene, total));
     if (sc) sc.textContent = `SCÉNA ${scene} / ${total}`;
-    if (ti) { const e = EP_TITLES[state.activePart]; if (e) ti.textContent = `// ${e.t}`; }
+    const e = EP_TITLES[state.activePart];
+    if (ti && e) ti.textContent = `// ${e.t}`;
+    const pa = document.getElementById("film-hud-part");
+    if (pa && e) pa.textContent = `DÍL ${e.rom}`;
   };
 
   // --- COUNTDOWN INTRO (static poster + 7s countdown before comic/film) ---
