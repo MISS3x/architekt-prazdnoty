@@ -931,7 +931,7 @@
       // KLING room: povol tlačítko a předvyplň prompt podle panelu
       document.getElementById('btn-kling-queue').disabled = false;
       const klingStyle = document.getElementById('kling-style');
-      if (klingStyle) klingStyle.value = getDefaultPromptForPreset(klingPreset, panel.filename);
+      if (klingStyle) klingStyle.value = getKlingStyleForPreset(klingPreset, panel.filename);
       const klingAction = document.getElementById('kling-action');
       if (klingAction) klingAction.value = '';
       document.getElementById('kling-queue-status').textContent = '';
@@ -1333,6 +1333,23 @@
     }
 
     // ===================== KLING (MCP) ROOM =====================
+    // Styl = JEN LOOK (česky, bez postav a míst). Scénu/postavy/akci píše uživatel
+    // do pole „Děj a kamera", které se ke stylu připne. Barevný tón dle dílu.
+    function getKlingStyleForPreset(preset, filename) {
+      let neon = "fialová (neon purple) a zlatě jantarová";
+      if (filename && filename.startsWith('01_')) neon = "neonově oranžová / jantarová";
+      else if (filename && filename.startsWith('02_')) neon = "fialová (neon purple) a zlatě jantarová";
+      else if (filename && filename.startsWith('03_')) neon = "toxicky žlutozelená (#ccff00)";
+
+      if (preset === 'filmic') {
+        return `Dystopický sci-fi 3D render, fotorealistický, dramatické vysoce kontrastní osvětlení. Ponurá deštivá atmosféra, mokré lesklé povrchy, šlehající déšť. Převážně odbarvené studené tóny (šedá, uhlová, břidlicově modrá) s intenzivní ${neon} září. Velká hloubka ostrosti, širokoúhlý záběr, filmový look.`;
+      } else if (preset === 'cartoon') {
+        return `Hravý kreslený styl, živé barvy, čisté linky, stylizovaná kresba, estetika animovaného seriálu. Výrazné obrysy, cel shading, expresivní vizuál s výběrovými ${neon} akcenty.`;
+      } else { // comic
+        return `2D komiksový styl, estetika grafického románu. Výrazné černé obrysy, šrafování, vysoký kontrast černobílé s výběrovými ${neon} světly. Dramatické stínování.`;
+      }
+    }
+
     let klingMode = 'video';     // 'video' | 'image'
     let klingPreset = 'comic';
     let klingActiveField = 'action';   // kam vkládat @-reference (action | style)
@@ -1360,7 +1377,7 @@
         if (b) b.classList.toggle('active', p === preset);
       });
       const ta = document.getElementById('kling-style');
-      if (ta && currentPanel) ta.value = getDefaultPromptForPreset(preset, currentPanel.filename);
+      if (ta && currentPanel) ta.value = getKlingStyleForPreset(preset, currentPanel.filename);
       updateKlingPreview();
     }
 
