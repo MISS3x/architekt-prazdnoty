@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fullscreenMode: false,
     comicMode: false,
     audioMode: false,
+    galleryMode: false,
     restoring: false
   };
 
@@ -1985,6 +1986,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // a dorovná obsah (komiks/text) na danou pozici. Funguje i při pauze, ve všech režimech.
   const seekToFraction = (f) => {
     if (!audio || !state.duration) return;
+    if (state.galleryMode) return; // v galerii scrub neaktivní
     const frac = Math.max(0, Math.min(1, f));
     audio.currentTime = frac * state.duration;
     state.curIdx = -1;
@@ -1998,6 +2000,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Posun audio časové osy o jednu VĚTU kolečkem myši (dir: +1 vpřed, -1 zpět).
   // Funguje ve VŠECH režimech; po skoku dorovná obsah na aktuální čas.
   const scrubByCue = (dir) => {
+    if (state.galleryMode) return; // v galerii posun po větách neaktivní
     if (!cues || !(state.duration > 0)) return;
     const times = buildSentenceTimes();
     if (!times.length) return;
@@ -2671,15 +2674,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- UI LISTENERS & CONTROL handlers ---
   const setupUIListeners = () => {
-    // Galerie jako samostatný view (fixed overlay) — toggle přes body.gallery-open
+    // Galerie jako samostatný view (overlay). V galerii se VYPNE veškeré přehrávání
+    // (audio + všechna videa) a transport; obsah je čistá galerie s lightboxem.
     const btnGallery = document.getElementById("btn-mode-gallery");
     const galleryView = document.getElementById("gallery-view");
-    const closeGallery = () => { document.body.classList.remove("gallery-open"); if(document.getElementById("btn-mode-gallery")) document.getElementById("btn-mode-gallery").classList.remove("active"); };
+    const galleryLightboxEl = document.getElementById("gallery-lightbox");
+    let closeLightbox = () => {}; // přiřadí se níže (lightbox); volá ho closeGallery
+
+    // DŮLEŽITÉ: galerie i lightbox jsou v HTML uvnitř <main>/.wrapper, který má
+    // z-index:1 → tvoří stacking kontext a uvězní galerii POD body-level video
+    // overlaye (fullscreen-overlay aj.). Přesuneme je na úroveň <body>, aby jejich
+    // z-index platil absolutně a galerie byla vždy úplně nahoře.
+    if (galleryView && galleryView.parentElement !== document.body) document.body.appendChild(galleryView);
+    if (galleryLightboxEl && galleryLightboxEl.parentElement !== document.body) document.body.appendChild(galleryLightboxEl);
+
+    const pauseAllVideos = () => {
+      document.querySelectorAll("video").forEach(v => { try { v.pause(); } catch (e) {} });
+    };
+    const resumeBackgroundVideos = () => {
+      document.querySelectorAll("video[loop][muted]").forEach(v => {
+        try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+      });
+    };
+
+    const openGallery = () => {
+      document.body.classList.add("gallery-open");
+      state.galleryMode = true;
+      if (btnGallery) btnGallery.classList.add("active");
+      try { audio.pause(); } catch (e) {}                 // zastav audio (master clock)
+      if (state.fullscreenMode) closeFullscreenOverlay(); // vypni filmový overlay
+      pauseAllVideos();                                   // zastav VŠECHNA videa (pozadí/hero/film/preview)
+      updateStatus();
+      if (galleryView) galleryView.scrollTop = 0;
+    };
+    const closeGallery = () => {
+      document.body.classList.remove("gallery-open");
+      state.galleryMode = false;
+      if (btnGallery) btnGallery.classList.remove("active");
+      closeLightbox();
+      resumeBackgroundVideos();                           // vrať ambientní video na pozadí
+    };
     if (btnGallery) {
       btnGallery.addEventListener("click", () => {
-        document.body.classList.toggle("gallery-open");
-        if(btnGallery) btnGallery.classList.toggle("active", document.body.classList.contains("gallery-open"));
-        if (galleryView && document.body.classList.contains("gallery-open")) galleryView.scrollTop = 0;
+        if (document.body.classList.contains("gallery-open")) closeGallery();
+        else openGallery();
       });
     }
     const btnGalleryClose = document.getElementById("gallery-close-btn");
@@ -2928,15 +2966,82 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Clicking gallery cards opens the image in fullscreen overlay
-    galleryCards.forEach(card => {
-      card.addEventListener("click", () => {
-        const src = card.dataset.src;
-        const label = card.querySelector(".gallery-card-label").textContent;
-        const shotId = card.querySelector(".gallery-card-id").textContent;
+    // --- Gallery lightbox (klasická galerie: maximalizace + slideování) ---
+    const lightbox = document.getElementById("gallery-lightbox");
+    const glbImg = document.getElementById("glb-img");
+    const glbId = document.getElementById("glb-id");
+    const glbLabel = document.getElementById("glb-label");
+    const glbCounter = document.getElementById("glb-counter");
+    let lbList = [];   // [{src,label,shotId}] — aktuálně viditelné (po filtru) karty
+    let lbIndex = 0;
 
-        openFullscreenImage(src, label, shotId);
+    const renderLightbox = () => {
+      if (!lbList.length) return;
+      const it = lbList[lbIndex];
+      if (glbImg) {
+        glbImg.style.animation = "none";
+        glbImg.src = it.src;
+        glbImg.alt = it.label;
+        void glbImg.offsetWidth;       // re-trigger fade animace
+        glbImg.style.animation = "";
+      }
+      if (glbId) glbId.textContent = it.shotId;
+      if (glbLabel) glbLabel.textContent = it.label;
+      if (glbCounter) glbCounter.textContent = `${lbIndex + 1} / ${lbList.length}`;
+    };
+
+    const openLightbox = (clickedCard) => {
+      // seznam = jen viditelné karty → slideování respektuje aktivní filtr (Díl I/II/III)
+      const visible = Array.from(galleryCards).filter(c => !c.classList.contains("hidden"));
+      lbList = visible.map(c => ({
+        src: c.dataset.src,
+        label: c.querySelector(".gallery-card-label")?.textContent || "",
+        shotId: c.querySelector(".gallery-card-id")?.textContent || ""
+      }));
+      lbIndex = Math.max(0, visible.indexOf(clickedCard));
+      renderLightbox();
+      if (lightbox) lightbox.classList.add("active");
+    };
+
+    // closeLightbox je deklarován výše (volá ho closeGallery) — tady ho naplníme
+    closeLightbox = () => { if (lightbox) lightbox.classList.remove("active"); };
+
+    const lbStep = (dir) => {
+      if (!lbList.length) return;
+      lbIndex = (lbIndex + dir + lbList.length) % lbList.length;
+      renderLightbox();
+    };
+
+    const glbPrev = document.getElementById("glb-prev");
+    const glbNext = document.getElementById("glb-next");
+    const glbClose = document.getElementById("glb-close");
+    const glbStage = document.getElementById("glb-stage");
+    if (glbPrev) glbPrev.addEventListener("click", (e) => { e.stopPropagation(); lbStep(-1); });
+    if (glbNext) glbNext.addEventListener("click", (e) => { e.stopPropagation(); lbStep(1); });
+    if (glbClose) glbClose.addEventListener("click", closeLightbox);
+    if (lightbox) lightbox.addEventListener("click", (e) => { if (e.target === lightbox || e.target === glbStage) closeLightbox(); });
+
+    document.addEventListener("keydown", (e) => {
+      if (!lightbox || !lightbox.classList.contains("active")) return;
+      if (e.key === "ArrowRight") { e.preventDefault(); lbStep(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); lbStep(-1); }
+      else if (e.key === "Escape") { e.preventDefault(); closeLightbox(); }
+    });
+
+    if (glbStage) {
+      let sx = 0, sy = 0, tracking = false;
+      glbStage.addEventListener("pointerdown", (e) => { tracking = true; sx = e.clientX; sy = e.clientY; });
+      glbStage.addEventListener("pointerup", (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = e.clientX - sx, dy = e.clientY - sy;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) lbStep(dx < 0 ? 1 : -1);
       });
+    }
+
+    // Klik na kartu → maximalizace do lightboxu (slideování pak mezi obrázky)
+    galleryCards.forEach(card => {
+      card.addEventListener("click", () => openLightbox(card));
     });
   };
 
@@ -3105,6 +3210,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const togglePlay = () => {
     if (!audio) return;
+    if (state.galleryMode) return; // v galerii je přehrávání vypnuté
     if (audio.paused) {
       const savedTime = audio.currentTime;
       playerStatus.textContent = "NAČÍTÁM…";
@@ -3281,3 +3387,32 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- BOOT ---
   init();
 });
+
+
+// Real-time updates from editor (only when running locally)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  const evtSource = new EventSource("http://localhost:3000/api/updates");
+  evtSource.onmessage = function(event) {
+    const filename = event.data;
+    if (!filename) return;
+    
+    // Find images and videos that match the updated filename and cache bust them
+    const mediaElements = document.querySelectorAll('img, video, source');
+    mediaElements.forEach(el => {
+      const srcAttr = el.tagName === 'SOURCE' ? el.src || el.parentNode.src : el.src;
+      if (srcAttr && srcAttr.includes(filename)) {
+        try {
+          const url = new URL(srcAttr, window.location.href);
+          url.searchParams.set('t', Date.now());
+          if (el.tagName === 'SOURCE') {
+            el.src = url.toString();
+            if (el.parentNode && el.parentNode.load) el.parentNode.load();
+          } else {
+            el.src = url.toString();
+          }
+          console.log("Realtime updated:", filename);
+        } catch(e) {}
+      }
+    });
+  };
+}

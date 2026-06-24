@@ -9,3 +9,12 @@ img/screenshots/temp/
 img/screenshots/backup/
 
 kling_queue.json
+
+# Zálohy a dočasné soubory z Kling/editor pipeline
+*.bak
+*.bak_trim*
+*.tmp.*
+app.js.tmp.*
+scratch/
+# Manuální Kling downloady s nestandardním názvem
+video/**/kling_*.mp4
