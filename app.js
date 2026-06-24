@@ -4,10 +4,13 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const IS_MOBILE = window.innerWidth <= 768;
+  // Na mobilu pouštíme videa NA VÝŠKU (_mobile.mp4, 9:16); desktop jsou čtvercová.
+  // Detekce dynamicky (per volání), aby fungovala i po zúžení okna / rotaci.
+  // Intro (0N_intro.mp4) nemá mobilní variantu → nechat základní soubor.
   const getVideoPath = (path) => {
     if (!path || typeof path !== 'string') return path;
-    if (IS_MOBILE && path.includes('.mp4') && !path.includes('_mobile.mp4')) {
+    const mobile = window.innerWidth <= 768;
+    if (mobile && path.includes('.mp4') && !path.includes('_mobile.mp4') && !path.includes('intro')) {
       return path.replace('.mp4', '_mobile.mp4');
     }
     return path;
