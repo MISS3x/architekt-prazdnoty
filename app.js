@@ -370,10 +370,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Click/touch screen to play/pause in comic & film modes
     const handleScreenTapToggle = (e) => {
-      if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input") || 
-          e.target.closest(".speech-bubble") || e.target.closest(".player-wrapper") || 
+      if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input") ||
+          e.target.closest(".speech-bubble") || e.target.closest(".player-wrapper") ||
           e.target.closest(".sticky-mode-switcher") || e.target.closest(".drag-grip") ||
-          e.target.closest(".ap-actrls") || e.target.closest(".ap-words")) {
+          e.target.closest(".ap-actrls") || e.target.closest(".ap-words") ||
+          e.target.closest(".fullscreen-cinema-btn") || e.target.closest(".fullscreen-close-btn")) {
         return;
       }
       togglePlay();
@@ -2833,7 +2834,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ex) { try { Promise.resolve(ex.call(document)).catch(() => {}); } catch (e) {} }
       }
     };
-    if (cinemaBtn) cinemaBtn.addEventListener("click", toggleCinema);
+    if (cinemaBtn) cinemaBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleCinema(); });
     const onFsChange = () => {
       const on = !!(document.fullscreenElement || document.webkitFullscreenElement);
       document.body.classList.toggle("cinema-on", on);
