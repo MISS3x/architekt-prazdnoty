@@ -443,8 +443,8 @@ body::after {
    Po intru se celý #fullscreen-poster deaktivuje (skryje), takže hero zmizí sám. */
 .fullscreen-overlay #fullscreen-poster.active .ch-poster-hero {
   display: flex !important;
-  justify-content: flex-start !important;  /* titulek do HORNÍ poloviny intra */
-  padding-top: 11vh !important;
+  justify-content: center !important;  /* hlavní titulek na STŘED videa (svisle i vodorovně) */
+  padding-top: 0 !important;
 }
 /* Spodní kinotitulek během intra schovej — hlavní titulek je nahoře přes video */
 .fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-subtitles { display: none !important; }
@@ -745,8 +745,9 @@ body.is-playing .gpp { opacity:0; pointer-events:none; }
 body.is-playing.ui-active .gpp { opacity:1; pointer-events:auto; }
 /* skryj v galerii */
 body.gallery-open .gpp{ display:none; }
-/* FILM: tlačítko stavu přehrávání do SPODNÍ TŘETINY videa (desktop i mobil) */
-body.mode-movie .gpp{ top:72% !important; }
+/* Tlačítko stavu přehrávání (Pozastaveno / Klikni) → HORNÍ ČTVRTINA okna,
+   všechny módy (film, komiks, text, audio), desktop i mobil. */
+.gpp{ top: calc(var(--ap-barH) + 5vh) !important; }
 
 /* 3D karusel slov v audio rezimu — slova prileti zepredu a odplují dozadu (mizí). */
 .ap-words { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
