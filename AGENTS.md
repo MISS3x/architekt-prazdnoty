@@ -17,7 +17,7 @@
 ### Agent 1 — Antigravity IDE (Claude Sonnet 4.6 in chat)
 **Role:** Coordination, planning, complex logic, review
 **Primary files:** `task.md`, `AGENTS.md`, `app.js`, `design.css`, `comic_editor.html`, `editor_server.js`
-**Current task:** Implementing Film Video Injection Feature
+**Current task:** ✅ Fáze 6 - Galerie dokončena
 **Status:** 🟢 ACTIVE
 
 ### Agent 2 — Claude CLI (terminal)
@@ -39,13 +39,13 @@
 
 | File | Locked by | Since | Note |
 |------|-----------|-------|------|
-| `app.js` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | Custom video attribute support |
+| `app.js` | — | — | Custom video attribute support |
 | `index.html` | — | — | — |
 | `style.css` | — | — | — |
 | `design.css` | — | — | — |
-| `task.md` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | Update tasks list |
-| `editor_server.js` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | ffmpeg cropping, rename & data-video endpoints |
-| `comic_editor.html` | Agent 1 (Antigravity IDE) | 2026-06-22 22:50 | Renaming inputs and logic |
+| `task.md` | — | — | Update tasks list |
+| `editor_server.js` | — | — | ffmpeg cropping, rename & data-video endpoints |
+| `comic_editor.html` | — | — | Renaming inputs and logic |
 
 
 ---
@@ -58,7 +58,7 @@ Claude Chat is implementing these phases — **Agents 1 & 2 should not touch the
 - [ ] **Fáze 3** — Komiks na .ap-comic strip & .ap-panel/.ap-bubble
 - [ ] **Fáze 4** — Film na .ap-film (SCÉNA HUD, titulky, video loop)
 - [x] **Fáze 5** — AUDIO equalizer sladit s designem ✅ (Agent 2 / Claude CLI)
-- [ ] **Fáze 6** — Samostatná galerie jako vlastní view
+- [x] **Fáze 6** — Samostatná galerie jako vlastní view ✅ (Agent 1 / Antigravity IDE)
 - [ ] **Fáze 7** — Odstranit UX extra (intro/dekrypce/countdown) + úklid + cache bump
 
 ---
