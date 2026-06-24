@@ -709,13 +709,14 @@
           </div>
 
           <div class="control-box">
-            <label>Vložit referenci do promptu</label>
+            <label>Připnuté elementy (Kling je použije bez ohledu na pojmenování v textu)</label>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
-              <button class="btn-filter" onclick="insertKlingRef('@Image')" title="Tento frame">@Image</button>
-              <button class="btn-filter" onclick="insertKlingRef('@Mia')" title="Postava Mia">@Mia</button>
-              <button class="btn-filter" onclick="insertKlingRef('@Krtek')" title="Postava Krtek">@Krtek</button>
-              <button class="btn-filter" onclick="insertKlingRef('@Ruda')" title="Postava Ruda">@Ruda</button>
+              <button class="btn-filter active" id="kling-el-image" title="Frame se připíná vždy (image_1)" disabled style="opacity: 1;">📌 Image (frame)</button>
+              <button class="btn-filter" id="kling-el-Mia" onclick="toggleKlingElement('Mia')" title="Připnout postavu Mia">+ Mia</button>
+              <button class="btn-filter" id="kling-el-Krtek" onclick="toggleKlingElement('Krtek')" title="Připnout postavu Krtek">+ Krtek</button>
+              <button class="btn-filter" id="kling-el-Ruda" onclick="toggleKlingElement('Ruda')" title="Připnout postavu Ruda">+ Ruda</button>
             </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">Klíčové je element PŘIPNOUT (nahraje se jako reference). V textu pak postavu pojmenuj jakkoli.</div>
           </div>
 
           <div class="control-box">
@@ -933,6 +934,7 @@
       if (klingStyle) klingStyle.value = getDefaultPromptForPreset(klingPreset, panel.filename);
       const klingAction = document.getElementById('kling-action');
       if (klingAction) klingAction.value = '';
+      klingAutoPin(panel.filename);
       document.getElementById('kling-queue-status').textContent = '';
       updateKlingPreview();
 
@@ -1343,31 +1345,6 @@
       return [action, style].filter(Boolean).join('\n');
     }
 
-    // ELEMENTY pro Omni 3.0: @token -> referenční obrázek. @Image = aktuální frame.
-    const KLING_CHAR_ELEMENTS = {
-      '@Mia': 'avatar/mia/mia.png',
-      '@Krtek': 'avatar/krtek/krtek.png',
-      '@Ruda': 'avatar/ruda/ruda.png'
-    };
-    // Vrátí elementy (reference images) v pořadí, bez duplicit.
-    // Frame (@Image) je VŽDY první (image_1) — jinak Omni generuje náhodné postavy.
-    // Postavy se přidají podle @Mia/@Krtek/@Ruda v promptu.
-    function klingDetectRefs() {
-      const text = klingComposedPrompt();
-      const refs = [];
-      const seen = new Set();
-      if (currentPanel) { refs.push({ token: '@Image', image: currentPanel.imgSrc }); seen.add('@Image'); }
-      const re = /@(Mia|Krtek|Ruda)\b/g;
-      let m;
-      while ((m = re.exec(text)) !== null) {
-        const tok = '@' + m[1];
-        if (seen.has(tok)) continue;
-        seen.add(tok);
-        if (KLING_CHAR_ELEMENTS[tok]) refs.push({ token: tok, image: KLING_CHAR_ELEMENTS[tok] });
-      }
-      return refs;
-    }
-
     function setKlingMode(mode) {
       klingMode = (mode === 'image') ? 'image' : 'video';
       document.getElementById('kling-mode-video').classList.toggle('active', klingMode === 'video');
@@ -1388,20 +1365,38 @@
       updateKlingPreview();
     }
 
-    function insertKlingRef(token) {
-      const ta = document.getElementById('kling-' + klingActiveField) || document.getElementById('kling-action');
-      if (!ta) return;
-      const start = (ta.selectionStart != null) ? ta.selectionStart : ta.value.length;
-      const end = (ta.selectionEnd != null) ? ta.selectionEnd : ta.value.length;
-      const before = ta.value.slice(0, start);
-      const after = ta.value.slice(end);
-      const pad = (before && !before.endsWith(' ')) ? ' ' : '';
-      const insert = pad + token + ' ';
-      ta.value = before + insert + after;
-      ta.focus();
-      const pos = (before + insert).length;
-      ta.setSelectionRange(pos, pos);
+    // Stav PŘIPNUTÝCH elementů postav (frame je připnut vždy). Klíčové je element
+    // připnout (nahraje se jako reference image) — text v promptu je libovolný.
+    let klingElements = { Mia: false, Krtek: false, Ruda: false };
+
+    function toggleKlingElement(name) {
+      klingElements[name] = !klingElements[name];
+      const b = document.getElementById('kling-el-' + name);
+      if (b) b.classList.toggle('active', klingElements[name]);
       updateKlingPreview();
+    }
+
+    // Auto-připnutí hlavní postavy dílu podle názvu framu (lze přepnout ručně).
+    function klingAutoPin(filename) {
+      klingElements = { Mia: false, Krtek: false, Ruda: false };
+      if (filename && filename.startsWith('01_')) klingElements.Ruda = true;
+      else if (filename && filename.startsWith('02_')) klingElements.Mia = true;
+      else if (filename && filename.startsWith('03_')) klingElements.Krtek = true;
+      ['Mia', 'Krtek', 'Ruda'].forEach(n => {
+        const b = document.getElementById('kling-el-' + n);
+        if (b) b.classList.toggle('active', klingElements[n]);
+      });
+    }
+
+    // Připnuté elementy. Frame se VŽDY nahrává (upload -> image_1). Postavy jsou
+    // KLING ELEMENTY (avataři v účtu) — připínají se podle jména, NENAHRÁVÁ se obrázek.
+    function klingSelectedRefs() {
+      const refs = [];
+      if (currentPanel) refs.push({ token: '@Image', kind: 'upload', image: currentPanel.imgSrc });
+      ['Mia', 'Krtek', 'Ruda'].forEach(n => {
+        if (klingElements[n]) refs.push({ token: '@' + n, kind: 'kling-element', name: n });
+      });
+      return refs;
     }
 
     function updateKlingPreview() {
@@ -1414,10 +1409,10 @@
       const reso = document.getElementById('kling-resolution').value;
       const cnt = document.getElementById('kling-count').value;
       const model = klingMode === 'image' ? 'kling-image-v3_0_omni' : 'kling-video-v3_0_omni';
-      const refs = klingDetectRefs();
+      const refs = klingSelectedRefs();
       const hasChar = refs.some(r => r.token !== '@Image');
-      const elems = 'ELEMENTY: ' + refs.map((r, i) => `图片${i + 1}=${r.token}`).join(', ')
-        + (hasChar ? '' : '   ⚠ jen frame — přidej @Mia/@Krtek/@Ruda, ať Omni nevyrobí náhodnou postavu');
+      const elems = 'PŘIPNUTO: ' + refs.map(r => r.token.replace('@', '')).join(' + ')
+        + (hasChar ? '' : '   ⚠ jen frame — připni postavu (+ Mia/Krtek/Ruda), jinak Omni vyrobí náhodnou');
       const head = klingMode === 'image'
         ? `${currentPanel.filename}  →  Kling IMAGE (${model})  ·  ${aspect} · ${reso} · ${cnt}×`
         : `${currentPanel.filename}  →  Kling VIDEO (${model})  ·  ${aspect} · ${dur}s · ${reso} · ${cnt}×`;
@@ -1438,7 +1433,7 @@
         duration: document.getElementById('kling-duration').value,
         resolution: document.getElementById('kling-resolution').value,
         imageCount: document.getElementById('kling-count').value,
-        refs: klingDetectRefs()
+        refs: klingSelectedRefs()
       };
       btn.disabled = true;
       status.style.color = '#2de2ff';
