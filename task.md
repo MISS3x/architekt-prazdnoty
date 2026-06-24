@@ -8,27 +8,321 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **75 / 75 done (100%)**
+## 📊 Progress: **71 / 79 done (90%)**
 
 ```
-#################################################################################################### 100%
+##########################################################################################---------- 90%
 ```
 
 | Section | Done | Total | % |
 |---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
 | HTML | 9 | 9 | 100% |
-| CSS | 7 | 7 | 100% |
+| CSS | 6 | 6 | 100% |
 | JS | 10 | 10 | 100% |
 | Kling AI | 4 | 4 | 100% |
 | Git | 4 | 4 | 100% |
 | State & UI | 7 | 7 | 100% |
 | Comic Editor | 10 | 10 | 100% |
 | HUD & Editor Mask | 8 | 8 | 100% |
-| Video Injection | 5 | 5 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
 | File Renaming | 6 | 6 | 100% |
-| Sentence-Level Video Sync | 5 | 5 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
 
 ---
+------- 90%
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+|---|---|---|
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+|---| | 0 | 0 | 0% |
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+|---|---|
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+------- 90%
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+|---|---|---|
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+|---| | 0 | 0 | 0% |
+# Architekt Prázdnoty — Master Task Plan
+
+> Živý dokument. Cokoliv dokončíme → odškrtneme `[x]`.
+
+## 🚨 Blokující akce (manuální)
+
+> Věci které musíš udělat ručně (API klíče, autentizace, nastavení služeb). Až budou hotové, smažu je.
+
+*Žádné aktuální blokery* ✅
+
+## 📊 Progress: **71 / 79 done (90%)**
+
+```
+##########################################################################################---------- 90%
+```
+
+| Section | Done | Total | % |
+|---|---|---|---|
+| ---- 90% | 0 | 0 | 0% |
+| 🚨 Blokující akce (manuální) | 0 | 0 | 0% |
+| 📊 Progress: **71 / 79 done (90%)** | 0 | 0 | 0% |
+| HTML | 9 | 9 | 100% |
+| CSS | 6 | 6 | 100% |
+| JS | 10 | 10 | 100% |
+| Kling AI | 4 | 4 | 100% |
+| Git | 4 | 4 | 100% |
+| State & UI | 7 | 7 | 100% |
+| Comic Editor | 10 | 10 | 100% |
+| HUD & Editor Mask | 8 | 8 | 100% |
+| Video Injection to Film | 5 | 5 | 100% |
+| File Renaming | 6 | 6 | 100% |
+| Sentence-Level Video Sync | 2 | 5 | 40% |
+| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+
+---
+
+
 
 ## HTML
 - [x] **#1** — Restructure index.html to separate Part 1, Part 2, and Part 3 content containers ✅ completed
@@ -126,3 +420,10 @@
 - [/] **#74** — Ensure native looping by setting `videoEl.loop = true` in `loadAndPlayPreview`, `syncFullscreenSource`, and `loadAndPlayFullscreenMirror`
 - [ ] **#75** — Verify sentence-level video transitions and native looping in FILM mode and commit changes
 
+
+## Visual Gallery (Fáze 6)
+- [ ] **#76** — Add 'Galerie' button to the mode menu in `index.html`
+- [ ] **#77** — Create the `#gallery-view` HTML structure with filters in `index.html`
+- [ ] **#78** — Add CSS grid styles for `.gallery-view` to `design.css` (4 cols desktop, 2 cols mobile)
+- [ ] **#79** — Implement JS logic in `app.js` to populate the gallery with all comic images
+- [ ] **#80** — Add filtering logic (Vše, Díl I, Díl II, Díl III) to the gallery

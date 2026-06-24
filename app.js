@@ -2668,12 +2668,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- UI LISTENERS & CONTROL handlers ---
   const setupUIListeners = () => {
     // Galerie jako samostatný view (fixed overlay) — toggle přes body.gallery-open
-    const btnGallery = document.getElementById("btn-nav-gallery");
+    const btnGallery = document.getElementById("btn-mode-gallery");
     const galleryView = document.getElementById("gallery-view");
-    const closeGallery = () => document.body.classList.remove("gallery-open");
+    const closeGallery = () => { document.body.classList.remove("gallery-open"); if(document.getElementById("btn-mode-gallery")) document.getElementById("btn-mode-gallery").classList.remove("active"); };
     if (btnGallery) {
       btnGallery.addEventListener("click", () => {
         document.body.classList.toggle("gallery-open");
+        if(btnGallery) btnGallery.classList.toggle("active", document.body.classList.contains("gallery-open"));
         if (galleryView && document.body.classList.contains("gallery-open")) galleryView.scrollTop = 0;
       });
     }
@@ -2851,9 +2852,60 @@ document.addEventListener("DOMContentLoaded", () => {
       fsVideo2.addEventListener("error", () => handleFullscreenVideoError(fsVideo2));
     }
 
+    
+    // Generate visual gallery dynamically from all comic panels
+    const galleryGrid = document.querySelector(".gallery-grid");
+    if (galleryGrid) {
+      galleryGrid.innerHTML = ""; // Clear existing static cards
+      
+      const allPanels = document.querySelectorAll(".comic-panel");
+      allPanels.forEach(panel => {
+        const img = panel.querySelector(".comic-panel-img");
+        if (!img) return;
+        
+        const src = img.getAttribute("src");
+        if (!src) return;
+        
+        // Extract part number from src (e.g. img/comic/dil_1/...)
+        let part = "1";
+        if (src.includes("dil_2")) part = "2";
+        else if (src.includes("dil_3")) part = "3";
+        
+        // Extract filename for label (e.g. 01_01_01.jpg)
+        const filename = src.split('/').pop();
+        const baseName = filename.split('.')[0]; // e.g. 01_01_01
+        
+        // Format label
+        const parts = baseName.split('_');
+        let label = baseName;
+        if (parts.length >= 3) {
+          label = `Díl ${parseInt(parts[0], 10)} · Odst. ${parseInt(parts[1], 10)} · Snímek ${parseInt(parts[2], 10)}`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "gallery-card";
+        card.dataset.part = part;
+        card.dataset.src = src;
+        
+        card.innerHTML = `
+          <div class="gallery-img-wrapper">
+            <img src="${src}" alt="${label}" loading="lazy">
+            <div class="gallery-card-glow"></div>
+          </div>
+          <div class="gallery-card-info">
+            <div class="gallery-card-id">[${baseName}]</div>
+            <div class="gallery-card-label">${label}</div>
+          </div>
+        `;
+        
+        galleryGrid.appendChild(card);
+      });
+    }
+
     // Setup visual gallery filter buttons
     const filterBtns = document.querySelectorAll(".gallery-filter-btn");
     const galleryCards = document.querySelectorAll(".gallery-card");
+
 
     filterBtns.forEach(btn => {
       btn.addEventListener("click", () => {

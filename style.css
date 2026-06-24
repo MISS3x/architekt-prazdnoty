@@ -3066,7 +3066,31 @@ body.part3-active .btn-welcome-reset-btn:hover {
   body.comic-fs .comic-col.cols-2 { width: min(42vh, 40vw) !important; }
   body.comic-fs .comic-col.cols-3 { width: min(28vh, 30vw) !important; }
 }
+}
 /* mobil — jeden sloupec, čtvercové obrázky */
 @media (max-width: 768px) {
   body.comic-fs .comic-panel { aspect-ratio: 1 / 1 !important; }
+}
+
+/* Playback Overlay */
+.playback-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 20px;
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.playback-overlay.visible {
+  opacity: 1;
 }

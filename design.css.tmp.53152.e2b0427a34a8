@@ -1,0 +1,868 @@
+/* =====================================================================
+   design.css — TRON / NEON GRID skin (RUDA-50)
+   Aplikuje design šablonu "Systém přehrávání" na reálnou stránku.
+   Načítá se PO style.css a cíleně přepisuje vzhled (engine zůstává).
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Chakra+Petch:wght@500;600;700&family=Share+Tech+Mono&family=Spectral:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+
+:root {
+  --cyan: #2de2ff;
+  --cyan-hi: #b6f6ff;
+  --cyan-deep: #0a8bb0;
+  --cyan-dim: rgba(45, 226, 255, .5);
+  --cyan-glow: rgba(45, 226, 255, .6);
+  --cyan-glow-intense: rgba(45, 226, 255, .4);
+  --amber: #ffb22e;
+  --amber-hi: #ffe09a;
+  --ap-bg: #03060b;
+  --ap-bar: #05101a;
+  --ap-line: rgba(45, 226, 255, .22);
+  --ap-txt: #cfdde2;
+  --ap-txt-dim: #8aa0a8;
+  --ap-barH: 104px; /* nový design — dvouřadá lišta (měřeno dynamicky JS) */
+  /* aliasy bez prefixu, aby šlo použít CSS z design projektu doslovně */
+  --bg: #03060b; --bar: #05101a; --line: rgba(45, 226, 255, .22);
+  --txt: #cfdde2; --txt-dim: #8aa0a8; --barH: var(--ap-barH);
+}
+
+/* ---------- base ---------- */
+body {
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(45, 226, 255, .07), transparent 55%),
+    radial-gradient(100% 60% at 50% 120%, rgba(255, 178, 46, .06), transparent 60%),
+    var(--ap-bg) !important;
+  color: var(--ap-txt);
+  font-family: 'Chakra Petch', system-ui, sans-serif;
+}
+/* jemná neonová mřížka na pozadí */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+  background-image:
+    linear-gradient(rgba(45, 226, 255, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 226, 255, .035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 30%, #000, transparent 80%);
+  mask-image: radial-gradient(120% 80% at 50% 30%, #000, transparent 80%);
+}
+.wrapper { position: relative; z-index: 1; }
+
+/* skryj staré ozdoby, které do nového designu nepatří */
+.bg-container, .video-bg-container, .text-bg-video-container, .scanlines { display: none !important; }
+.veil { background: transparent !important; }
+
+/* ===================== TOP BAR (reference .ap-bar) ===================== */
+/* Jednořadá lišta: brand · centrovaný segment verzí · pravá skupina (epizody + transport + galerie) */
+/* DVOUŘADÁ lišta z design projektu (verbatim ap-bar) */
+.ap-bar{
+  position:fixed; top:0; left:0; right:0; z-index:1200;
+  display:flex; flex-direction:column; gap:10px; padding:10px 18px;
+  background:linear-gradient(180deg, rgba(7,20,30,.96), rgba(4,10,16,.92));
+  border-bottom:1px solid var(--line);
+  box-shadow:0 8px 30px -12px #000, 0 0 0 1px rgba(0,0,0,.4), inset 0 -1px 0 rgba(45,226,255,.12);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+}
+.ap-bar::after{ content:''; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent); opacity:.5; }
+
+.ap-row1{ display:flex; align-items:flex-end; gap:18px; }
+.ap-row2{ display:flex; align-items:center; gap:14px; }
+.ap-row1, .ap-row2{ width:100%; max-width:900px; margin:0 auto; }
+
+.ap-brand{ display:flex; align-items:center; gap:11px; min-width:0; margin-left:auto; overflow:hidden; }
+.ap-dia{ width:12px; height:12px; background:var(--cyan); transform:rotate(45deg);
+  box-shadow:0 0 12px var(--cyan); flex:0 0 auto; }
+.ap-brandtx{ font-family:'Orbitron',sans-serif; font-weight:800; font-size:14px; letter-spacing:.22em;
+  color:var(--cyan-hi); text-shadow:0 0 12px rgba(45,226,255,.6); white-space:nowrap; }
+.ap-sep{ width:1px; height:26px; background:rgba(45,226,255,.25); }
+.ap-eptitle{ font-family:'Share Tech Mono',monospace; font-size:11.5px; letter-spacing:.08em;
+  color:var(--txt-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; }
+.ap-eptitle b{ color:var(--cyan); letter-spacing:.16em; }
+
+.ap-modes{ display:flex; align-items:flex-end; gap:18px; }
+.ap-segwrap, .ap-epsel{ display:flex; flex-direction:column; gap:5px; }
+.ap-modelab{ font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.26em;
+  text-transform:uppercase; color:rgba(45,226,255,.5); padding-left:2px; }
+.ap-modelab.am{ color:rgba(255,178,46,.6); }
+.ap-epsel{ position:relative; padding-left:18px; }
+.ap-epsel::before{ content:''; position:absolute; left:0; top:2px; bottom:0; width:1px;
+  background:linear-gradient(180deg, transparent, rgba(255,178,46,.45), transparent); }
+
+/* version segment */
+.ap-seg{ display:flex; gap:7px; }
+.ap-vbtn{ position:relative; cursor:pointer; border:0; background:rgba(45,226,255,.05);
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
+  padding:9px 17px; color:#8fd0e0; font-family:'Chakra Petch',sans-serif; font-weight:700;
+  font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:8px;
+  transition:.16s; box-shadow:inset 0 0 0 1px rgba(45,226,255,.3); white-space:nowrap; border-radius:0; }
+.ap-vbtn .ic{ font-size:13px; opacity:.7; }
+.ap-vbtn:hover{ color:#eafcff; background:rgba(45,226,255,.12); box-shadow:inset 0 0 0 1px rgba(45,226,255,.6), 0 0 14px -4px var(--cyan); }
+.ap-vbtn.on{ color:#02121a; background:linear-gradient(180deg,var(--cyan-hi),var(--cyan));
+  box-shadow:0 0 20px -2px var(--cyan), inset 0 0 0 1px var(--cyan-hi); font-size:13px; font-weight:600; }
+.ap-vbtn.on .ic{ opacity:1; }
+
+.ap-ctrls{ display:flex; align-items:center; gap:14px; justify-self:end; }
+
+/* episode selector — jantarová osa */
+.ap-eps{ display:flex; gap:7px; }
+.ap-ep{ cursor:pointer; border:0; min-width:46px; height:40px; padding:0 6px; display:grid; place-items:center;
+  background:rgba(255,178,46,.06); color:#d6b884; font-family:'Orbitron',sans-serif; font-weight:800; font-size:16px;
+  letter-spacing:.04em; clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+  box-shadow:inset 0 0 0 1px rgba(255,178,46,.3); transition:.15s; border-radius:0; }
+.ap-ep .rom{ line-height:1; }
+.ap-ep:hover{ color:#fff7e6; background:rgba(255,178,46,.13); box-shadow:inset 0 0 0 1px rgba(255,178,46,.6), 0 0 14px -4px var(--amber); }
+.ap-ep.on{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber));
+  box-shadow:0 0 22px -3px var(--amber), inset 0 0 0 1px var(--amber-hi); }
+
+/* transport — celá šířka spodní řady */
+.ap-trans{ display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.ap-tb{ cursor:pointer; border:0; width:34px; height:34px; display:grid; place-items:center;
+  background:rgba(45,226,255,.06); color:#cdeef6;
+  clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
+  box-shadow:inset 0 0 0 1px rgba(45,226,255,.4); transition:.15s; border-radius:0; }
+.ap-tb svg{ width:14px; height:14px; }
+.ap-tb:hover{ color:#fff; background:rgba(45,226,255,.14); box-shadow:inset 0 0 0 1px var(--cyan), 0 0 14px -4px var(--cyan); }
+.ap-play{ cursor:pointer; border:0; width:45px; height:52px; display:grid; place-items:center;
+  background:linear-gradient(180deg,var(--amber-hi),var(--amber)) !important; color:#02121a;
+  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%) !important;
+  box-shadow:0 0 25px rgba(255, 178, 46, 0.4), inset 0 0 0 1px var(--amber-hi) !important;
+  transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.2s ease; border-radius:0; }
+.ap-play svg{ width:22px; height:22px; transition: transform 0.15s ease; }
+.ap-play:hover{ transform:scale(1.08) translateY(-1px); box-shadow:0 0 35px rgba(255, 178, 46, 0.75), inset 0 0 0 1.5px #fff !important; }
+.ap-scrub{ flex:1; min-width:60px; position:relative; height:16px; display:flex; align-items:center; cursor:pointer; }
+.ap-track{ position:absolute; left:0; right:0; top:50%; height:2px; transform:translateY(-50%); background:rgba(45,226,255,.18); }
+.ap-fill{ position:absolute; left:0; top:50%; height:3px; transform:translateY(-50%); width:0;
+  background:linear-gradient(90deg,var(--cyan-deep),var(--cyan),var(--cyan-hi)); box-shadow:0 0 12px var(--cyan); }
+.ap-knob{ position:absolute; top:50%; left:0; width:4px; height:15px; transform:translate(-50%,-50%);
+  background:var(--cyan-hi); box-shadow:0 0 10px var(--cyan-hi),0 0 18px var(--cyan); }
+.ap-time{ font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--cyan-hi);
+  white-space:nowrap; text-shadow:0 0 8px rgba(45,226,255,.5); }
+.ap-time .dim{ color:rgba(45,226,255,.4); text-shadow:none; }
+
+.ap-gal{ cursor:pointer; border:0; width:38px; height:38px; display:grid; place-items:center; padding:0;
+  background:rgba(255,178,46,.08); color:var(--amber-hi);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+  box-shadow:inset 0 0 0 1px rgba(255,178,46,.4); transition:.15s; border-radius:0; }
+.ap-gal svg{ width:18px; height:18px; }
+.ap-gal:hover{ color:#fff7e6; background:rgba(255,178,46,.16); box-shadow:inset 0 0 0 1px var(--amber), 0 0 16px -4px var(--amber); }
+.ap-gal.on{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber)); box-shadow:0 0 22px -3px var(--amber); }
+
+#bottom-slider { display: none !important; }
+
+/* engine toggluje .active — namapuj na vzhled .on z design projektu */
+.ap-vbtn.active{ color:#02121a; background:linear-gradient(180deg,var(--cyan-hi),var(--cyan));
+  box-shadow:0 0 20px -2px var(--cyan), inset 0 0 0 1px var(--cyan-hi); font-size:13px; font-weight:600; }
+.ap-vbtn.active .ic{ opacity:1; }
+.ap-ep.active{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber));
+  box-shadow:0 0 22px -3px var(--amber), inset 0 0 0 1px var(--amber-hi); }
+
+/* Tlačítka ◀ ▶ (posun po větách) — zobrazená i na desktopu */
+.ap-step { display: grid; }
+
+/* MOBIL: slider pod stop/play na celou šířku mezi ◀ ▶, větší posuvník */
+@media (max-width: 768px) {
+  .ap-row2 {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    grid-template-areas:
+      "stop play time gal"
+      "prev scrub scrub next";
+    gap: 12px 8px; align-items: center; width: 100%; max-width: 100%;
+  }
+  .ap-trans { display: contents; }
+  #bar-stop { grid-area: stop; }
+  #bar-play { grid-area: play; }
+  .ap-time  { grid-area: time; justify-self: end; }
+  #btn-nav-gallery { grid-area: gal; }
+  #bar-prev { grid-area: prev; }
+  #bar-scrub { grid-area: scrub; width: auto !important; }
+  #bar-next { grid-area: next; }
+  .ap-step { display: grid !important; width: 46px; height: 46px; }
+  .ap-step svg { width: 18px; height: 18px; }
+  /* větší slider + posuvník pro pohodlné tažení */
+  .ap-scrub { height: 32px; }
+  .ap-track, .ap-fill { height: 5px; }
+  .ap-knob { width: 12px; height: 30px; box-shadow: 0 0 12px var(--cyan-hi), 0 0 22px var(--cyan); }
+}
+
+/* ===================== START SCREEN (version pick) ===================== */
+.intro-selector-overlay {
+  position: fixed; inset: 0; z-index: 1400; display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(45, 226, 255, .1), transparent 55%),
+    radial-gradient(100% 60% at 50% 120%, rgba(255, 178, 46, .08), transparent 60%),
+    rgba(3, 6, 11, .97);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: opacity .5s ease;
+}
+.intro-selector-overlay.hidden { opacity: 0; pointer-events: none; }
+.intro-selector-container { max-width: 1080px; width: 100%; }
+.intro-selector-header { text-align: center; margin-bottom: 38px; }
+.intro-selector-subtitle {
+  font-family: 'Share Tech Mono', monospace !important; font-size: 12px !important; letter-spacing: .28em !important;
+  text-transform: uppercase; color: var(--cyan) !important; text-shadow: 0 0 14px rgba(45, 226, 255, .6);
+}
+.intro-selector-title {
+  font-family: 'Orbitron', sans-serif !important; font-weight: 800 !important;
+  font-size: clamp(30px, 5vw, 56px) !important; letter-spacing: .06em; margin: 12px 0 0 !important;
+  color: #eafcff !important; text-shadow: 0 0 34px rgba(45, 226, 255, .4);
+}
+.intro-selector-description {
+  font-family: 'Chakra Petch', sans-serif !important; color: var(--ap-txt-dim) !important;
+  font-size: 15px !important; letter-spacing: .04em; margin-top: 14px !important;
+}
+.version-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.version-card {
+  position: relative; cursor: pointer; overflow: hidden;
+  background: rgba(45, 226, 255, .04) !important; border: 0 !important;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  box-shadow: inset 0 0 0 1px rgba(45, 226, 255, .28) !important;
+  padding: 30px 24px !important; transition: .18s; text-align: left;
+}
+.version-card:hover {
+  background: rgba(45, 226, 255, .09) !important; transform: translateY(-3px);
+  box-shadow: inset 0 0 0 1px var(--cyan), 0 0 30px -8px var(--cyan) !important;
+}
+.version-card.movie-card { box-shadow: inset 0 0 0 1px rgba(255, 178, 46, .3) !important; background: rgba(255, 178, 46, .05) !important; }
+.version-card.movie-card:hover { box-shadow: inset 0 0 0 1px var(--amber), 0 0 30px -8px var(--amber) !important; background: rgba(255, 178, 46, .1) !important; }
+.card-icon { font-size: 30px; margin-bottom: 12px; }
+.card-title { font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important; letter-spacing: .14em; font-size: 13px !important; }
+.version-card.movie-card .card-title { color: var(--amber-hi) !important; }
+.card-desc { font-family: 'Chakra Petch', sans-serif !important; color: var(--ap-txt-dim) !important; font-size: 13.5px !important; line-height: 1.5; margin: 10px 0 18px !important; }
+.card-btn {
+  font-family: 'Orbitron', sans-serif !important; font-weight: 700; font-size: 11px; letter-spacing: .18em;
+  border: 0 !important; cursor: pointer; padding: 9px 18px !important; color: #02121a !important;
+  background: linear-gradient(180deg, var(--cyan-hi), var(--cyan)) !important;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  box-shadow: 0 0 18px -3px var(--cyan); border-radius: 0 !important;
+}
+.version-card.movie-card .card-btn { background: linear-gradient(180deg, var(--amber-hi), var(--amber)) !important; box-shadow: 0 0 18px -3px var(--amber); }
+
+/* ===================== COUNTDOWN INTRO ===================== */
+.countdown-overlay {
+  position: fixed; inset: 0; z-index: 1500; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #03060b; cursor: pointer; transition: opacity .4s ease;
+}
+.countdown-overlay.hidden { opacity: 0; pointer-events: none; }
+.countdown-overlay .cd-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(100%) contrast(1.08) brightness(.32);
+}
+.countdown-overlay .cd-tint {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 42%, rgba(45, 226, 255, .12), rgba(3, 6, 11, .9) 78%);
+}
+.countdown-overlay .cd-info { position: relative; z-index: 2; text-align: center; margin-bottom: 26px; padding: 0 20px; }
+.countdown-overlay .cd-sub {
+  font-family: 'Share Tech Mono', monospace; font-size: 13px; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--cyan); text-shadow: 0 0 14px rgba(45, 226, 255, .6);
+}
+.countdown-overlay .cd-title {
+  font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: clamp(24px, 4.5vw, 50px);
+  letter-spacing: .04em; margin-top: 10px; color: #eafcff; text-shadow: 0 0 30px rgba(45, 226, 255, .4);
+}
+.countdown-overlay .cd-ring {
+  position: relative; z-index: 2; width: 150px; height: 150px; display: grid; place-items: center;
+  border-radius: 50%; border: 2px solid rgba(45, 226, 255, .35);
+  box-shadow: 0 0 50px -6px rgba(45, 226, 255, .5), inset 0 0 40px -10px rgba(45, 226, 255, .4);
+}
+.countdown-overlay .cd-num {
+  font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 76px; line-height: 1;
+  color: var(--cyan-hi); text-shadow: 0 0 28px rgba(45, 226, 255, .7);
+}
+.countdown-overlay .cd-hint {
+  position: absolute; bottom: 34px; z-index: 2;
+  font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
+  color: rgba(45, 226, 255, .5);
+}
+@media (max-width: 768px) {
+  .version-cards { grid-template-columns: 1fr; gap: 12px; }
+  .version-card { padding: 20px !important; }
+  .countdown-overlay .cd-ring { width: 120px; height: 120px; }
+  .countdown-overlay .cd-num { font-size: 58px; }
+}
+
+/* odsazení obsahu pod fixní lištu */
+.story-container { padding-top: calc(var(--ap-barH) + 30px) !important; }
+
+/* ===================== TEXT ===================== */
+.story-container { max-width: 760px !important; }
+.story-content { background: transparent !important; border: 0 !important; backdrop-filter: none !important; padding: 10px 26px 90px !important; }
+.story-paragraph { font-family: 'Spectral', Georgia, serif !important; font-size: 18.5px !important; line-height: 1.85 !important; color: var(--ap-txt) !important; margin: 0 0 30px !important; }
+.story-paragraph em, .story-quote em { color: var(--cyan-hi); font-style: italic; }
+.dropcap {
+  float: left; font-family: 'Orbitron', sans-serif !important; font-weight: 800 !important; font-size: 74px !important;
+  line-height: .74 !important; color: var(--cyan) !important; padding: 6px 14px 0 0 !important;
+  text-shadow: 0 0 22px rgba(45, 226, 255, .55); -webkit-text-fill-color: var(--cyan);
+}
+.story-quote {
+  font-family: 'Spectral', Georgia, serif !important; font-size: 21px !important; line-height: 1.6 !important;
+  color: #e6eef1 !important; padding: 6px 0 6px 24px !important; border-left: 3px solid var(--cyan) !important;
+  box-shadow: -1px 0 18px -6px var(--cyan); background: transparent !important;
+}
+.section-title { font-family: 'Orbitron', sans-serif !important; color: var(--cyan-hi) !important; letter-spacing: .08em; text-shadow: 0 0 18px rgba(45, 226, 255, .3); }
+.section-num { color: var(--cyan) !important; }
+.section-line { background: linear-gradient(90deg, var(--cyan-dim), transparent) !important; }
+.bullet-title { color: var(--cyan-hi) !important; }
+.bullet-marker { background: var(--cyan) !important; box-shadow: 0 0 10px var(--cyan); }
+.amber-highlight { color: #02121a !important; background: var(--amber); padding: 0 6px; border-radius: 3px; }
+
+/* circular figures */
+.story-figure { margin: 46px 0; text-align: center; }
+.story-img.img-circle, .story-img.img-circle-amber {
+  width: 320px; height: 320px; margin: 0 auto; border-radius: 50%; object-fit: cover;
+  filter: grayscale(.15) contrast(1.05);
+  box-shadow: 0 0 0 1px var(--cyan-dim), 0 0 40px -8px rgba(45, 226, 255, .5), inset 0 0 30px -10px rgba(0, 0, 0, .8);
+}
+.story-img.img-circle-amber { box-shadow: 0 0 0 1px rgba(255, 178, 46, .5), 0 0 40px -8px rgba(255, 178, 46, .5); }
+.story-figcaption {
+  margin-top: 18px; font-family: 'Share Tech Mono', monospace !important; font-size: 11px !important;
+  letter-spacing: .34em !important; text-transform: uppercase; color: var(--cyan-dim) !important;
+}
+
+/* active paragraph (engine highlight) */
+.story-paragraph.active, .story-quote.active { color: #eafcff !important; }
+.story-paragraph .word.read { color: var(--cyan-hi); }
+
+/* ===================== CHAPTER HERO HEADER ===================== */
+/* Visible before first audio-synced paragraph; dims when story begins */
+.story-chapter-hero {
+  position: relative;
+  padding: 60px 0 52px;
+  margin-bottom: 20px;
+  text-align: center;
+  opacity: 1;
+  transition: opacity 1.2s ease;
+  /* Subtle background glow */
+  background:
+    radial-gradient(80% 60% at 50% 30%, rgba(45, 226, 255, .06), transparent 80%),
+    radial-gradient(60% 40% at 50% 100%, rgba(255, 178, 46, .04), transparent 70%);
+}
+/* Once a paragraph becomes active, dim the hero */
+.story-chapter-hero.dimmed { opacity: 0.22; pointer-events: none; }
+/* Push hero below the fixed bar so it's fully visible */
+.story-chapter-hero { padding-top: calc(var(--ap-barH) + 40px); }
+@media (max-width: 600px) { .story-chapter-hero { padding-top: calc(var(--ap-barH) + 24px); } }
+
+.ch-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--cyan-dim);
+  margin-bottom: 18px;
+}
+.ch-rom {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  font-size: clamp(12px, 2vw, 15px);
+  letter-spacing: .5em;
+  text-transform: uppercase;
+  color: var(--amber);
+  text-shadow: 0 0 18px rgba(255, 178, 46, .55);
+  margin-bottom: 10px;
+}
+.ch-title {
+  font-family: 'Orbitron', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: clamp(34px, 7vw, 68px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: .04em;
+  color: #eafcff !important;
+  text-shadow: 0 0 40px rgba(45, 226, 255, .35), 0 0 80px rgba(45, 226, 255, .15);
+  margin: 0 0 8px !important;
+}
+.ch-title-em {
+  display: block;
+  color: var(--cyan-hi);
+  text-shadow: 0 0 30px rgba(45, 226, 255, .6);
+  font-size: .8em;
+  letter-spacing: .08em;
+}
+.ch-meta {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ap-txt-dim);
+  margin-top: 20px;
+}
+.ch-line {
+  width: 100%;
+  height: 1px;
+  margin-top: 36px;
+  background: linear-gradient(90deg, transparent, var(--cyan-dim) 30%, var(--amber-hi) 50%, var(--cyan-dim) 70%, transparent);
+  box-shadow: 0 0 12px rgba(45, 226, 255, .2);
+}
+/* Mobile tweaks */
+@media (max-width: 600px) {
+  .story-chapter-hero { padding: 40px 0 36px; }
+  .ch-title { font-size: clamp(28px, 9vw, 50px) !important; }
+}
+
+/* ===================== COMIC CHAPTER HERO ===================== */
+/* Title card at the start of each comic strip (horizontal scroll) */
+.comic-chapter-hero {
+  flex: 0 0 auto;
+  width: 100vw;                  /* fills one viewport width in horizontal strip */
+  min-height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  background:
+    radial-gradient(80% 60% at 50% 40%, rgba(45,226,255,.08), transparent 80%),
+    radial-gradient(60% 50% at 50% 90%, rgba(255,178,46,.06), transparent 70%),
+    var(--ap-bg);
+  box-shadow: inset -1px 0 0 rgba(45,226,255,.2);
+  position: relative;
+}
+.comic-chapter-hero::after {
+  content: ''; position: absolute; right: 0; top: 15%; bottom: 15%; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--cyan-dim) 40%, var(--amber-dim, rgba(255,178,46,.3)) 60%, transparent);
+}
+/* Vertical comic layout (mobile): chapter card fills viewport height */
+@media (max-width: 768px) {
+  .comic-chapter-hero {
+    width: 100%; min-height: 70vh; padding: 40px 24px;
+    box-shadow: inset 0 -1px 0 rgba(45,226,255,.2);
+  }
+  .comic-chapter-hero::after { display: none; }
+}
+
+/* ===================== FILM POSTER HERO ===================== */
+/* Replaces the small preview-poster-content with the full cinematic hero */
+.ch-poster-hero {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important; flex-direction: column !important;
+  align-items: center !important; justify-content: center !important;
+  padding: 40px 32px !important;
+  text-align: center;
+  background: none !important;
+  z-index: 3;
+}
+.fullscreen-overlay .ch-poster-hero { display: none !important; }
+/* Během intra (aktivní poster) ukaž HLAVNÍ titulek jako vrstvu PŘES teaser video.
+   Po intru se celý #fullscreen-poster deaktivuje (skryje), takže hero zmizí sám. */
+.fullscreen-overlay #fullscreen-poster.active .ch-poster-hero {
+  display: flex !important;
+  justify-content: flex-start !important;  /* titulek do HORNÍ poloviny intra */
+  padding-top: 11vh !important;
+}
+/* Spodní kinotitulek během intra schovej — hlavní titulek je nahoře přes video */
+.fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-subtitles { display: none !important; }
+.ch-poster-hero .ch-title {
+  font-size: clamp(28px, 5.5vw, 62px) !important;
+}
+.ch-poster-hero .ch-rom {
+  font-size: clamp(11px, 1.6vw, 14px);
+}
+.poster-ch-title { pointer-events: none; }
+/* Ensure grayscale is removed from film intro teaser video */
+.fullscreen-overlay .preview-poster-img {
+  filter: none !important;
+}
+
+/* ===================== COMIC ===================== */
+/* Potlačené (neaktivní) panely: tlumený rám bez záře, zhasnutá grafika.
+   Jen aktivní frame svítí barvou a cyan glow. */
+.comic-panel { box-shadow: 0 0 0 1px rgba(45, 226, 255, .22), inset 0 0 60px -20px #000 !important; border: 0 !important; border-radius: 12px !important; transition: box-shadow .35s ease !important; }
+.comic-panel.active { box-shadow: 0 0 0 2px var(--cyan-hi), 0 0 34px -2px var(--cyan) !important; }
+.comic-panel-img { filter: grayscale(1) brightness(.42) contrast(.95) !important; transition: filter .35s ease !important; }
+.comic-panel.active .comic-panel-img { filter: grayscale(0) contrast(1.12) brightness(1.06) saturate(1.1) !important; }
+.comic-panel-number, .comic-caption { font-family: 'Share Tech Mono', monospace; }
+
+/* All panels are displayed as squares in comic fullscreen mode */
+body.comic-fs .comic-panel {
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Base style for the aspect ratio mask overlay */
+body.comic-fs .comic-panel[data-aspect]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: background 0.3s ease;
+}
+
+/* 16:9 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="16-9"]::after {
+  background: linear-gradient(to bottom, 
+    rgba(0,0,0,0.5) 0% 21.875%, 
+    transparent 21.875% 78.125%, 
+    rgba(0,0,0,0.5) 78.125% 100%
+  ) !important;
+}
+
+/* 4:3 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="4-3"]::after {
+  background: linear-gradient(to bottom, 
+    rgba(0,0,0,0.5) 0% 12.5%, 
+    transparent 12.5% 87.5%, 
+    rgba(0,0,0,0.5) 87.5% 100%
+  ) !important;
+}
+
+/* 3:4 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="3-4"]::after {
+  background: linear-gradient(to right, 
+    rgba(0,0,0,0.5) 0% 12.5%, 
+    transparent 12.5% 87.5%, 
+    rgba(0,0,0,0.5) 87.5% 100%
+  ) !important;
+}
+
+/* 9:16 aspect ratio mask */
+body.comic-fs .comic-panel[data-aspect="9-16"]::after {
+  background: linear-gradient(to right, 
+    rgba(0,0,0,0.5) 0% 21.875%, 
+    transparent 21.875% 78.125%, 
+    rgba(0,0,0,0.5) 78.125% 100%
+  ) !important;
+}
+
+/* 1:1 aspect ratio mask (explicit) */
+body.comic-fs .comic-panel[data-aspect="1-1"]::after {
+  background: transparent !important;
+}
+.comic-caption { border-left: 3px solid var(--cyan) !important; }
+.comic-caption p { font-family: 'Chakra Petch', sans-serif !important; }
+.speech-bubble { background: #f4f7f8 !important; border: 0 !important; box-shadow: 0 4px 16px rgba(0, 0, 0, .5), 0 0 0 2px rgba(10, 15, 20, .9) !important; }
+.speech-text { font-family: 'Chakra Petch', sans-serif !important; text-transform: uppercase; color: #0a0f14 !important; }
+.comic-title-card { border-color: var(--cyan) !important; }
+.comic-title-card .ctc-title { font-family: 'Orbitron', sans-serif !important; }
+
+/* Desktop comic text — 2x menší sizing */
+@media (min-width: 769px) {
+  body.comic-fs .speech-bubble {
+    padding: 7px 11px !important;
+    border-radius: 9px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .5), 0 0 0 1px rgba(10, 15, 20, .9) !important;
+  }
+  body.comic-fs .speech-text {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.3px !important;
+  }
+  body.comic-fs .comic-panel.short-bubble .speech-text {
+    font-size: 16px !important;
+    line-height: 1.22 !important;
+  }
+  body.comic-fs .comic-panel.long-bubble .speech-text {
+    font-size: 11px !important;
+  }
+  body.comic-fs .comic-panel.xlong-bubble .speech-text {
+    font-size: 9px !important;
+  }
+  body.comic-fs .speech-pointer {
+    bottom: -4px !important;
+    left: 10px !important;
+    border-left-width: 4px !important;
+    border-right-width: 4px !important;
+    border-top-width: 4px !important;
+    border-top-color: rgba(10, 15, 20, .9) !important;
+  }
+  body.comic-fs .speech-pointer::after {
+    top: -5px !important;
+    left: -3px !important;
+    border-left-width: 3px !important;
+    border-right-width: 3px !important;
+    border-top-width: 3px !important;
+    border-top-color: #f4f7f8 !important;
+  }
+  body.comic-fs .comic-panel:nth-child(even) .speech-pointer {
+    left: auto !important;
+    right: 10px !important;
+  }
+}
+
+/* ===================== FILM ===================== */
+.fullscreen-overlay { background-color: #000 !important; padding: 0 !important; }
+.fullscreen-overlay { top: var(--ap-barH) !important; }
+.fullscreen-screen {
+  max-width: min(100%, 900px) !important; width: min(100%, 900px) !important; margin: 0 auto !important;
+  /* Reserve 110px at bottom for subtitles + shot-id — screen ends above them */
+  height: calc(100vh - var(--ap-barH) - 110px) !important;
+  aspect-ratio: auto !important; max-height: none !important; border: 0 !important; border-radius: 0 !important;
+  box-shadow: none !important; background: #000 !important;
+  /* Extend bottom gradient into the subtitle zone so text stays legible */
+  overflow: visible !important;
+}
+/* Dark cinematic gradient at the bottom of the video frame (subtitle legibility) */
+/* Letterbox vigneta na VŠECH 4 stranách (vlevo+nahoře přes ::before, vpravo+dole přes ::after).
+   Každý pseudo-prvek kryje celé video a má dvě gradientové vrstvy fadeující z černé do průhledna. */
+.fullscreen-screen::before, .fullscreen-screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+}
+.fullscreen-screen::before {
+  background:
+    linear-gradient(90deg, #000, transparent 14%),   /* vlevo */
+    linear-gradient(180deg, #000, transparent 14%);  /* nahoře */
+}
+.fullscreen-screen::after {
+  background:
+    linear-gradient(270deg, #000, transparent 14%),  /* vpravo */
+    linear-gradient(0deg, #000, transparent 14%);    /* dole */
+}
+/* Bottom subtitle fade — separate pseudo, injected via a wrapper div approach:
+   We use a box-shadow trick on fullscreen-overlay to darken the bottom zone */
+.fullscreen-overlay::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 160px; z-index: 4; pointer-events: none;
+  background: linear-gradient(0deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.55) 55%, transparent 100%);
+}
+/* comic fullscreen sits below the bar too */
+body.comic-fs .comic-content { top: var(--ap-barH) !important; }
+body.comic-fs .comic-grid { height: 100% !important; }
+/* Film: video VŽDY plná barva, nikdy potlačené (ani při loopu). */
+.fs-video { object-fit: contain !important; filter: none !important; }
+.fs-video.active { opacity: 1 !important; }
+/* film grain */
+.preview-scanlines {
+  opacity: .28 !important;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 3px) !important;
+}
+/* subtitle = velký kinotitulek bez boxu (nový design ap-sub) */
+/* Klasické filmové titulky: BÍLÉ písmo BEZ pozadí (jen stín pro čitelnost) */
+.fullscreen-subtitles {
+    position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
+    bottom: 84px !important; z-index: 20 !important; width: 92% !important; max-width: min(880px, 92vw) !important;
+    margin: 0 !important; min-height: 0 !important;
+    background: none !important; color: #ffffff !important;
+    padding: 8px 12px !important; border-radius: 0 !important;
+    border: 0 !important; box-shadow: none !important;
+    font-family: 'Bangers', 'Comic Neue', 'Chakra Petch', sans-serif !important; font-weight: 700 !important;
+    font-size: 31px !important; line-height: 1.22 !important; letter-spacing: 0.6px !important; text-align: center !important; text-transform: uppercase !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.9), 0 1px 2px #000 !important; text-wrap: balance;
+  }
+.fullscreen-subtitles .cin-word { opacity: .5; color: #ffffff; }
+.fullscreen-subtitles .cin-word.read { opacity: 1; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.9), 0 1px 2px #000; }
+/* Ve FILMU schovej bledě modrý titulek z náhledového monitoru (preview) — duplicita */
+body.mode-movie #preview-subtitles { display: none !important; }
+.fullscreen-shot-id {
+  position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
+  bottom: 34px !important; z-index: 10 !important; margin: 0 !important;
+  font-family: 'Share Tech Mono', monospace !important; font-size: 11px !important;
+  letter-spacing: .28em !important; color: rgba(45, 226, 255, .6) !important;
+}
+/* top HUD strip */
+.fullscreen-overlay::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 52px; z-index: 5; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .7), transparent);
+}
+/* SCÉNA x/N HUD (nový design ap-filmtop — title vlevo, scéna vpravo) */
+.ap-filmtop {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 6; pointer-events: none;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 150px 14px 26px; /* pravý padding kvůli zavíracímu tlačítku */
+  font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: .22em;
+  text-transform: uppercase; color: rgba(255, 255, 255, .5);
+}
+.ap-filmhud { white-space: nowrap; color: var(--cyan-hi); letter-spacing: .18em; text-shadow: 0 0 10px rgba(45, 226, 255, .5); }
+.film-hud-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.fullscreen-close-btn {
+  font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important;
+  border: 1px solid rgba(45, 226, 255, .3) !important; background: rgba(45, 226, 255, .06) !important; z-index: 11;
+}
+
+/* FILM: titulky zůstávají klasicky dole PŘES video, ale vždy NAD ním
+   (dřív se schovávaly pod video — chyba vrstvení). Stačí zvednout z-index. */
+.fullscreen-screen { z-index: 1 !important; }
+.fullscreen-subtitles, .fullscreen-shot-id, .ap-filmtop { z-index: 20 !important; }
+/* Dokud běží úvodní poster, neukazuj modrý titulek/kód/HUD (jinak text prosvítá přes intro) */
+.fullscreen-overlay:has(#fullscreen-poster.active) #fullscreen-shot-id,
+.fullscreen-overlay:has(#fullscreen-poster.active) .ap-filmtop { display: none !important; }
+
+/* ===================== AUDIO · PIXELOVÁ LED MATRIX (canvas plástev) ===================== */
+.ap-audio2{ position:fixed; left:0; right:0; top:var(--ap-barH); bottom:0; z-index:1000; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:30px;
+  background:radial-gradient(120% 90% at 50% 40%, rgba(45,226,255,.08), transparent 62%),
+    radial-gradient(90% 70% at 50% 120%, rgba(255,178,46,.10), transparent 60%), #02050a; }
+.ap-audio2::before{ content:''; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.5;
+  background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 1px, transparent 1px 3px); }
+
+.ap-matrixwrap{ position:absolute; top:0; bottom:0; left:50%; transform:translateX(-50%);
+  width:min(100%, 900px); z-index:2; margin:0; padding:0; display:block; }
+.ap-matrix{ position:absolute; inset:0; width:100%; height:100%; display:block;
+  image-rendering:pixelated; touch-action:none; user-select:none; -webkit-user-select:none; }
+.ap-mcorner{ display:none; }
+
+/* GLOBÁLNÍ velké hexagon play/pauza tlačítko přes hlavní content (audio/film/komiks/text).
+   Auto-hide jako u video přehrávače:
+   - pauza (i úvod) → PLAY trvale vidět,
+   - přehrávání → skryté; objeví se jen při pohybu/dotyku (body.ui-active) a ukáže PAUZU,
+   - klik na konci stopy = přehraje znovu od začátku. */
+/* TEXTOVÉ tlačítko (žádný hexagon) — stavy řídí JS (updateGppText) */
+.gpp{ position:fixed; left:50%; top:calc(50% + var(--ap-barH) / 2); transform:translate(-50%,-50%);
+  z-index:1150; cursor:pointer; border:0; background:none; color:var(--amber-hi);
+  display:flex; flex-direction:column; align-items:center; gap:7px; padding:18px 34px; text-align:center;
+  transition:opacity .3s ease, transform .18s cubic-bezier(.165,.84,.44,1);
+  opacity:0; pointer-events:none; }
+.gpp-main{ font-family:'Orbitron',sans-serif; font-weight:800;
+  font-size:clamp(22px, 4.4vw, 40px); letter-spacing:.12em; text-transform:uppercase; line-height:1;
+  color:var(--amber-hi); text-shadow:0 2px 12px rgba(0,0,0,.92), 0 0 28px rgba(255,178,46,.7); }
+.gpp-sub{ font-family:'Share Tech Mono',monospace; font-size:clamp(11px, 1.5vw, 14px);
+  letter-spacing:.24em; text-transform:uppercase; color:var(--amber);
+  text-shadow:0 2px 8px rgba(0,0,0,.92), 0 0 12px rgba(255,178,46,.5); }
+.gpp-sub:empty{ display:none; }
+.gpp:hover{ transform:translate(-50%,-50%) scale(1.05); }
+/* viditelnost: při pauze trvale, při přehrávání jen na pohyb/dotyk (ui-active) */
+body:not(.is-playing) .gpp { opacity:1; pointer-events:auto; }
+body.is-playing .gpp { opacity:0; pointer-events:none; }
+body.is-playing.ui-active .gpp { opacity:1; pointer-events:auto; }
+/* skryj v galerii */
+body.gallery-open .gpp{ display:none; }
+
+/* 3D karusel slov v audio rezimu — slova prileti zepredu a odplují dozadu (mizí). */
+.ap-words { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  z-index:6; width:min(92%,640px); height:240px; pointer-events:none;
+  perspective:640px; transform-style:preserve-3d; }
+.ap-word { position:absolute; left:50%; top:50%; white-space:nowrap;
+  font-family:"Orbitron",sans-serif; font-weight:800; font-size:clamp(20px,5.2vw,40px);
+  letter-spacing:.02em; color:#eafcff;
+  text-shadow:0 0 26px rgba(45,226,255,.7), 0 2px 8px rgba(0,0,0,.6);
+  will-change:transform,opacity;
+  animation:ap-wordfly 2.8s cubic-bezier(.2,.6,.3,1) forwards; }
+@keyframes ap-wordfly {
+  0%   { opacity:0; transform:translate(-50%,-50%) translateZ(-440px) scale(.32); }
+  18%  { opacity:1; }
+  72%  { opacity:1; }
+  100% { opacity:0; transform:translate(-50%,-50%) translateZ(380px) scale(1.8); }
+}
+
+.ap-audio2 .ap-audioinfo{ position:absolute; left:50%; transform:translateX(-50%); width:min(100%, 900px); top:5%; z-index:5; text-align:center; pointer-events:none; padding:0 20px; }
+.ap-akick{ font-family:'Share Tech Mono',monospace; font-size:12px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--cyan); text-shadow:0 0 14px rgba(45,226,255,.6); }
+.ap-atitle{ font-family:'Orbitron',sans-serif; font-weight:800; font-size:clamp(26px,4.4vw,48px); line-height:.98;
+  letter-spacing:.02em; margin:12px 0 0; color:#eafcff; text-shadow:0 0 34px rgba(45,226,255,.4); }
+.ap-atitle .am{ color:var(--amber-hi); text-shadow:0 0 30px rgba(255,178,46,.5); }
+.ap-anarr{ display:inline-block; margin-top:12px; font-family:'Share Tech Mono',monospace; font-size:12px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--txt-dim); }
+
+.ap-audio2 .ap-actrls{ position:absolute; left:50%; transform:translateX(-50%); bottom:26px; z-index:6;
+  display:flex; flex-direction:column; align-items:center; gap:13px; }
+.ap-audio2 .ap-astatus{ position:static; transform:none;
+  display:flex; align-items:center; gap:10px; font-family:'Share Tech Mono',monospace; font-size:11px;
+  letter-spacing:.2em; text-transform:uppercase; color:rgba(45,226,255,.6); }
+.ap-micbtn{ display:flex; align-items:center; gap:10px; cursor:pointer; border:0;
+  background:rgba(255,178,46,.08); color:var(--amber-hi); padding:10px 18px;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
+  box-shadow:inset 0 0 0 1px rgba(255,178,46,.4); transition:.16s;
+  font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+.ap-micbtn:hover{ color:#fff7e6; background:rgba(255,178,46,.16); box-shadow:inset 0 0 0 1px var(--amber), 0 0 18px -4px var(--amber); }
+.ap-micbtn.on{ color:#1a1102; background:linear-gradient(180deg,var(--amber-hi),var(--amber)); box-shadow:0 0 22px -3px var(--amber); }
+.ap-micbtn.on .ap-micdot{ background:#1a1102; animation:ap-blink 1s infinite; }
+/* hint dole nad statusem — nikdy nekoliduje s (i 2řádkovým) titulem */
+.ap-draghint{ position:absolute; left:50%; top:auto; bottom:58px; transform:translateX(-50%); z-index:6;
+  font-family:'Share Tech Mono',monospace; font-size:9.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:rgba(45,226,255,.4); pointer-events:none; white-space:nowrap; }
+.ap-aled{ width:9px; height:9px; transform:rotate(45deg); background:#3a4a52; }
+.ap-aled.on{ background:var(--cyan); box-shadow:0 0 12px var(--cyan); animation:ap-blink 1.3s infinite; }
+@keyframes ap-blink{ 0%,100%{ opacity:1 } 50%{ opacity:.3 } }
+
+/* ===================== GALLERY (samostatný view) ===================== */
+.gallery-section {
+  position: fixed; left: 0; right: 0; top: var(--ap-barH); bottom: 0; z-index: 1150;
+  display: none; overflow-y: auto;
+  padding: 40px 26px 90px !important; margin: 0 !important; max-width: none !important;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(45, 226, 255, .08), transparent 55%),
+    radial-gradient(100% 60% at 50% 120%, rgba(255, 178, 46, .06), transparent 60%),
+    var(--ap-bg);
+}
+body.gallery-open .gallery-section { display: block; }
+.gallery-header {
+  max-width: 1180px; margin: 0 auto 26px; position: relative;
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 24px;
+}
+.gallery-kick { font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--amber); flex-basis: 100%; }
+.gallery-grid { max-width: 1180px; margin: 0 auto !important; }
+.gallery-close-btn {
+  margin-left: auto; cursor: pointer; border: 0;
+  font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--amber-hi); background: rgba(255, 178, 46, .08); padding: 9px 14px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 178, 46, .4); transition: .15s;
+}
+.gallery-close-btn:hover { color: #fff7e6; background: rgba(255, 178, 46, .16); box-shadow: inset 0 0 0 1px var(--amber), 0 0 16px -4px var(--amber); }
+.gallery-title { font-family: 'Orbitron', sans-serif !important; font-weight: 800; font-size: 34px !important; letter-spacing: .06em; margin: 0 !important; color: #eafcff !important; text-shadow: 0 0 26px rgba(45, 226, 255, .35); }
+.gallery-filter-btn {
+  font-family: 'Share Tech Mono', monospace !important; text-transform: uppercase; letter-spacing: .1em;
+  border: 0 !important; background: rgba(45, 226, 255, .05) !important; color: #9ad0e0 !important;
+  clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px);
+  box-shadow: inset 0 0 0 1px rgba(45, 226, 255, .28) !important; border-radius: 0 !important;
+}
+.gallery-filter-btn.active { color: #02121a !important; background: var(--cyan) !important; box-shadow: 0 0 14px -3px var(--cyan) !important; }
+.gallery-card { border-radius: 10px !important; box-shadow: 0 0 0 1px var(--ap-line) !important; }
+.gallery-card:hover { box-shadow: 0 0 0 1px var(--cyan), 0 0 24px -6px rgba(45, 226, 255, .6) !important; }
+.gallery-card-id { font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important; }
+.gallery-card-label { font-family: 'Share Tech Mono', monospace !important; color: #dff6fb !important; }
+
+/* ===================== FOOTER ===================== */
+.footer { font-family: 'Share Tech Mono', monospace !important; color: var(--ap-txt-dim) !important; border-top: 1px solid var(--ap-line); }
+body.comic-fs .footer { display: none !important; }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 1040px) {
+  :root { --ap-barH: 132px; }
+  /* Lišta responzivně: segment verzí přes celou šířku, tlačítka procentuálně (flex:1) */
+  .ap-bar { gap: 9px; padding: 9px 12px; }
+  .ap-row1 { flex-wrap: wrap; align-items: stretch; gap: 10px; }
+  .ap-brand { display: none; }
+  .ap-modes { width: 100%; align-items: stretch; gap: 12px; }
+  .ap-segwrap { flex: 1; min-width: 0; }
+  .ap-seg { width: 100%; }
+  .ap-seg .ap-vbtn { flex: 1; min-width: 0; justify-content: center; padding: 11px 5px; }
+  .ap-epsel { padding-left: 12px; }
+  .ap-ep { min-width: 42px; height: 42px; }
+  .ap-tb { width: 40px; height: 40px; }
+  .story-container { padding-top: calc(var(--ap-barH) + 16px) !important; }
+  .story-content { padding: 10px 18px 72px !important; }
+  .story-img.img-circle, .story-img.img-circle-amber { width: min(78vw, 300px); height: min(78vw, 300px); }
+  /* Mobile film: screen fills most of overlay so subtitles land INSIDE the video frame */
+  .fullscreen-screen {
+    height: calc(100% - 80px) !important;
+    max-height: calc(100% - 80px) !important;
+  }
+  /* Subtitles: smaller font, tucked just above the very bottom of the video */
+  .fullscreen-subtitles {
+    width: 90% !important;
+    max-width: 90% !important;
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+    bottom: 36px !important;
+    padding: 0 8px !important;
+  }
+  .fullscreen-shot-id { bottom: 14px !important; font-size: 9px !important; }
+  /* HUD strip: tighter padding so SCÉNA X / Y fits on one line */
+  .ap-filmtop { padding: 10px 80px 10px 14px !important; font-size: 10px !important; }
+}
+@media (max-width: 430px) {
+  .ap-seg .ap-vbtn { font-size: 11px; letter-spacing: .02em; padding: 11px 3px; gap: 4px; }
+  .ap-seg .ap-vbtn .ic { display: none; }
+  .ap-ep { min-width: 36px; height: 40px; font-size: 14px; }
+  .ap-time { font-size: 10px; }
+  .story-img.img-circle, .story-img.img-circle-amber { width: 82vw; height: 82vw; }
+}
+
+/* ===== Žádný prázdný vertikální scroll mimo TEXT režim =====
+   Film / Audio / Komiks jsou celoobrazovkové overlaye — obsah v toku za nimi
+   (story-container, footer) jinak tvořil prázdné místo „kam není kam skrolovat".
+   Jen TEXT režim smí scrollovat (čtení). */
+body.mode-movie,
+body.mode-audio,
+body.comic-fs {
+  overflow: hidden !important;
+}
+/* pro jistotu i na html, aby nevznikl scrollbar na kořeni */
+html:has(body.mode-movie),
+html:has(body.mode-audio),
+html:has(body.comic-fs) {
+  overflow: hidden !important;
+}
