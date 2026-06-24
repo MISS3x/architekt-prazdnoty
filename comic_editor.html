@@ -829,6 +829,9 @@
             📤 Pošli do fronty (Kling)
           </button>
           <div id="kling-queue-status" style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #2de2ff; text-align: center; min-height: 14px;"></div>
+          <button class="btn btn-secondary" onclick="copyKlingCommand()" style="width: 100%; margin-top: 6px; font-size: 12px;" title="Zkopíruje příkaz pro Claude Code do schránky">
+            📋 Kopírovat příkaz „zpracuj Kling frontu"
+          </button>
         </div>
 
         <!-- Section: Přejmenování souborů -->
@@ -1416,6 +1419,22 @@
       updateKlingPreview();
     }
     function insertKlingScene(phrase) { insertKlingPhrase(phrase); }
+
+    // Zkopíruje příkaz pro Claude Code do schránky.
+    async function copyKlingCommand() {
+      const cmd = 'zpracuj Kling frontu';
+      try {
+        await navigator.clipboard.writeText(cmd);
+        showToast('Zkopírováno: „' + cmd + '" — vlož do Claude Code', true);
+      } catch (e) {
+        // fallback pro nezabezpečený kontext
+        const ta = document.createElement('textarea');
+        ta.value = cmd; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showToast('Zkopírováno: „' + cmd + '"', true); }
+        catch (e2) { showToast('Nepodařilo se zkopírovat', false); }
+        document.body.removeChild(ta);
+      }
+    }
     let klingActiveField = 'action';   // kam vkládat @-reference (action | style)
 
     // Spojí "děj a kamera" + "popis stylu" do jednoho promptu (děj první, pak styl)
