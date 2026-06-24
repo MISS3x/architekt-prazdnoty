@@ -500,10 +500,10 @@
       <div class="subtitle">IMAGE REVIEW & REGENERATION DASHBOARD</div>
     </div>
     <div class="filter-bar">
-      <button class="btn-filter active" onclick="filterParts('all')">Všechny díly</button>
-      <button class="btn-filter" onclick="filterParts('01')">Díl I</button>
-      <button class="btn-filter" onclick="filterParts('02')">Díl II</button>
-      <button class="btn-filter" onclick="filterParts('03')">Díl III</button>
+      <button class="btn-filter active" data-filter="all" onclick="filterParts('all')">Všechny díly</button>
+      <button class="btn-filter" data-filter="01" onclick="filterParts('01')">Díl I</button>
+      <button class="btn-filter" data-filter="02" onclick="filterParts('02')">Díl II</button>
+      <button class="btn-filter" data-filter="03" onclick="filterParts('03')">Díl III</button>
     </div>
   </header>
 
@@ -894,19 +894,27 @@
     let cropper = null;
     let isCropMode = false;
 
+    // Aktuální filtr dílu — zachová se i po reloadu (po uložení framu nepřeskočí na Díl I).
+    let currentFilter = 'all';
+
     // Load initial panels
     async function loadPanels() {
       try {
         const response = await fetch('http://localhost:3000/api/panels');
         if (!response.ok) throw new Error('Failed to fetch panels');
         panels = await response.json();
-        renderPanelList();
+        renderPanelList();           // použije currentFilter
+        // zůstaň u aktuálního panelu — odskroluj k němu
+        requestAnimationFrame(() => {
+          const active = document.querySelector('#panel-list .panel-card.active');
+          if (active) active.scrollIntoView({ block: 'nearest' });
+        });
       } catch (err) {
         showToast('Chyba při načítání panelů: ' + err.message, false);
       }
     }
 
-    function renderPanelList(filterPart = 'all') {
+    function renderPanelList(filterPart = currentFilter) {
       const container = document.getElementById('panel-list');
       container.innerHTML = '';
       
@@ -933,8 +941,9 @@
     }
 
     function filterParts(part) {
-      document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      currentFilter = part;
+      document.querySelectorAll('.filter-bar .btn-filter').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.filter === part));
       renderPanelList(part);
     }
 
