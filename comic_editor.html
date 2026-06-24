@@ -1343,6 +1343,31 @@
       return [action, style].filter(Boolean).join('\n');
     }
 
+    // ELEMENTY pro Omni 3.0: @token -> referenční obrázek. @Image = aktuální frame.
+    const KLING_CHAR_ELEMENTS = {
+      '@Mia': 'avatar/mia/mia.png',
+      '@Krtek': 'avatar/krtek/krtek.png',
+      '@Ruda': 'avatar/ruda/ruda.png'
+    };
+    // Vrátí elementy (reference images) v pořadí, bez duplicit.
+    // Frame (@Image) je VŽDY první (image_1) — jinak Omni generuje náhodné postavy.
+    // Postavy se přidají podle @Mia/@Krtek/@Ruda v promptu.
+    function klingDetectRefs() {
+      const text = klingComposedPrompt();
+      const refs = [];
+      const seen = new Set();
+      if (currentPanel) { refs.push({ token: '@Image', image: currentPanel.imgSrc }); seen.add('@Image'); }
+      const re = /@(Mia|Krtek|Ruda)\b/g;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        const tok = '@' + m[1];
+        if (seen.has(tok)) continue;
+        seen.add(tok);
+        if (KLING_CHAR_ELEMENTS[tok]) refs.push({ token: tok, image: KLING_CHAR_ELEMENTS[tok] });
+      }
+      return refs;
+    }
+
     function setKlingMode(mode) {
       klingMode = (mode === 'image') ? 'image' : 'video';
       document.getElementById('kling-mode-video').classList.toggle('active', klingMode === 'video');
@@ -1389,9 +1414,14 @@
       const reso = document.getElementById('kling-resolution').value;
       const cnt = document.getElementById('kling-count').value;
       const model = klingMode === 'image' ? 'kling-image-v3_0_omni' : 'kling-video-v3_0_omni';
-      el.textContent = klingMode === 'image'
-        ? `${currentPanel.filename}  →  Kling IMAGE (${model})  ·  ${aspect} · ${reso} · ${cnt}×\n${prompt}`
-        : `${currentPanel.filename}  →  Kling VIDEO (${model})  ·  ${aspect} · ${dur}s · ${reso} · ${cnt}×\n${prompt}`;
+      const refs = klingDetectRefs();
+      const hasChar = refs.some(r => r.token !== '@Image');
+      const elems = 'ELEMENTY: ' + refs.map((r, i) => `图片${i + 1}=${r.token}`).join(', ')
+        + (hasChar ? '' : '   ⚠ jen frame — přidej @Mia/@Krtek/@Ruda, ať Omni nevyrobí náhodnou postavu');
+      const head = klingMode === 'image'
+        ? `${currentPanel.filename}  →  Kling IMAGE (${model})  ·  ${aspect} · ${reso} · ${cnt}×`
+        : `${currentPanel.filename}  →  Kling VIDEO (${model})  ·  ${aspect} · ${dur}s · ${reso} · ${cnt}×`;
+      el.textContent = `${head}\n${elems}\n${prompt}`;
     }
 
     async function sendToKlingQueue() {
@@ -1407,7 +1437,8 @@
         aspect: document.getElementById('kling-aspect').value,
         duration: document.getElementById('kling-duration').value,
         resolution: document.getElementById('kling-resolution').value,
-        imageCount: document.getElementById('kling-count').value
+        imageCount: document.getElementById('kling-count').value,
+        refs: klingDetectRefs()
       };
       btn.disabled = true;
       status.style.color = '#2de2ff';

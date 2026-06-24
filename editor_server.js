@@ -774,6 +774,9 @@ app.post('/api/queue-kling', (req, res) => {
       duration: String(b.duration || '5'),
       resolution: b.resolution || '1080p',
       imageCount: String(b.imageCount || '1'),
+      // ELEMENTY (reference images) pro Omni 3.0: [{token:'@Image', image:'...'}].
+      // Agent je nahraje jako image_1..N a v promptu @token přepíše na 图片N.
+      refs: Array.isArray(b.refs) ? b.refs : [],
       status: 'pending',
       createdAt: new Date().toISOString()
     };
