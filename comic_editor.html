@@ -1449,17 +1449,22 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await r.json();
+        const txt = await r.text();
+        let data = {};
+        try { data = txt ? JSON.parse(txt) : {}; } catch (e) { data = {}; }
         if (r.ok && data.success) {
           status.style.color = '#3ee37a';
           status.textContent = `✓ Ve frontě (${data.pending} čeká). Řekni Claudovi: „zpracuj Kling frontu".`;
+        } else if (!txt) {
+          status.style.color = '#ff4a4a';
+          status.textContent = 'Prázdná odpověď serveru — restartuj editor server (node editor_server.js) a zkus znovu.';
         } else {
           status.style.color = '#ff4a4a';
-          status.textContent = 'Chyba: ' + (data.error || 'neznámá');
+          status.textContent = 'Chyba: ' + (data.error || ('HTTP ' + r.status));
         }
       } catch (e) {
         status.style.color = '#ff4a4a';
-        status.textContent = 'Chyba spojení: ' + e.message;
+        status.textContent = 'Chyba spojení (server neběží?): ' + e.message;
       } finally {
         btn.disabled = false;
       }
