@@ -182,6 +182,13 @@ async function generateImagenImage(prompt) {
 }
 
 // Helper to get Part number from global paragraph index
+function getLocalParaFromGlobalI(globalI) {
+  const g = parseInt(globalI);
+  if (g < 20) return g + 1; // Part 1: 0-19 -> 1-20
+  if (g < 32) return g - 20 + 1; // Part 2: 20-31 -> 1-12
+  return g - 32 + 1; // Part 3: 32+ -> 1+
+}
+
 function getPartFromGlobalI(globalI) {
   const g = parseInt(globalI);
   if (g < 20) return 1;
@@ -253,7 +260,7 @@ app.get('/api/panels', (req, res) => {
       if (!video && globalI !== -1 && sentenceIdx !== -1) {
         const part = getPartFromGlobalI(globalI);
         const partStr = String(part).padStart(2, '0');
-        const paraStr = String(parseInt(globalI) + 1).padStart(2, '0');
+        const paraStr = String(getLocalParaFromGlobalI(globalI)).padStart(2, '0');
         const subStr = String(parseInt(sentenceIdx) + 1).padStart(2, '0');
         video = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
       }
@@ -521,7 +528,7 @@ app.post('/api/inject-video', async (req, res) => {
   try {
     const part = getPartFromGlobalI(globalI);
     const partStr = String(part).padStart(2, '0');
-    const paraStr = String(parseInt(globalI) + 1).padStart(2, '0');
+    const paraStr = String(getLocalParaFromGlobalI(globalI)).padStart(2, '0');
     const subStr = String(parseInt(sentenceIdx) + 1).padStart(2, '0');
 
     let targetVideoPath;

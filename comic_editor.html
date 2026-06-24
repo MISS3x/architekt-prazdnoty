@@ -1129,7 +1129,7 @@
       showOverlay(true, 'Ukládám ořezaný obrázek...', 'Zálohuji a přepisuji soubor na disku');
       
       try {
-        const response = await fetch('/api/crop', {
+        const response = await fetch('http://localhost:3000/api/crop', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1331,7 +1331,7 @@
       }
       
       try {
-        const response = await fetch('/api/generate', {
+        const response = await fetch('http://localhost:3000/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1372,7 +1372,7 @@
       if (!currentPanel) return;
       
       try {
-        const response = await fetch('/api/approve', {
+        const response = await fetch('http://localhost:3000/api/approve', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename: currentPanel.filename })
@@ -1404,7 +1404,7 @@
       if (!currentPanel) return;
 
       try {
-        const response = await fetch('/api/discard', {
+        const response = await fetch('http://localhost:3000/api/discard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename: currentPanel.filename })
@@ -1487,7 +1487,7 @@
       showOverlay(true, 'Ukládám masku panelu...', 'Přepisuji atribut data-aspect v HTML souborech');
       
       try {
-        const response = await fetch('/api/save-mask', {
+        const response = await fetch('http://localhost:3000/api/save-mask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1540,7 +1540,7 @@
         showOverlay(true, 'Nahrávám a injektuji video...', 'Generuji mobilní verzi přes ffmpeg a přepisuji HTML...');
         
         try {
-          const response = await fetch('/api/inject-video', {
+          const response = await fetch('http://localhost:3000/api/inject-video', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1604,7 +1604,7 @@
       showOverlay(true, 'Přejmenovávám soubory...', 'Aktualizuji soubory na disku a reference v HTML');
       
       try {
-        const response = await fetch('/api/rename-panel-files', {
+        const response = await fetch('http://localhost:3000/api/rename-panel-files', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
