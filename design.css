@@ -1176,3 +1176,14 @@ html:has(body.comic-fs) {
 .gallery-card.locked:hover .gallery-img-wrapper img {
   filter: blur(8px) brightness(0.5) !important;
 }
+
+/* Locked Part Switcher styling */
+.ap-ep.locked-part .rom {
+  display: none;
+}
+.ap-ep.locked-part::after {
+  content: "🔒";
+  font-size: 15px;
+  filter: drop-shadow(0 0 5px var(--amber));
+}
+

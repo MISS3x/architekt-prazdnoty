@@ -8,7 +8,7 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **85 / 85 done (100%)**
+## 📊 Progress: **87 / 87 done (100%)**
 
 ```
 #################################################################################################### 100%
@@ -28,7 +28,7 @@
 | File Renaming | 6 | 6 | 100% |
 | Sentence-Level Video Sync | 5 | 5 | 100% |
 | Visual Gallery (Fáze 6) | 5 | 5 | 100% |
-| Part 3 PIN Lock | 5 | 5 | 100% |
+| Part 3 PIN Lock | 7 | 7 | 100% |
 
 ---
 
@@ -141,3 +141,6 @@
 - [x] **#83** — Implement JS logic for the countdown timer and local storage state `decryptedPart3` in `app.js` ✅ completed
 - [x] **#84** — Wire click handlers on mode tabs, sticky buttons, and character cards to open the PIN modal if Part 3 is locked ✅ completed
 - [x] **#85** — Verify PIN verification, countdown auto-unlock, and cancel/fallback logic in browser ✅ completed
+- [x] **#86** — Add visual lock icon to Part 3 sticky switcher button and wire it to show PIN terminal on click ✅ completed
+- [x] **#87** — Add visual lock icon to all Part 3 gallery cards and wire them to show PIN terminal on click, unlocking all views ✅ completed
+

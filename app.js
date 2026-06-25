@@ -61,6 +61,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   };
 
+  const updatePartLockStatus = () => {
+    const bStickyPart3 = document.getElementById("btn-sticky-part3");
+    const tPart3 = document.getElementById("tab-part3");
+    const unlocked = isUnlockedPart3();
+    
+    [bStickyPart3, tPart3].forEach(el => {
+      if (el) {
+        if (unlocked) {
+          el.classList.remove("locked-part");
+        } else {
+          el.classList.add("locked-part");
+        }
+      }
+    });
+  };
+
   let pinSuccessCallback = null;
   let pinTimerInterval = null;
 
@@ -112,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         
         closePinModal();
+        updatePartLockStatus();
         if (pinSuccessCallback) {
           const cb = pinSuccessCallback;
           pinSuccessCallback = null;
@@ -167,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         
         closePinModal();
+        updatePartLockStatus();
         if (pinSuccessCallback) {
           const cb = pinSuccessCallback;
           pinSuccessCallback = null;
@@ -196,6 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const setPartSwitcherUI = (partNum) => {
+    updatePartLockStatus();
     const tPart1 = document.getElementById("tab-part1");
     const tPart2 = document.getElementById("tab-part2");
     const tPart3 = document.getElementById("tab-part3");
@@ -1426,6 +1445,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 7. Setup UI controls listeners
     setupUIListeners();
     setupPinListeners();
+    updatePartLockStatus();
     setupGlobalPlayButton(); // globální velké play/pauza tlačítko (audio/film/komiks/text)
 
     // 8. Setup characters cards click switch
@@ -3223,8 +3243,10 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll(".gallery-card[data-part='3']").forEach(c => {
               c.classList.remove("locked");
             });
-            // And switch to Part 3
-            setPart(3, true);
+            // And switch to Part 3 without autoplay (since we are in gallery)
+            setPart(3, false);
+            // Open the clicked card in lightbox
+            openLightbox(card);
           });
           return;
         }
