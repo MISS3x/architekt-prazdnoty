@@ -170,11 +170,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
     
-    const verifyPin = () => {
+    const verifyPin = async () => {
       const pinVal = (input ? input.value : "").trim();
       const error = document.getElementById("pin-error");
+      const targetHash = "8d7842dbbaa5ece37d719d311ac1feafc1d7347f4baa8b2b813d251f1fd1aa58";
       
-      if (pinVal === "4844") {
+      // Calculate SHA-256 hash of the input PIN
+      const msgBuffer = new TextEncoder().encode(pinVal);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      if (hashHex === targetHash) {
         state.decryptedPart3 = true;
         localStorage.setItem("decrypted_part3", "true");
         
