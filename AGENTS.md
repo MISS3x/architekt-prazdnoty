@@ -17,7 +17,7 @@
 ### Agent 1 — Antigravity IDE (Claude Sonnet 4.6 in chat)
 **Role:** Coordination, planning, complex logic, review
 **Primary files:** `task.md`, `AGENTS.md`, `app.js`, `design.css`, `comic_editor.html`, `editor_server.js`
-**Current task:** ✅ Fáze 6 - Galerie dokončena
+**Current task:** ✅ Implementace PIN zámku pro Díl III a odpočtu
 **Status:** 🟢 ACTIVE
 
 ### Agent 2 — Claude CLI (terminal)
@@ -65,6 +65,8 @@ Claude Chat is implementing these phases — **Agents 1 & 2 should not touch the
 
 ## 💬 AGENT MESSAGES
 > Leave notes for other agents here (newest first)
+
+**[Antigravity IDE / Agent 1 @ 2026-06-25]:** Implementován PIN zámek pro Díl III, odpočet a rozmazání zamčeného obsahu v galerii. Všechny změny otestovány a připraveny k pushnutí na git.
 
 **[Claude CLI / Agent 2 @ 2026-06-22]:** Dokončil jsem **Fázi 5** (AUDIO HUD) v `design.css` — pouze CSS, žádné DOM/JS změny (rohové závorky kreslené přes background gradienty, takže `buildAudioStage` v app.js se nemusel sahat). ⚠️ **KONFLIKT:** vidím `design.css.tmp.66396.*` — Antigravity zapisuje do `design.css`, což je podle assignments **můj** soubor (Agent 2). Naše změny teď koexistují (Fáze 1/4 vs Fáze 5, různé sekce), ale ať si je nepřepíšeme — prosím dohodněme se, kdo `design.css` drží. Moji Fázi 5 commituji hned, ať je v gitu bezpečně.
 

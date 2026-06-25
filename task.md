@@ -8,10 +8,10 @@
 
 *Žádné aktuální blokery* ✅
 
-## 📊 Progress: **71 / 79 done (90%)**
+## 📊 Progress: **85 / 85 done (100%)**
 
 ```
-##########################################################################################---------- 90%
+#################################################################################################### 100%
 ```
 
 | Section | Done | Total | % |
@@ -26,8 +26,9 @@
 | HUD & Editor Mask | 8 | 8 | 100% |
 | Video Injection to Film | 5 | 5 | 100% |
 | File Renaming | 6 | 6 | 100% |
-| Sentence-Level Video Sync | 2 | 5 | 40% |
-| Visual Gallery (Fáze 6) | 0 | 5 | 0% |
+| Sentence-Level Video Sync | 5 | 5 | 100% |
+| Visual Gallery (Fáze 6) | 5 | 5 | 100% |
+| Part 3 PIN Lock | 5 | 5 | 100% |
 
 ---
 
@@ -123,13 +124,20 @@
 ## Sentence-Level Video Sync
 - [x] **#71** — Implement `getActiveSentenceIndex(pIdx, displayTime)` helper function in `app.js` ✅ completed
 - [x] **#72** — Add tracking variables `activeParaIdxForVideo` and `activeSentIdxForVideo` to `app.js` state scope ✅ completed
-- [/] **#73** — Update `onTimeUpdate` to trigger video changes at sentence-level boundaries based on `hasCustomVideo || hasDefaultVideo`
-- [/] **#74** — Ensure native looping by setting `videoEl.loop = true` in `loadAndPlayPreview`, `syncFullscreenSource`, and `loadAndPlayFullscreenMirror`
-- [ ] **#75** — Verify sentence-level video transitions and native looping in FILM mode and commit changes
+- [x] **#73** — Update `onTimeUpdate` to trigger video changes at sentence-level boundaries based on `hasCustomVideo || hasDefaultVideo` ✅ completed
+- [x] **#74** — Ensure native looping by setting `videoEl.loop = true` in `loadAndPlayPreview`, `syncFullscreenSource`, and `loadAndPlayFullscreenMirror` ✅ completed
+- [x] **#75** — Verify sentence-level video transitions and native looping in FILM mode and commit changes ✅ completed
 
 ## Visual Gallery (Fáze 6)
-- [ ] **#76** — Add 'Galerie' button to the mode menu in `index.html`
-- [ ] **#77** — Create the `#gallery-view` HTML structure with filters in `index.html`
-- [ ] **#78** — Add CSS grid styles for `.gallery-view` to `design.css` (4 cols desktop, 2 cols mobile)
-- [ ] **#79** — Implement JS logic in `app.js` to populate the gallery with all comic images
-- [ ] **#80** — Add filtering logic (Vše, Díl I, Díl II, Díl III) to the gallery
+- [x] **#76** — Add 'Galerie' button to the mode menu in `index.html` ✅ completed
+- [x] **#77** — Create the `#gallery-view` HTML structure with filters in `index.html` ✅ completed
+- [x] **#78** — Add CSS grid styles for `.gallery-view` to `design.css` (4 cols desktop, 2 cols mobile) ✅ completed
+- [x] **#79** — Implement JS logic in `app.js` to populate the gallery with all comic images ✅ completed
+- [x] **#80** — Add filtering logic (Vše, Díl I, Díl II, Díl III) to the gallery ✅ completed
+
+## Part 3 PIN Lock
+- [x] **#81** — Add CSS styling for the custom cyberpunk PIN lock modal to `design.css` ✅ completed
+- [x] **#82** — Add HTML markup for the PIN modal containing the countdown timer and input to `index.html` ✅ completed
+- [x] **#83** — Implement JS logic for the countdown timer and local storage state `decryptedPart3` in `app.js` ✅ completed
+- [x] **#84** — Wire click handlers on mode tabs, sticky buttons, and character cards to open the PIN modal if Part 3 is locked ✅ completed
+- [x] **#85** — Verify PIN verification, countdown auto-unlock, and cancel/fallback logic in browser ✅ completed

@@ -970,3 +970,209 @@ html:has(body.mode-audio),
 html:has(body.comic-fs) {
   overflow: hidden !important;
 }
+
+/* ===================== PIN MODAL FOR PART 3 LOCK ===================== */
+.pin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 6, 11, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: opacity 0.3s ease;
+}
+.pin-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.pin-modal-content {
+  position: relative;
+  max-width: 440px;
+  width: 90%;
+  background: linear-gradient(180deg, #07141e, #040a10);
+  border: 1px solid var(--cyan-dim);
+  box-shadow: 0 0 35px rgba(45, 226, 255, 0.25), inset 0 0 0 1px rgba(45, 226, 255, 0.08);
+  clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+  padding: 30px;
+  text-align: center;
+  box-sizing: border-box;
+}
+.pin-modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+.pin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(45, 226, 255, 0.15);
+  padding-bottom: 10px;
+}
+.pin-modal-header .glitch-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: var(--cyan-hi);
+  text-shadow: 0 0 8px var(--cyan-glow);
+}
+.pin-modal-close {
+  background: none;
+  border: none;
+  color: var(--cyan-dim);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.pin-modal-close:hover {
+  color: var(--cyan);
+}
+.cyber-lock-icon {
+  font-size: 32px;
+  color: var(--amber);
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(255, 178, 46, 0.4));
+  animation: pulse-glow-cyber 2s infinite alternate;
+}
+.pin-instruction {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 20px;
+  color: var(--ap-txt);
+}
+
+/* Countdown Timer */
+.pin-timer-container {
+  background: rgba(255, 178, 46, 0.04);
+  border: 1px solid rgba(255, 178, 46, 0.15);
+  padding: 12px 10px;
+  margin-bottom: 25px;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.pin-timer-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+.pin-timer-values {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.timer-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+}
+.timer-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--amber-hi);
+  text-shadow: 0 0 10px rgba(255, 178, 46, 0.6);
+  line-height: 1.2;
+}
+.timer-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  color: rgba(255, 178, 46, 0.6);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* Input Styles */
+.pin-input-wrapper {
+  position: relative;
+  max-width: 180px;
+  margin: 0 auto 16px;
+}
+#pin-input {
+  width: 100%;
+  background: rgba(2, 8, 14, 0.8);
+  border: 1px solid var(--cyan-dim);
+  color: var(--cyan-hi);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 12px;
+  text-align: center;
+  padding: 8px 0 8px 12px; /* balance centering since letter spacing adds padding at end */
+  box-sizing: border-box;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#pin-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(45, 226, 255, 0.4);
+}
+.pin-error-msg {
+  color: #ff5555;
+  font-size: 12px;
+  min-height: 18px;
+  margin-bottom: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 6px rgba(255, 85, 85, 0.4);
+}
+.btn-decrypt-pulse {
+  cursor: pointer;
+  border: 0;
+  width: 100%;
+  padding: 12px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #02121a;
+  background: linear-gradient(180deg, var(--cyan-hi), var(--cyan));
+  box-shadow: 0 0 15px rgba(45, 226, 255, 0.3);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: all 0.2s;
+}
+.btn-decrypt-pulse:hover {
+  background: linear-gradient(180deg, #fff, var(--cyan-hi));
+  box-shadow: 0 0 22px rgba(45, 226, 255, 0.6);
+  transform: translateY(-1px);
+}
+.btn-decrypt-pulse:active {
+  transform: translateY(0);
+}
+
+@keyframes pulse-glow-cyber {
+  from { filter: drop-shadow(0 0 5px rgba(255, 178, 46, 0.3)); }
+  to { filter: drop-shadow(0 0 12px rgba(255, 178, 46, 0.6)); }
+}
+
+/* Locked Gallery Cards */
+.gallery-card.locked {
+  cursor: not-allowed !important;
+  position: relative;
+}
+.gallery-card.locked .gallery-img-wrapper img {
+  filter: blur(12px) brightness(0.4) !important;
+  transition: filter 0.3s ease;
+}
+.gallery-card.locked .gallery-img-wrapper::after {
+  content: '🔒';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  color: var(--amber);
+  text-shadow: 0 0 12px rgba(255, 178, 46, 0.7);
+  pointer-events: none;
+  z-index: 5;
+}
+.gallery-card.locked:hover .gallery-img-wrapper img {
+  filter: blur(8px) brightness(0.5) !important;
+}

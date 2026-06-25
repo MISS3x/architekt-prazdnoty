@@ -3769,6 +3769,37 @@
     <div id="fullscreen-subtitles" class="fullscreen-subtitles">// SYSTEM STANDBY</div>
   </div>
 
+  <!-- Secure Access PIN Modal -->
+  <div id="pin-modal" class="pin-modal hidden">
+    <div class="pin-modal-content">
+      <div class="pin-modal-header">
+        <span class="glitch-text" data-text="[SECURE ACCESS PROTOCOL]">// ZABEZPEČENÝ PŘÍSTUP</span>
+        <button class="pin-modal-close" id="pin-modal-close">✕</button>
+      </div>
+      <div class="pin-modal-body">
+        <div class="cyber-lock-icon">🔒</div>
+        <p class="pin-instruction">Zadejte přístupový PIN k dešifrování Dílu III.</p>
+        
+        <div class="pin-timer-container">
+          <div class="pin-timer-label">// AUTOMATICKÉ ODEMČENÍ ZA:</div>
+          <div class="pin-timer-values" id="pin-countdown">
+            <div class="timer-unit"><span class="timer-num" id="timer-days">00</span><span class="timer-label">Dní</span></div>
+            <div class="timer-unit"><span class="timer-num" id="timer-hours">00</span><span class="timer-label">Hod</span></div>
+            <div class="timer-unit"><span class="timer-num" id="timer-minutes">00</span><span class="timer-label">Min</span></div>
+            <div class="timer-unit"><span class="timer-num" id="timer-seconds">00</span><span class="timer-label">Sec</span></div>
+          </div>
+        </div>
+        
+        <div class="pin-input-wrapper">
+          <input type="text" id="pin-input" maxlength="4" placeholder="••••" autocomplete="off" inputmode="numeric">
+          <div class="pin-input-glow"></div>
+        </div>
+        <div class="pin-error-msg" id="pin-error"></div>
+        <button id="btn-submit-pin" class="btn-decrypt-pulse">OVĚŘIT KÓD</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Audio element -->
   <audio id="audio-element" src="audio/dil_1.mp3" preload="auto">
   

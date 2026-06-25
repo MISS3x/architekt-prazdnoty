@@ -18,3 +18,8 @@ app.js.tmp.*
 scratch/
 # Manuální Kling downloady s nestandardním názvem
 video/**/kling_*.mp4
+
+# Video style test files and directories
+video/styled_test/
+video_style_test.html
+generate_video_styles.py

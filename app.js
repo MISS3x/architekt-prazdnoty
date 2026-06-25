@@ -36,12 +36,192 @@ document.addEventListener("DOMContentLoaded", () => {
     autoplayAttempted: false,
     activePart: 1,
     decryptedPart2: true, // UX jako reference: díly se přepínají okamžitě, bez dekrypční brány
-    decryptedPart3: true,
+    decryptedPart3: localStorage.getItem("decrypted_part3") === "true",
     fullscreenMode: false,
     comicMode: false,
     audioMode: false,
     galleryMode: false,
     restoring: false
+  };
+
+  // --- PART 3 PIN ACCESS CONTROL & COUNTDOWN ---
+  const isUnlockedPart3 = () => {
+    if (state.decryptedPart3) return true;
+    if (localStorage.getItem("decrypted_part3") === "true") {
+      state.decryptedPart3 = true;
+      return true;
+    }
+    // Target date: Wednesday, July 1, 2026 at 20:00:00 local time
+    const targetDate = new Date("2026-07-01T20:00:00");
+    if (new Date() >= targetDate) {
+      state.decryptedPart3 = true;
+      localStorage.setItem("decrypted_part3", "true");
+      return true;
+    }
+    return false;
+  };
+
+  let pinSuccessCallback = null;
+  let pinTimerInterval = null;
+
+  const showPinModal = (successCallback) => {
+    pinSuccessCallback = successCallback;
+    const modal = document.getElementById("pin-modal");
+    const input = document.getElementById("pin-input");
+    const error = document.getElementById("pin-error");
+    
+    if (error) error.textContent = "";
+    if (input) input.value = "";
+    if (modal) modal.classList.remove("hidden");
+    if (input) input.focus();
+    
+    // Pause audio while login is shown
+    if (audio && !audio.paused) {
+      audio.pause();
+    }
+    
+    startPinCountdown();
+  };
+
+  const closePinModal = () => {
+    const modal = document.getElementById("pin-modal");
+    if (modal) modal.classList.add("hidden");
+    if (pinTimerInterval) {
+      clearInterval(pinTimerInterval);
+      pinTimerInterval = null;
+    }
+  };
+
+  const startPinCountdown = () => {
+    if (pinTimerInterval) clearInterval(pinTimerInterval);
+    const targetDate = new Date("2026-07-01T20:00:00");
+    
+    const update = () => {
+      const now = new Date();
+      const diff = targetDate - now;
+      
+      if (diff <= 0) {
+        clearInterval(pinTimerInterval);
+        pinTimerInterval = null;
+        state.decryptedPart3 = true;
+        localStorage.setItem("decrypted_part3", "true");
+        
+        // Remove locked style in gallery
+        document.querySelectorAll(".gallery-card[data-part='3']").forEach(c => {
+          c.classList.remove("locked");
+        });
+        
+        closePinModal();
+        if (pinSuccessCallback) {
+          const cb = pinSuccessCallback;
+          pinSuccessCallback = null;
+          cb();
+        }
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      const dEl = document.getElementById("timer-days");
+      const hEl = document.getElementById("timer-hours");
+      const mEl = document.getElementById("timer-minutes");
+      const sEl = document.getElementById("timer-seconds");
+      
+      if (dEl) dEl.textContent = String(days).padStart(2, '0');
+      if (hEl) hEl.textContent = String(hours).padStart(2, '0');
+      if (mEl) mEl.textContent = String(minutes).padStart(2, '0');
+      if (sEl) sEl.textContent = String(seconds).padStart(2, '0');
+    };
+    
+    update();
+    pinTimerInterval = setInterval(update, 1000);
+  };
+
+  const setupPinListeners = () => {
+    const modalClose = document.getElementById("pin-modal-close");
+    const submitBtn = document.getElementById("btn-submit-pin");
+    const input = document.getElementById("pin-input");
+    
+    if (modalClose) {
+      modalClose.addEventListener("click", () => {
+        closePinModal();
+        pinSuccessCallback = null;
+        setPartSwitcherUI(state.activePart);
+      });
+    }
+    
+    const verifyPin = () => {
+      const pinVal = (input ? input.value : "").trim();
+      const error = document.getElementById("pin-error");
+      
+      if (pinVal === "4844") {
+        state.decryptedPart3 = true;
+        localStorage.setItem("decrypted_part3", "true");
+        
+        // Remove locked style in gallery
+        document.querySelectorAll(".gallery-card[data-part='3']").forEach(c => {
+          c.classList.remove("locked");
+        });
+        
+        closePinModal();
+        if (pinSuccessCallback) {
+          const cb = pinSuccessCallback;
+          pinSuccessCallback = null;
+          cb();
+        }
+      } else {
+        if (error) {
+          error.textContent = "CHYBNÝ PŘÍSTUPOVÝ KÓD. ZKUSTE TO ZNOVU.";
+          if (input) {
+            input.value = "";
+            input.focus();
+          }
+        }
+      }
+    };
+    
+    if (submitBtn) {
+      submitBtn.addEventListener("click", verifyPin);
+    }
+    if (input) {
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          verifyPin();
+        }
+      });
+    }
+  };
+
+  const setPartSwitcherUI = (partNum) => {
+    const tPart1 = document.getElementById("tab-part1");
+    const tPart2 = document.getElementById("tab-part2");
+    const tPart3 = document.getElementById("tab-part3");
+    
+    const bStickyPart1 = document.getElementById("btn-sticky-part1");
+    const bStickyPart2 = document.getElementById("btn-sticky-part2");
+    const bStickyPart3 = document.getElementById("btn-sticky-part3");
+
+    if (tPart1) tPart1.classList.remove("active", "part2-active", "part3-active");
+    if (tPart2) tPart2.classList.remove("active", "part2-active", "part3-active");
+    if (tPart3) tPart3.classList.remove("active", "part2-active", "part3-active");
+    
+    if (bStickyPart1) bStickyPart1.classList.remove("active", "part2-active", "part3-active");
+    if (bStickyPart2) bStickyPart2.classList.remove("active", "part2-active", "part3-active");
+    if (bStickyPart3) bStickyPart3.classList.remove("active", "part2-active", "part3-active");
+    
+    if (partNum === 1) {
+      if (tPart1) tPart1.classList.add("active");
+      if (bStickyPart1) bStickyPart1.classList.add("active");
+    } else if (partNum === 2) {
+      if (tPart2) tPart2.classList.add("active", "part2-active");
+      if (bStickyPart2) bStickyPart2.classList.add("active", "part2-active");
+    } else if (partNum === 3) {
+      if (tPart3) tPart3.classList.add("active", "part3-active");
+      if (bStickyPart3) bStickyPart3.classList.add("active", "part3-active");
+    }
   };
 
   const saveState = () => {
@@ -781,6 +961,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const setPart = (partNum, startPlaying = false) => {
+    if (partNum === 3 && !isUnlockedPart3()) {
+      showPinModal(() => {
+        setPart(3, startPlaying);
+      });
+      return;
+    }
+
     state.activePart = partNum;
     updateBarEpTitle(partNum);
     if (state.audioMode) updateAudioStage(partNum);
@@ -1238,6 +1425,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 7. Setup UI controls listeners
     setupUIListeners();
+    setupPinListeners();
     setupGlobalPlayButton(); // globální velké play/pauza tlačítko (audio/film/komiks/text)
 
     // 8. Setup characters cards click switch
@@ -1253,12 +1441,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const panel = document.getElementById("leak-panel-part2");
             if (panel) panel.scrollIntoView({ behavior: "smooth" });
             runDecryptionAnimation(2);
-            return;
-          }
-          if (partNum === 3 && !state.decryptedPart3) {
-            const panel = document.getElementById("leak-panel-part3");
-            if (panel) panel.scrollIntoView({ behavior: "smooth" });
-            runDecryptionAnimation(3);
             return;
           }
         }
@@ -1599,9 +1781,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("decrypted_part2", "true");
         setPart(2, true);
       } else if (state.activePart === 2) {
-        console.log("Díl II ended, decrypting/switching to Díl III");
-        state.decryptedPart3 = true;
-        localStorage.setItem("decrypted_part3", "true");
+        console.log("Díl II ended, transitioning to Díl III (will login if locked)");
         setPart(3, true);
       } else {
         // Last part finished, reset to standby
@@ -2821,12 +3001,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (btnStickyPart3) {
       btnStickyPart3.addEventListener("click", () => {
-        if (!state.comicMode && !state.decryptedPart3) {
-          const panel = document.getElementById("leak-panel-part3");
-          if (panel) panel.scrollIntoView({ behavior: "smooth" });
-          runDecryptionAnimation(3);
-          return;
-        }
         setPart(3, true);
       });
     }
@@ -2924,8 +3098,9 @@ document.addEventListener("DOMContentLoaded", () => {
           label = `Díl ${parseInt(parts[0], 10)} · Odst. ${parseInt(parts[1], 10)} · Snímek ${parseInt(parts[2], 10)}`;
         }
 
+        const isLocked = part === "3" && !isUnlockedPart3();
         const card = document.createElement("div");
-        card.className = "gallery-card";
+        card.className = "gallery-card" + (isLocked ? " locked" : "");
         card.dataset.part = part;
         card.dataset.src = src;
         
@@ -3041,7 +3216,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Klik na kartu → maximalizace do lightboxu (slideování pak mezi obrázky)
     galleryCards.forEach(card => {
-      card.addEventListener("click", () => openLightbox(card));
+      card.addEventListener("click", () => {
+        if (card.classList.contains("locked")) {
+          showPinModal(() => {
+            // Success callback: unlock all gallery cards of Part 3!
+            document.querySelectorAll(".gallery-card[data-part='3']").forEach(c => {
+              c.classList.remove("locked");
+            });
+            // And switch to Part 3
+            setPart(3, true);
+          });
+          return;
+        }
+        openLightbox(card);
+      });
     });
   };
 
