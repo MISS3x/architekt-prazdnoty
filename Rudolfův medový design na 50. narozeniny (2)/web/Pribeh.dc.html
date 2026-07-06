@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: #06080b; }
+  ::selection { background: #41e0ff; color: #06080b; }
+  @keyframes flick { 0%,100%{opacity:1} 92%{opacity:1} 94%{opacity:.5} 96%{opacity:1} 97%{opacity:.7} 98%{opacity:1} }
+</style>
+</helmet>
+
+<div ref="{{ setRoot }}" style="position:relative;min-height:100vh;background:#06080b;font-family:'Newsreader',serif;color:#dfe7f1;overflow-x:hidden;">
+
+  <!-- ===== rotating backgrounds ===== -->
+  <div style="position:fixed;inset:0;z-index:0;overflow:hidden;background:#06080b;">
+    <img data-bg src="img/bg1.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transform:scale(1.08);transition:opacity 2.2s ease, transform 9.5s linear;">
+    <img data-bg src="img/bg2.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.0);transition:opacity 2.2s ease, transform 9.5s linear;">
+    <img data-bg src="img/bg5.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.0);transition:opacity 2.2s ease, transform 9.5s linear;">
+    <img data-bg src="img/bg3.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.0);transition:opacity 2.2s ease, transform 9.5s linear;">
+    <img data-bg src="img/bg6.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.0);transition:opacity 2.2s ease, transform 9.5s linear;">
+    <img data-bg src="img/bg4.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.0);transition:opacity 2.2s ease, transform 9.5s linear;">
+  </div>
+  <!-- veil -->
+  <div style="position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 80% at 50% 25%, rgba(6,8,11,.35) 0%, rgba(6,8,11,.7) 60%, rgba(4,5,8,.92) 100%);"></div>
+  <!-- scanlines -->
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.16) 3px, rgba(0,0,0,0) 4px);mix-blend-mode:multiply;opacity:.5;"></div>
+
+  <!-- ===== HERO ===== -->
+  <header style="position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(6,8,11,.2) 0%, rgba(6,8,11,0) 30%, rgba(6,8,11,.7) 78%, #06080b 100%);"></div>
+    <div style="position:relative;z-index:2;max-width:1100px;margin:0 auto;width:100%;padding:0 32px 60px;">
+      <div style="display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:12px;letter-spacing:5px;text-transform:uppercase;color:#41e0ff;">
+        <span style="width:34px;height:1px;background:#41e0ff;box-shadow:0 0 8px #41e0ff;"></span>
+        A NEW BERLIN STORY · RUDA-50
+      </div>
+      <h1 style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(52px,9vw,128px);line-height:.92;letter-spacing:1px;margin-top:14px;color:#f3f8ff;text-shadow:0 0 28px rgba(65,224,255,.35), 0 0 2px rgba(65,224,255,.7);">ARCHITEKT<br>PRÁZDNOTY</h1>
+      <p style="font-family:'Newsreader',serif;font-style:italic;font-size:clamp(17px,2.2vw,23px);color:#cdd6e2;margin-top:18px;max-width:620px;line-height:1.5;">Audio-legenda o muži, který se z padesáti procent skládal z železa — a možná nikdy doopravdy nezemřel.</p>
+
+      <!-- ===== AUDIO PLAYER ===== -->
+      <div style="margin-top:32px;max-width:660px;background:linear-gradient(180deg, rgba(16,21,30,.92), rgba(10,13,18,.94));border:1px solid rgba(65,224,255,.22);border-radius:14px;padding:20px 22px;backdrop-filter:blur(8px);box-shadow:0 24px 60px -24px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05);">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#6b7787;">
+          <span>// AUDIO ARCHIVE — RUDA.M</span><span style="color:{{ statusColor }};">{{ statusLabel }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;margin-top:16px;">
+          <button onClick="{{ togglePlay }}" style="flex:none;width:64px;height:64px;border-radius:50%;border:1.5px solid #41e0ff;background:radial-gradient(circle at 50% 35%, rgba(65,224,255,.25), rgba(65,224,255,.05));color:#41e0ff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 22px rgba(65,224,255,.35), inset 0 0 18px rgba(65,224,255,.18);" style-hover="transform:scale(1.06);">
+            <span style="font-size:22px;line-height:1;">{{ playIcon }}</span>
+          </button>
+          <div style="flex:1;min-width:0;">
+            <div onClick="{{ seek }}" style="position:relative;height:10px;border-radius:6px;background:rgba(255,255,255,.08);cursor:pointer;overflow:hidden;border:1px solid rgba(255,255,255,.06);">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:{{ pct }};background:linear-gradient(90deg,#41e0ff,#9af0ff);box-shadow:0 0 12px rgba(65,224,255,.6);"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;letter-spacing:1px;color:#8a97a8;margin-top:8px;">
+              <span>{{ curTime }}</span><span>{{ durTime }}</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+          <button onClick="{{ toggleCalib }}" style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;border:1px solid {{ calibBorder }};background:{{ calibBg }};color:{{ calibColor }};">{{ calibLabel }}</button>
+          <button onClick="{{ exportCues }}" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:transparent;color:#8a97a8;">Export časování</button>
+          <button onClick="{{ resetCues }}" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:transparent;color:#8a97a8;">Reset</button>
+          <label style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#6b7787;cursor:pointer;border:1px solid rgba(255,255,255,.14);padding:7px 12px;border-radius:8px;">Jiné audio<input type="file" accept="audio/*" onChange="{{ loadAudioFile }}" style="display:none;"></label>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-weight:500;font-size:10px;letter-spacing:.5px;color:#5a6675;margin-top:10px;line-height:1.5;">{{ hint }}</div>
+      </div>
+
+      <div style="margin-top:28px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:#41e0ff;animation:flick 6s infinite;">▼ SCROLL · ČTI · POSLOUCHEJ</div>
+    </div>
+  </header>
+
+  <!-- ===== STORY (reading panel) ===== -->
+  <main style="position:relative;z-index:2;max-width:820px;margin:0 auto;padding:0 16px;">
+    <div style="background:linear-gradient(180deg, rgba(8,11,16,.86), rgba(7,9,13,.92));backdrop-filter:blur(3px);border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);padding:88px 46px 50px;">
+
+    <p data-i="0" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;transition:opacity .35s ease, border-color .35s ease;"><span style="float:left;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:78px;line-height:.8;padding:6px 14px 0 0;color:#41e0ff;text-shadow:0 0 18px rgba(65,224,255,.5);">N</span>eonové prstence Nového Berlína pulzovaly v rytmu binárního deště, ale Ruda Müller stál na střeše svého posledního projektu — sedmsetmetrového mrakodrapu <em>Aegis</em> — a díval se opačným směrem. Tam, kde končila atmosférická kupole města a začínaly syrové, neuro-kontaminované hory starého světa.</p>
+    <p data-i="1" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Ruda byl jiný. V éře, kdy budovy navrhovaly kvantové algoritmy, on stále kreslil první linie ručně, implantovaným stylusem přímo do své zrakové kůry. Jeho mrakodrapy nebyly jen stavby; byly to obří chladiče pro megasíť, tektonické chrámy z uhlíkových vláken a chromu. A stejně divný jako jeho architektura byl i jeho život. Zatímco ostatní korporátní elity trávily čas v polévce virtuálního hedonismu, Ruda běhal.</p>
+    <p data-i="2" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Neběhal na trenažérech. Běhal maratony v toxických zónách, bez kyslíkové masky, jen s upravenými kybernetickými plícemi, které filtrovaly popílek a těžké kovy. Pravidelně testoval limity svého bio-mechanického těla.</p>
+    <p data-i="3" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">A pak, uprostřed největšího stavebního boomu století, prostě odešel.</p>
+
+    <figure style="margin:60px 0;display:flex;flex-direction:column;align-items:center;">
+      <img src="img/b.jpg" alt="Mechatronická včela" style="width:300px;max-width:70%;border-radius:50%;border:1px solid rgba(65,224,255,.25);box-shadow:0 0 50px rgba(65,224,255,.18), 0 30px 60px -20px #000;">
+      <figcaption style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#6b7787;margin-top:18px;">APIS MECHATRONICA</figcaption>
+    </figure>
+
+    <h2 style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:34px;letter-spacing:1px;color:#f3f8ff;display:flex;align-items:center;gap:14px;margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#41e0ff;">I</span> MĚSÍC MIMO SÍŤ <span style="flex:1;height:1px;background:linear-gradient(90deg,#41e0ff,transparent);"></span></h2>
+
+    <blockquote data-i="4" style="border-left:3px solid #41e0ff;padding:10px 0 10px 20px;margin:22px 0;font-family:'JetBrains Mono',monospace;font-weight:500;font-size:16px;line-height:1.6;font-style:italic;color:#9af0ff;transition:opacity .35s ease;">„Odpojuji neuro-link. Lokální vyhledávání vypnuto. Spouštím autonomní režim,“ oznámil chladný hlas v jeho hlavě.</blockquote>
+
+    <p data-i="5" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;transition:opacity .35s ease, border-color .35s ease;">Ruda Müller nechal limuzínu na hranici perimetru a vstoupil do zakázaných hor. Žádné drony, žádné satelitní sledování, žádná záloha na cloudu. Pro zbytek světa prostě přestal existovat. V korporátních kruzích se šeptalo o nervovém zhroucení, jiní tvrdili, že hledá ložiska vzácných minerálů pro své megastruktury.</p>
+    <p data-i="6" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Pravda byla fascinující. Ruda v horách neběhal pro zdraví. Běhal, aby utekl hluku lidských myšlenek, které globální síť neustále pumpovala do vzduchu. Kilometr za kilometrem, v mrazu a samotě, jeho procesory chladly. V hlubokých skalních soutěskách nacházel statický klid. Občas se zastavil, pohladil chladnou žulu a do své vnitřní paměti si ukládal geologické struktury. Tyto vzorce pak promítal do organických křivek svých mrakodrapů. Podle mnohých stál za jeho genialitou právě tento měsíc absolutního digitálního půstu.</p>
+    <p data-i="7" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Po přesně třiceti dnech se vrátil. Špinavý, s napůl vybitými bateriemi v kyber-brýlích, ale s očima, ve kterých svítil kód pro novou generaci měst.</p>
+
+    <figure style="margin:60px 0;display:flex;flex-direction:column;align-items:center;">
+      <img src="img/c.jpg" alt="Rudolf Müller — Honey Superfuel Cell" style="width:380px;max-width:88%;border-radius:50%;border:1px solid rgba(255,181,46,.3);box-shadow:0 0 60px rgba(255,181,46,.14), 0 30px 70px -20px #000;">
+      <figcaption style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#6b7787;margin-top:18px;">RUDOLF MÜLLER · HONEY SUPERFUEL CELL</figcaption>
+    </figure>
+
+    <h2 style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:34px;letter-spacing:1px;color:#f3f8ff;display:flex;align-items:center;gap:14px;margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#41e0ff;">II</span> POSLEDNÍ ZÁHADA <span style="flex:1;height:1px;background:linear-gradient(90deg,#41e0ff,transparent);"></span></h2>
+
+    <p data-i="8" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">O desítky let později byl Ruda Müller živoucí legendou. Dosáhl věku 100 let — což v té době, díky pokročilé bio-regeneraci, nebylo neobvyklé, ale u člověka s tak brutálním životním stylem to hraničilo se zázrakem. Jeho tělo bylo z padesáti procent tvořeno kybernetickými implantáty ze staré školy, které už nikdo neuměl opravit.</p>
+    <p data-i="9" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Jeho smrt však šokovala celý svět. A dodnes zůstává největší záhadou Nového Berlína.</p>
+    <p data-i="10" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Našli ho v jeho soukromém penthouse na vrcholu <em>Aegis</em>. Seděl ve svém křesle, na očích měl své staré, poškrábané kyber-brýle a na rtech lehký, ironický úsměv.</p>
+    <p data-i="11" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Když forenzní technici a datoví detektivové analyzovali jeho tělo, narazili na hned několik věcí, které nedávaly smysl:</p>
+
+    <div data-i="12" style="display:flex;gap:14px;align-items:flex-start;margin-top:18px;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;transition:opacity .35s ease, border-color .35s ease;">
+      <span style="flex:none;margin-top:9px;width:9px;height:9px;background:#41e0ff;box-shadow:0 0 10px #41e0ff;transform:rotate(45deg);"></span>
+      <p style="font-family:'Newsreader',serif;font-size:20px;line-height:1.65;"><strong style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;color:#f3f8ff;">Absolutní vymazání.</strong> Jeho vnitřní pevný disk i záložní neuro-kapsle byly kompletně zformátované. Nešlo o selhání hardwaru — data byla přepsána čistým binárním kódem, který tvořil dokonalý, nekonečný vzorec včelí plástve.</p>
+    </div>
+    <div data-i="13" style="display:flex;gap:14px;align-items:flex-start;margin-top:14px;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;transition:opacity .35s ease, border-color .35s ease;">
+      <span style="flex:none;margin-top:9px;width:9px;height:9px;background:#41e0ff;box-shadow:0 0 10px #41e0ff;transform:rotate(45deg);"></span>
+      <p style="font-family:'Newsreader',serif;font-size:20px;line-height:1.65;"><strong style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;color:#f3f8ff;">Biologický paradox.</strong> Jeho organické srdce se nezastavilo selháním věku ani kvůli toxickému prostředí. Podle pitevní zprávy se prostě rozhodlo přestat bít v jeden přesný moment, jako by dostalo softwarový příkaz <span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:16px;color:#ffb52e;">SHUTDOWN</span>.</p>
+    </div>
+    <div data-i="14" style="display:flex;gap:14px;align-items:flex-start;margin-top:14px;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;transition:opacity .35s ease, border-color .35s ease;">
+      <span style="flex:none;margin-top:9px;width:9px;height:9px;background:#41e0ff;box-shadow:0 0 10px #41e0ff;transform:rotate(45deg);"></span>
+      <p style="font-family:'Newsreader',serif;font-size:20px;line-height:1.65;"><strong style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;color:#f3f8ff;">Termální anomálie.</strong> V momentě smrti teplota jeho kybernetických implantátů klesla na absolutní nulu během jediné sekundy, což odporovalo všem fyzikálním zákonům tehdejší mechatroniky.</p>
+    </div>
+
+    <p data-i="15" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:22px;transition:opacity .35s ease, border-color .35s ease;">Nejdivnější však byl nález na jeho pracovním stole. Ležela tam prázdná skleněná lahev od medu s gravírováním mechatronické včely a nápisem: <span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:16px;letter-spacing:.5px;color:#ffb52e;">HONEY SUPERFUEL CELL — FUEL FOR THE NEXT 50 YEARS</span>.</p>
+    <p data-i="16" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">A v ten moment to datovým analytikům došlo. Přesně před padesáti lety, v den Rudových 50. narozenin, se v jeho kanceláři objevil záhadný týpek z podsvětí, kterému nikdo neřekl jinak než <strong style="color:#f3f8ff;">Krtek</strong>. Nikdo nevěděl, odkud přišel, ale přinesl Rudovi tuhle jedinou lahev. „Palivo pro další půlstoletí, architekte,“ zašeptal tehdy a zmizel v hlubokých tunelech sub-města.</p>
+    <p data-i="17" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Ruda Müller možná vůbec neumřel. Ta lahev neobsahovala obyčejný med, ale tekutý nanofuel cell — nanotechnologické palivo, které po padesáti letech dokončilo svou práci. Vteřinu předtím, než jeho srdce udělalo <span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:16px;color:#ffb52e;">SHUTDOWN</span>, se Rudovo vědomí nerozpadlo, ale kompletně asimilovalo do globálního AGI. Stal se součástí super deep mindu, který teď řídí celou planetu.</p>
+    <p data-i="18" style="font-family:'Newsreader',serif;font-size:21px;line-height:1.72;text-align:justify;border-left:2px solid transparent;padding-left:18px;margin-left:-20px;margin-top:18px;transition:opacity .35s ease, border-color .35s ease;">Ale to nikdo neví. Pro svět zůstal jen prázdnou schránkou v křesle. Ale když se dnes podíváte na mrakodrapy Nového Berlína, jejich neonová světla už neblikají náhodně. Pulzují v dokonalém včelím algoritmu.</p>
+
+    <div style="margin:60px 0 10px;text-align:center;">
+      <div style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#6b7787;">// ARCHIVNÍ ZÁZNAM · 10 · 06 · 2076</div>
+      <p data-i="19" style="font-family:'Newsreader',serif;font-style:italic;font-size:clamp(26px,4.4vw,40px);line-height:1.25;color:#f3f8ff;margin-top:18px;text-shadow:0 0 24px rgba(65,224,255,.28);transition:opacity .35s ease;">Je Ruda Müller opravdu pryč —<br>nebo teď běhá uvnitř samotné sítě?</p>
+    </div>
+    </div>
+  </main>
+
+  <footer style="position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.08);padding:26px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#5a6675;max-width:820px;margin:0 auto;">
+    <span>HONEY SUPERFUEL CELL</span>
+    <span>RUDA-50 · MMXXVI · NEW BERLIN ARCHIVE</span>
+  </footer>
+
+  <audio ref="{{ setAudio }}" src="audio/pribeh.mp3" preload="metadata"></audio>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { playing:false, cur:0, dur:0, calib:false, loaded:false, msg:"" };
+  cues = null;
+
+  setRoot = (el) => { if (el) this.root = el; };
+
+  componentDidMount() {
+    this.paras = this.root ? Array.from(this.root.querySelectorAll("[data-i]")) : [];
+    this.paras.sort((a,b) => (+a.dataset.i) - (+b.dataset.i));
+    this.N = this.paras.length;
+    let stored = null;
+    try { const s = localStorage.getItem("ruda_cues_v2"); if (s) stored = JSON.parse(s); } catch(e) {}
+    this.cues = (stored && stored.length === this.N && stored.some(x => typeof x === "number")) ? stored : null;
+    this.curIdx = -1;
+    this.paras.forEach((p, idx) => { p.addEventListener("click", () => this.onParaClick(idx)); });
+    // rotating backgrounds
+    this.bgEls = this.root ? Array.from(this.root.querySelectorAll("[data-bg]")) : [];
+    this.bgIdx = 0;
+    this.bgTimer = setInterval(() => this.rotate(), 9000);
+    this.applyHighlight(-1);
+  }
+  componentWillUnmount() { clearInterval(this.bgTimer); }
+
+  rotate() {
+    if (!this.bgEls.length) return;
+    this.bgIdx = (this.bgIdx + 1) % this.bgEls.length;
+    this.bgEls.forEach((e, i) => {
+      e.style.opacity = i === this.bgIdx ? "1" : "0";
+      e.style.transform = i === this.bgIdx ? "scale(1.08)" : "scale(1.0)";
+    });
+  }
+
+  setAudio = (el) => {
+    if (!el || this.audio === el) return;
+    this.audio = el;
+    const onMeta = () => this.grabDur();
+    el.addEventListener("loadedmetadata", onMeta);
+    el.addEventListener("durationchange", onMeta);
+    el.addEventListener("canplay", onMeta);
+    el.addEventListener("timeupdate", () => this.onTime());
+    el.addEventListener("play", () => this.setState({ playing: true }));
+    el.addEventListener("pause", () => this.setState({ playing: false }));
+    el.addEventListener("ended", () => this.setState({ playing: false }));
+    if (el.readyState >= 1) onMeta();
+  };
+
+  grabDur() {
+    const d = this.audio ? this.audio.duration : 0;
+    if (isFinite(d) && d > 0) {
+      this.setState({ dur: d, loaded: true }, () => this.seedCues());
+    } else {
+      if (!this.state.loaded) this.setState({ loaded: true });
+      this.fixInfinite();
+    }
+  }
+
+  fixInfinite() {
+    if (this._fixing || !this.audio) return;
+    this._fixing = true;
+    const a = this.audio;
+    const ondc = () => {
+      if (isFinite(a.duration) && a.duration > 0) {
+        a.removeEventListener("durationchange", ondc);
+        try { a.currentTime = 0; } catch(e) {}
+        this.setState({ dur: a.duration, loaded: true }, () => this.seedCues());
+      }
+    };
+    a.addEventListener("durationchange", ondc);
+    try { a.currentTime = 1e7; } catch(e) {}
+  }
+
+  seedCues() {
+    if (this.cues || !(this.state.dur > 0)) return;
+    const lens = this.paras.map(p => Math.max(10, (p.textContent || "").trim().length));
+    const total = lens.reduce((a,b) => a + b, 0);
+    const cues = []; let acc = 0;
+    for (let i = 0; i < this.N; i++) { cues.push(+(this.state.dur * (acc / total)).toFixed(2)); acc += lens[i]; }
+    this.cues = cues;
+  }
+
+  onTime() {
+    const t = this.audio.currentTime;
+    this.setState({ cur: t });
+    const idx = this.activeIndex(t);
+    if (idx !== this.curIdx) {
+      this.curIdx = idx;
+      this.applyHighlight(idx);
+      if (this.state.playing && !this.state.calib) this.scrollToPara(idx);
+    }
+  }
+
+  activeIndex(t) {
+    if (!this.cues) return -1;
+    let idx = -1;
+    for (let i = 0; i < this.N; i++) { const c = this.cues[i]; if (c != null && t >= c - 0.02) idx = i; }
+    return idx;
+  }
+
+  applyHighlight(idx) {
+    this.paras.forEach((p, i) => {
+      const on = i === idx;
+      p.style.opacity = idx < 0 ? "1" : (on ? "1" : "0.3");
+      if (p.style.borderLeftStyle === "solid") p.style.borderLeftColor = on ? "#41e0ff" : "transparent";
+    });
+  }
+
+  scrollToPara(idx) {
+    const el = this.paras[idx]; if (!el) return;
+    const r = el.getBoundingClientRect();
+    const mid = window.innerHeight * 0.4;
+    if (r.top < mid * 0.5 || r.top > window.innerHeight * 0.8) {
+      window.scrollTo({ top: Math.max(0, window.scrollY + r.top - mid), behavior: "smooth" });
+    }
+  }
+
+  togglePlay = () => { if (!this.audio) return; if (this.audio.paused) this.audio.play(); else this.audio.pause(); };
+  seek = (e) => {
+    if (!this.audio || !this.state.dur) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const f = (e.clientX - r.left) / r.width;
+    this.audio.currentTime = Math.max(0, Math.min(1, f)) * this.state.dur;
+  };
+
+  toggleCalib = () => {
+    const on = !this.state.calib;
+    this.setState({ calib: on });
+    this.paras.forEach(p => {
+      p.style.cursor = on ? "crosshair" : "default";
+      p.style.outline = on ? "1px dashed rgba(65,224,255,.4)" : "none";
+      p.style.outlineOffset = "4px";
+    });
+    if (on) this.applyHighlight(-1);
+  };
+
+  onParaClick = (idx) => {
+    if (!this.state.calib || !this.audio) return;
+    if (!this.cues) this.cues = new Array(this.N).fill(null);
+    this.cues[idx] = +this.audio.currentTime.toFixed(2);
+    try { localStorage.setItem("ruda_cues_v2", JSON.stringify(this.cues)); } catch(e) {}
+    const p = this.paras[idx];
+    if (p) { p.style.background = "rgba(65,224,255,.16)"; setTimeout(() => { p.style.background = "transparent"; }, 320); }
+    this.setState({ msg: "Odstavec " + idx + " → " + this.fmt(this.audio.currentTime) + "  (uloženo)" });
+  };
+
+  exportCues = () => {
+    const data = JSON.stringify(this.cues.map(c => c == null ? null : +c.toFixed(2)));
+    try { navigator.clipboard && navigator.clipboard.writeText(data); } catch(e) {}
+    try {
+      const blob = new Blob([data], { type: "application/json" });
+      const u = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = u; a.download = "ruda_cues.json"; a.click();
+    } catch(e) {}
+    this.setState({ msg: "Časování zkopírováno do schránky + staženo." });
+  };
+
+  resetCues = () => {
+    this.cues = null;
+    try { localStorage.setItem("ruda_cues_v2", "null"); } catch(e) {}
+    this.seedCues();
+    this.curIdx = -1; this.applyHighlight(-1);
+    this.setState({ msg: "Časování resetováno na odhad podle délky textu." });
+  };
+
+  loadAudioFile = (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f || !this.audio) return;
+    this.audio.src = URL.createObjectURL(f);
+    this.audio.load();
+    this.setState({ msg: "Načteno: " + f.name });
+  };
+
+  fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t/60), s = Math.floor(t%60); return m + ":" + (s<10?"0":"") + s; }
+
+  renderVals() {
+    const { playing, cur, dur, calib, loaded, msg } = this.state;
+    return {
+      setRoot: this.setRoot, setAudio: this.setAudio,
+      togglePlay: this.togglePlay, seek: this.seek,
+      playIcon: playing ? "❚❚" : "▶",
+      pct: dur ? (cur/dur*100) + "%" : "0%",
+      curTime: this.fmt(cur), durTime: loaded ? this.fmt(dur) : "--:--",
+      statusLabel: playing ? "PŘEHRÁVÁ SE" : (loaded ? "PŘIPRAVENO" : "NAČÍTÁM…"),
+      statusColor: playing ? "#41e0ff" : "#6b7787",
+      toggleCalib: this.toggleCalib, exportCues: this.exportCues, resetCues: this.resetCues, loadAudioFile: this.loadAudioFile,
+      calibLabel: calib ? "● KALIBRACE — KLIKEJ NA ODSTAVCE" : "Synchronizace textu",
+      calibBg: calib ? "rgba(65,224,255,.16)" : "transparent",
+      calibBorder: calib ? "#41e0ff" : "rgba(255,255,255,.14)",
+      calibColor: calib ? "#9af0ff" : "#8a97a8",
+      hint: msg || (calib
+        ? "Pusť audio a v pravý okamžik klikni na odstavec — uloží se jeho čas. Po dokončení dej „Export časování“."
+        : "Stiskni přehrání — text se zvýrazňuje podle audia. Časování doladíš přes „Synchronizace textu“."),
+    };
+  }
+}
+</script>
+</body>
+</html>
