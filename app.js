@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- BACKGROUND MUSIC (BGM) SYSTEM ---
   const BGM_TRACKS = {
-    1: ["video/dil_1/dill_1_a.mp3", "video/dil_1/dil_1_b.mp3"],
+    1: ["video/dil_1/dil_1_b.mp3", "video/dil_1/dill_1_a.mp3"],
     2: ["video/dil_2/dil_2_a.mp3", "video/dil_2/dil_2_b.mp3"],
     3: ["video/dil_3/dil_3_a.mp3", "video/dil_3/dill_3_b.mp3"]
   };
@@ -1103,15 +1103,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (previewPoster) previewPoster.classList.add("active");
     if (fullscreenPoster) fullscreenPoster.classList.add("active");
     
-    // Update teaser video
+    // Update teaser video — only play if fullscreen overlay is visible
+    // (prevents iOS Safari from auto-fullscreening a hidden video → black screen)
     const teaserVid = document.getElementById("fullscreen-teaser-video");
     if (teaserVid) {
       teaserVid.src = getVideoPath(`video/dil_${partNum}/0${partNum}_intro.mp4`);
-      teaserVid.play().catch(e => {
-        if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
-          console.log("Teaser autoplay prevented", e);
-        }
-      });
+      if (state.fullscreenMode) {
+        teaserVid.play().catch(e => {
+          if (e.name !== "AbortError" && e.name !== "NotAllowedError") {
+            console.log("Teaser autoplay prevented", e);
+          }
+        });
+      }
     }
 
     // Update poster hero content
