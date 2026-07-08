@@ -1658,14 +1658,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (playerPreview) playerPreview.style.display = "flex";
         if (playerWrapperEl) playerWrapperEl.style.display = "flex"; // Show player dashboard panel during movie mode
         openFullscreenOverlay();
-        // Auto-trigger browser fullscreen for immersive cinema experience
-        queueMicrotask(() => {
-          const ov = document.getElementById("fullscreen-overlay");
-          if (!ov) return;
+        // Request browser fullscreen synchronously (must be in user gesture call stack)
+        const ov = document.getElementById("fullscreen-overlay");
+        if (ov) {
           const req = ov.requestFullscreen || ov.webkitRequestFullscreen || ov.msRequestFullscreen;
           if (req) {
             try { Promise.resolve(req.call(ov)).catch(() => {
-              // iOS Safari fallback: fullscreen the video element directly
               const vid = document.getElementById("fs-video-1") || document.getElementById("fs-video-2");
               if (vid && vid.webkitEnterFullscreen) try { vid.webkitEnterFullscreen(); } catch(e){}
             }); } catch(e) {
@@ -1676,7 +1674,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const vid = document.getElementById("fs-video-1") || document.getElementById("fs-video-2");
             if (vid && vid.webkitEnterFullscreen) try { vid.webkitEnterFullscreen(); } catch(e){}
           }
-        });
+        }
       } else if (mode === "audio") {
         state.comicMode = false;
         document.body.classList.remove("comic-fs");
