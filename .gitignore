@@ -23,3 +23,11 @@ video/**/kling_*.mp4
 video/styled_test/
 video_style_test.html
 generate_video_styles.py
+
+# Původní zálohy před ořezem/úpravami
+*_orig.mp4
+
+# Zkompilované dlouhé filmy (přesahují limit 100MB na GitHubu)
+*full_movie.mp4
+
+
