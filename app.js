@@ -1461,10 +1461,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. Build the horizontal comic strip (intro title cards + wheel scrolling)
     setupComicStrip();
 
-    // Reload always starts fresh at 0:00, Part 1, movie mode
+    // Reload always starts fresh at 0:00, Part 1, text mode
+    // (Film fullscreen overlay opens only when user clicks ▸Film)
     const savedPart = "1";
     const savedTime = null; // Ignore saved time
-    const savedMode = "movie";
+    const savedMode = "text";
 
     state.restoring = false;
 
@@ -1473,7 +1474,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // setActiveModeUI je const definovaný níž → odlož aplikaci režimu za konec
     // synchronního initu (jinak TDZ ReferenceError → pád celého initu).
-    queueMicrotask(() => { setActiveModeUI("movie"); });
+    queueMicrotask(() => { setActiveModeUI("text"); });
 
     if (savedTime && audio) {
       const timeVal = parseFloat(savedTime);
