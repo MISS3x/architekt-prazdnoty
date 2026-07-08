@@ -337,6 +337,79 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- DOM ELEMENTS ---
   const _dummy = document.createElement("div");
   const audio = document.getElementById("audio-element"); // Audio element still exists
+
+  // --- BACKGROUND MUSIC (BGM) SYSTEM ---
+  const BGM_TRACKS = {
+    1: ["video/dil_1/dill_1_a.mp3", "video/dil_1/dil_1_b.mp3"],
+    2: ["video/dil_2/dil_2_a.mp3", "video/dil_2/dil_2_b.mp3"],
+    3: ["video/dil_3/dil_3_a.mp3", "video/dil_3/dill_3_b.mp3"]
+  };
+  const bgmAudio = new Audio();
+  bgmAudio.loop = false;
+  bgmAudio.volume = 0.30; // default 30%
+  let bgmTrackIdx = 0; // 0 = A, 1 = B
+  let bgmPart = 1;
+
+  // When track A ends, auto-play track B; when B ends, loop back to A
+  bgmAudio.addEventListener("ended", () => {
+    const tracks = BGM_TRACKS[bgmPart];
+    if (!tracks) return;
+    bgmTrackIdx = (bgmTrackIdx + 1) % tracks.length;
+    bgmAudio.src = tracks[bgmTrackIdx];
+    bgmAudio.play().catch(() => {});
+  });
+
+  const bgmSetPart = (partNum) => {
+    bgmPart = partNum;
+    bgmTrackIdx = 0;
+    const tracks = BGM_TRACKS[partNum];
+    if (tracks && tracks.length) {
+      bgmAudio.src = tracks[0];
+      bgmAudio.load();
+    }
+  };
+
+  const bgmPlay = () => {
+    if (bgmAudio.src) bgmAudio.play().catch(() => {});
+  };
+
+  const bgmPause = () => {
+    bgmAudio.pause();
+  };
+
+  const bgmSetVolume = (v) => {
+    bgmAudio.volume = Math.max(0, Math.min(1, v));
+    localStorage.setItem("ap_bgm_volume", bgmAudio.volume);
+    // Update slider UI if it exists
+    const slider = document.getElementById("bgm-volume-slider");
+    if (slider) slider.value = bgmAudio.volume;
+    const label = document.getElementById("bgm-volume-label");
+    if (label) label.textContent = Math.round(bgmAudio.volume * 100) + "%";
+  };
+
+  // Restore saved volume
+  const savedBgmVol = localStorage.getItem("ap_bgm_volume");
+  if (savedBgmVol !== null) bgmAudio.volume = parseFloat(savedBgmVol);
+
+  // Init BGM slider once DOM is ready
+  setTimeout(() => {
+    const slider = document.getElementById("bgm-volume-slider");
+    const label = document.getElementById("bgm-volume-label");
+    if (slider) {
+      slider.value = bgmAudio.volume;
+      slider.addEventListener("input", (e) => bgmSetVolume(parseFloat(e.target.value)));
+    }
+    if (label) label.textContent = Math.round(bgmAudio.volume * 100) + "%";
+  }, 0);
+
+  // Sync BGM with narration audio play/pause events
+  if (audio) {
+    audio.addEventListener("play", () => bgmPlay());
+    audio.addEventListener("pause", () => bgmPause());
+  }
+  // Init BGM for part 1
+  bgmSetPart(1);
+
   const playBtn = document.getElementById("play-btn") || _dummy;
   const playBtnWrapper = document.getElementById("play-btn-wrapper") || _dummy;
   const playIcon = document.getElementById("play-icon") || _dummy;
@@ -997,6 +1070,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.activePart = partNum;
     updateBarEpTitle(partNum);
     if (state.audioMode) updateAudioStage(partNum);
+    bgmSetPart(partNum); // Switch BGM tracks when part changes
     
     // Reset all tabs active states
     if (tabPart1) tabPart1.classList.remove("active", "part2-active", "part3-active");

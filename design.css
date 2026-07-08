@@ -140,6 +140,37 @@ body::after {
   white-space:nowrap; text-shadow:0 0 8px rgba(45,226,255,.5); }
 .ap-time .dim{ color:rgba(45,226,255,.4); text-shadow:none; }
 
+/* --- BGM Volume Slider --- */
+.ap-bgm-vol {
+  display: flex; align-items: center; gap: 5px; margin-left: 8px;
+  padding: 0 6px; border-left: 1px solid rgba(45,226,255,.15);
+}
+.ap-bgm-icon { font-size: 13px; opacity: .7; line-height: 1; }
+.ap-bgm-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 70px; height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(45,226,255,.15), rgba(45,226,255,.3));
+  outline: none; cursor: pointer;
+}
+.ap-bgm-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--cyan-hi); box-shadow: 0 0 6px var(--cyan-hi), 0 0 12px var(--cyan);
+  cursor: pointer;
+}
+.ap-bgm-slider::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%; border: none;
+  background: var(--cyan-hi); box-shadow: 0 0 6px var(--cyan-hi), 0 0 12px var(--cyan);
+  cursor: pointer;
+}
+.ap-bgm-label {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: var(--cyan-hi); opacity: .7; white-space: nowrap; min-width: 28px; text-align: right;
+}
+@media (max-width: 480px) {
+  .ap-bgm-vol { display: none; } /* Hide on very small screens to save space */
+}
+
 .ap-gal{ cursor:pointer; border:0; width:38px; height:38px; display:grid; place-items:center; padding:0;
   background:rgba(255,178,46,.08); color:var(--amber-hi);
   clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
