@@ -3143,8 +3143,29 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!ov) return;
       const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
       if (!fsEl) {
+        // Try standard Fullscreen API first (works on desktop + Android)
         const req = ov.requestFullscreen || ov.webkitRequestFullscreen || ov.msRequestFullscreen;
-        if (req) { try { Promise.resolve(req.call(ov)).catch(() => {}); } catch (e) {} }
+        if (req) {
+          try { Promise.resolve(req.call(ov)).catch(() => {
+            // Fallback for iOS Safari: fullscreen the active video element directly
+            const activeVid = currentFsEl && currentFsEl.src ? currentFsEl : (fsVideo1 || fsVideo2);
+            if (activeVid && activeVid.webkitEnterFullscreen) {
+              try { activeVid.webkitEnterFullscreen(); } catch (e2) {}
+            }
+          }); } catch (e) {
+            // Same iOS fallback
+            const activeVid = currentFsEl && currentFsEl.src ? currentFsEl : (fsVideo1 || fsVideo2);
+            if (activeVid && activeVid.webkitEnterFullscreen) {
+              try { activeVid.webkitEnterFullscreen(); } catch (e2) {}
+            }
+          }
+        } else {
+          // No Fullscreen API at all — try iOS video fullscreen
+          const activeVid = currentFsEl && currentFsEl.src ? currentFsEl : (fsVideo1 || fsVideo2);
+          if (activeVid && activeVid.webkitEnterFullscreen) {
+            try { activeVid.webkitEnterFullscreen(); } catch (e2) {}
+          }
+        }
       } else {
         const ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
         if (ex) { try { Promise.resolve(ex.call(document)).catch(() => {}); } catch (e) {} }
@@ -3384,15 +3405,18 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCinemaSubtitle(state.curIdx, state.calibMode ? state.currentTime : Math.max(0, state.currentTime - 0.4));
 
     // Sync source from active preview element
-    const activeSrc = currentPrevEl.src;
+    let activeSrc = currentPrevEl ? currentPrevEl.src : "";
     const activeShot = previewShotId ? previewShotId.textContent : "[STANDBY]";
     if (fullscreenShotId) {
       fullscreenShotId.textContent = activeShot;
     }
     
-    if (activeSrc) {
-      syncFullscreenSource(activeSrc);
+    // If no video loaded yet (e.g. page just opened), load intro video
+    if (!activeSrc || activeSrc === location.href || activeSrc === "") {
+      const partStr = String(state.activePart).padStart(2, '0');
+      activeSrc = getVideoPath(`video/dil_${state.activePart}/${partStr}_intro.mp4`);
     }
+    syncFullscreenSource(activeSrc);
     saveState();
   };
 
