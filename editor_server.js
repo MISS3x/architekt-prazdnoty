@@ -617,7 +617,7 @@ app.post('/api/inject-video', async (req, res) => {
 
     // Generate mobile video version via ffmpeg
     console.log(`Generating mobile video version using ffmpeg...`);
-    const ffmpegCmd = `ffmpeg -y -i "${targetVideoPath}" -vf "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280" -c:v libx264 -crf 23 -preset fast -c:a copy "${targetMobileVideoPath}"`;
+    const ffmpegCmd = `./bin/ffmpeg -y -i "${targetVideoPath}" -vf "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280" -c:v libx264 -crf 23 -preset fast -c:a copy "${targetMobileVideoPath}"`;
     
     exec(ffmpegCmd, (error, stdout, stderr) => {
       if (error) {
@@ -752,7 +752,7 @@ app.post('/api/inject-image', (req, res) => {
     const tmpPath = path.join(__dirname, 'img', 'comic', partFolder, `${imgBase}_uploadtmp`);
     fs.writeFileSync(tmpPath, buffer);
 
-    exec(`ffmpeg -y -i "${tmpPath}" -q:v 2 "${targetPath}"`, (error) => {
+    exec(`./bin/ffmpeg -y -i "${tmpPath}" -q:v 2 "${targetPath}"`, (error) => {
       try { fs.unlinkSync(tmpPath); } catch (e) {}
       if (error) {
         console.error(`inject-image ffmpeg error: ${error.message}`);
