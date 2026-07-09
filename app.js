@@ -390,7 +390,6 @@ document.addEventListener("DOMContentLoaded", () => {
           // If narration is playing or we manually trigger, play it
           bgmAudio.play().catch(() => {});
           updateBgmSelectorUI();
-    startMusicMatrix();
           
           // Sync with Soundtrack View if active
           const soundtrackOpen = document.body.classList.contains("soundtrack-open");
@@ -412,7 +411,6 @@ document.addEventListener("DOMContentLoaded", () => {
     bgmAudio.src = tracks[bgmTrackIdx];
     bgmAudio.play().catch(() => {});
     updateBgmSelectorUI();
-    startMusicMatrix();
     
     const soundtrackOpen = document.body.classList.contains("soundtrack-open");
     if (soundtrackOpen && typeof renderSoundtrackList === "function") {
@@ -435,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     updateBgmSelectorUI();
-    startMusicMatrix();
   };
 
   const bgmPlay = () => {
@@ -502,7 +499,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     updateBgmSelectorUI();
-    startMusicMatrix();
   }, 0);
 
   // Sync BGM with narration audio play/pause events
@@ -1188,8 +1184,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     musicMatrixRaf = requestAnimationFrame(draw);
   };
+  startMusicMatrix();
 
-\  const showAudioStage = (show) => {
+  const showAudioStage = (show) => {
     const el = buildAudioStage();
     el.style.display = show ? "block" : "none";
     if (show) {
@@ -3465,7 +3462,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderSoundtrackList();
       syncSoundtrackPlayerUI();
       updateBgmSelectorUI();
-    startMusicMatrix(); // update dynamic dots in top-bar BGM slider!
+ // update dynamic dots in top-bar BGM slider!
     };
 
     const syncSoundtrackPlayerUI = () => {
