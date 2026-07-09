@@ -55,7 +55,7 @@
               <button id="btn-mode-comic" class="ap-vbtn"><span class="ic">◧</span>Komiks</button>
               <button id="btn-mode-text" class="ap-vbtn active"><span class="ic">◫</span>Text</button>
               <button id="btn-mode-gallery" class="ap-vbtn"><span class="ic">🖼</span>Galerie</button>
-            </div>
+              <button id="btn-mode-soundtrack" class="ap-vbtn"><span class="ic">🎵</span>Music</button>            </div>
           </div>
           <div class="ap-epsel">
             <span class="ap-modelab am">Díl</span>
@@ -87,7 +87,10 @@
           <span class="ap-time"><span id="bar-time-cur">0:00</span><span class="dim" id="bar-time-dur"> / 0:00</span></span>
           <div class="ap-bgm-vol" title="Hlasitost hudby na pozadí">
             <span class="ap-bgm-icon">🎵</span>
-            <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.01" value="0.30" class="ap-bgm-slider">
+            <div class="ap-bgm-container">
+              <div class="ap-bgm-selector" id="bgm-selector"></div>
+              <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.01" value="0.30" class="ap-bgm-slider">
+            </div>
             <span class="ap-bgm-label" id="bgm-volume-label">30%</span>
           </div>
         </div>
@@ -2893,6 +2896,63 @@
       </div>
     </div>
 
+    <!-- Soundtrack Section (samostatný view) -->
+    <section class="soundtrack-section" id="soundtrack-view">
+      <div class="soundtrack-header">
+        <div class="soundtrack-kick">// Akustické prostředí projektu</div>
+        <h2 class="soundtrack-title">MUSIC</h2>
+        <div class="soundtrack-filters">
+          <button class="soundtrack-filter-btn active" data-filter="all">VŠE</button>
+          <button class="soundtrack-filter-btn" data-filter="1">DÍL I</button>
+          <button class="soundtrack-filter-btn" data-filter="2">DÍL II</button>
+          <button class="soundtrack-filter-btn" data-filter="3">DÍL III</button>
+        </div>
+        <button class="soundtrack-close-btn" id="soundtrack-close-btn" title="Zavřít soundtrack">✕ ZAVŘÍT</button>
+      </div>
+
+      <div class="soundtrack-layout">
+        <!-- Interactive Player Card -->
+        <div class="snd-player-card">
+          <div class="snd-player-scanline"></div>
+          <div class="snd-player-hud-corners">
+            <div class="c-tl"></div><div class="c-tr"></div>
+            <div class="c-bl"></div><div class="c-br"></div>
+          </div>
+          <div class="snd-player-meta">
+            <span class="snd-meta-status">// SYSTEM PLAYING music</span>
+            <div class="snd-meta-title" id="snd-active-title">ŽÁDNÁ SKLADBA</div>
+            <div class="snd-meta-part" id="snd-active-part">-</div>
+          </div>
+          
+          <div class="snd-visualizer" id="snd-visualizer" style="position:relative; width:100%; height:120px; overflow:hidden;">
+            <canvas class="snd-matrix" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+          </div>
+
+          <div class="snd-controls">
+            <button class="snd-btn" id="snd-btn-prev" title="Předchozí"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6L18 6v12z"/></svg></button>
+            <button class="snd-play-btn" id="snd-btn-play" title="Přehrát / Pozastavit"><svg viewBox="0 0 24 24" fill="currentColor" id="snd-play-icon"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="snd-btn" id="snd-btn-stop" title="Zastavit"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>
+            <button class="snd-btn" id="snd-btn-next" title="Další"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12h2v12h-2z"/></svg></button>
+          </div>
+
+          <div class="snd-scrub-container">
+            <span class="snd-time" id="snd-time-cur">0:00</span>
+            <div class="snd-scrub" id="snd-scrub">
+              <div class="snd-track"></div>
+              <div class="snd-fill" id="snd-fill"></div>
+              <div class="snd-knob" id="snd-knob"></div>
+            </div>
+            <span class="snd-time dim" id="snd-time-dur">0:00</span>
+          </div>
+        </div>
+
+        <!-- Track List Grid -->
+        <div class="snd-tracklist" id="soundtrack-list">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
 
 
 
@@ -3711,6 +3771,16 @@
   <div id="fullscreen-overlay" class="fullscreen-overlay">
     <div class="fullscreen-cinema-btn" id="fullscreen-cinema-btn" title="Režim kina (celá obrazovka)">⛶ KINO</div>
     <div class="fullscreen-close-btn" id="fullscreen-close-btn">✕ ZAVŘÍT // CLOSE</div>
+    
+    <!-- Film BGM Control (top-left) -->
+    <div class="ap-bgm-vol film-bgm-vol" title="Hlasitost hudby na pozadí">
+      <span class="ap-bgm-icon">🎵</span>
+      <div class="ap-bgm-container">
+        <div class="ap-bgm-selector" id="film-bgm-selector"></div>
+        <input type="range" id="film-bgm-volume-slider" min="0" max="1" step="0.01" value="0.30" class="ap-bgm-slider">
+      </div>
+      <span class="ap-bgm-label" id="film-bgm-volume-label">30%</span>
+    </div>
     <div class="ap-filmtop" id="film-hud">
       <span class="film-hud-title" id="film-hud-title">// ARCHITEKT PRÁZDNOTY</span>
       <span class="film-hud-sep">/</span>

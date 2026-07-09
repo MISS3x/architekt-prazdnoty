@@ -225,6 +225,14 @@ def main():
             if os.path.exists(src_mobile):
                 src_video = src_mobile
                 
+        if i + 1 == len(panels) and src_video and os.path.exists(src_video):
+            try:
+                actual_dur = get_media_duration(args.ffmpeg, src_video)
+                if actual_dur > duration:
+                    duration = actual_dur
+            except Exception:
+                pass
+                
         src_img = resolve_image_path(panel['video_path'])
         
         segments.append({
@@ -283,16 +291,97 @@ def main():
         print(stderr.decode('utf-8', errors='ignore'))
         sys.exit(1)
         
-    # Mix concatenated video with audio track
-    print("🎵 Merging video and audio track...")
+    # --- BGM (Background Music) ---
+    # Track order matches app.js BGM_TRACKS
+    GLOBAL_BGM_TRACKS = ["music/Honeycomb Shutdown_1.mp3", "music/Shutdown Grid 1.mp3"]
+    PART2_BGM_TRACKS = [
+        "music/Brass Lens Exodus 2.mp3",
+        "music/The Hive Collapse 22.mp3",
+        "music/The Hive Collapse 2.mp3"
+    ]
+    PART3_BGM_TRACKS = [
+        "music/Gold Hive Dawn 3.mp3"
+    ]
+    BGM_TRACKS = {
+        1: GLOBAL_BGM_TRACKS,
+        2: PART2_BGM_TRACKS,
+        3: PART3_BGM_TRACKS
+    }
+    bgm_tracks = [t for t in BGM_TRACKS.get(part, []) if os.path.exists(t)]
+    
+    if bgm_tracks:
+        # Concatenate BGM tracks (A+B+A+B... loop to cover full audio duration)
+        bgm_concat_path = os.path.join(temp_dir, "bgm_concat.mp3")
+        bgm_list_path = os.path.join(temp_dir, "bgm_list.txt")
+        
+        # Calculate how many loops we need
+        total_bgm_dur = 0
+        for t in bgm_tracks:
+            total_bgm_dur += get_media_duration(args.ffmpeg, t)
+        loops_needed = max(1, int(audio_dur / total_bgm_dur) + 1)
+        
+        with open(bgm_list_path, 'w') as bf:
+            for _ in range(loops_needed):
+                for t in bgm_tracks:
+                    abs_path = os.path.abspath(t)
+                    bf.write(f"file '{abs_path}'\n")
+        
+        print(f"🎵 Concatenating BGM tracks ({len(bgm_tracks)} tracks × {loops_needed} loops)...")
+        cmd_bgm = [
+            args.ffmpeg, '-y',
+            '-f', 'concat', '-safe', '0',
+            '-i', bgm_list_path,
+            '-t', f"{audio_dur:.3f}",
+            '-c:a', 'libmp3lame', '-b:a', '192k',
+            bgm_concat_path
+        ]
+        process = subprocess.Popen(cmd_bgm, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            print("Warning: BGM concat failed, proceeding without music")
+            print(stderr.decode('utf-8', errors='ignore'))
+            bgm_concat_path = None
+        else:
+            print(f"✅ BGM prepared ({audio_dur:.1f}s)")
+    else:
+        bgm_concat_path = None
+        print("⚠️ No BGM tracks found, compiling without background music")
+    
+    # Mix narration + BGM into combined audio
+    if bgm_concat_path and os.path.exists(bgm_concat_path):
+        print("🎵 Mixing narration (100%) + BGM (30%)...")
+        mixed_audio_path = os.path.join(temp_dir, "mixed_audio.aac")
+        cmd_mix = [
+            args.ffmpeg, '-y',
+            '-i', audio_path,
+            '-i', bgm_concat_path,
+            '-filter_complex',
+            '[0:a]volume=1.0[narr];[1:a]volume=0.30[bgm];[narr][bgm]amix=inputs=2:duration=first:dropout_transition=3[out]',
+            '-map', '[out]',
+            '-c:a', 'aac', '-b:a', '192k',
+            mixed_audio_path
+        ]
+        process = subprocess.Popen(cmd_mix, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            print("Warning: Audio mixing failed, using narration only")
+            print(stderr.decode('utf-8', errors='ignore'))
+            final_audio = audio_path
+        else:
+            final_audio = mixed_audio_path
+            print("✅ Audio mixed successfully")
+    else:
+        final_audio = audio_path
+    
+    # Merge video + mixed audio
+    print("🎬 Merging video and mixed audio track...")
     cmd_merge = [
         args.ffmpeg, '-y',
         '-i', raw_video_path,
-        '-i', audio_path,
+        '-i', final_audio,
         '-c:v', 'copy',
         '-c:a', 'aac',
         '-b:a', '192k',
-        '-shortest',
         output_filename
     ]
     process = subprocess.Popen(cmd_merge, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

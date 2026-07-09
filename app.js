@@ -339,34 +339,103 @@ document.addEventListener("DOMContentLoaded", () => {
   const audio = document.getElementById("audio-element"); // Audio element still exists
 
   // --- BACKGROUND MUSIC (BGM) SYSTEM ---
+  const GLOBAL_BGM_TRACKS = [
+    "music/Honeycomb Shutdown_1.mp3",
+    "music/Shutdown Grid 1.mp3"
+  ];
+  const PART2_BGM_TRACKS = [
+    "music/Brass Lens Exodus 2.mp3",
+    "music/The Hive Collapse 22.mp3",
+    "music/The Hive Collapse 2.mp3"
+  ];
+  const PART3_BGM_TRACKS = [
+    "music/Gold Hive Dawn 3.mp3"
+  ];
   const BGM_TRACKS = {
-    1: ["video/dil_1/dil_1_b.mp3", "video/dil_1/dill_1_a.mp3"],
-    2: ["video/dil_2/dil_2_a.mp3", "video/dil_2/dil_2_b.mp3"],
-    3: ["video/dil_3/dil_3_a.mp3", "video/dil_3/dill_3_b.mp3"]
+    1: GLOBAL_BGM_TRACKS,
+    2: PART2_BGM_TRACKS,
+    3: PART3_BGM_TRACKS
   };
   const bgmAudio = new Audio();
   bgmAudio.loop = false;
   bgmAudio.volume = 0.30; // default 30%
-  let bgmTrackIdx = 0; // 0 = A, 1 = B
+  let bgmTrackIdx = 0; // index of active track
   let bgmPart = 1;
 
-  // When track A ends, auto-play track B; when B ends, loop back to A
+  const updateBgmSelectorUI = () => {
+    const selectors = [
+      document.getElementById("bgm-selector"),
+      document.getElementById("film-bgm-selector"),
+      document.getElementById("snd-bgm-selector")
+    ];
+    const tracks = BGM_TRACKS[bgmPart] || [];
+    
+    selectors.forEach(selector => {
+      if (!selector) return;
+      selector.innerHTML = "";
+      
+      tracks.forEach((track, idx) => {
+        const dot = document.createElement("div");
+        dot.className = "ap-bgm-dot" + (idx === bgmTrackIdx ? " active" : "");
+        
+        const parts = track.split("/");
+        const filename = parts[parts.length - 1].replace(".mp3", "");
+        dot.title = `Soundtrack: ${filename}`;
+        
+        dot.addEventListener("click", () => {
+          if (bgmTrackIdx === idx && !bgmAudio.paused) return; // already playing
+          bgmTrackIdx = idx;
+          bgmAudio.src = track;
+          
+          // If narration is playing or we manually trigger, play it
+          bgmAudio.play().catch(() => {});
+          updateBgmSelectorUI();
+    startMusicMatrix();
+          
+          // Sync with Soundtrack View if active
+          const soundtrackOpen = document.body.classList.contains("soundtrack-open");
+          if (soundtrackOpen && typeof renderSoundtrackList === "function") {
+            renderSoundtrackList();
+            syncSoundtrackPlayerUI();
+          }
+        });
+        selector.appendChild(dot);
+      });
+    });
+  };
+
+  // When track ends, auto-play next track
   bgmAudio.addEventListener("ended", () => {
     const tracks = BGM_TRACKS[bgmPart];
-    if (!tracks) return;
+    if (!tracks || !tracks.length) return;
     bgmTrackIdx = (bgmTrackIdx + 1) % tracks.length;
     bgmAudio.src = tracks[bgmTrackIdx];
     bgmAudio.play().catch(() => {});
+    updateBgmSelectorUI();
+    startMusicMatrix();
+    
+    const soundtrackOpen = document.body.classList.contains("soundtrack-open");
+    if (soundtrackOpen && typeof renderSoundtrackList === "function") {
+      renderSoundtrackList();
+      syncSoundtrackPlayerUI();
+    }
   });
 
   const bgmSetPart = (partNum) => {
     bgmPart = partNum;
-    bgmTrackIdx = 0;
     const tracks = BGM_TRACKS[partNum];
     if (tracks && tracks.length) {
-      bgmAudio.src = tracks[0];
-      bgmAudio.load();
+      // Don't interrupt playing BGM if it's already one of the global BGM tracks
+      const curSrc = bgmAudio.src ? decodeURIComponent(bgmAudio.src) : "";
+      const matchesAny = tracks.some(t => curSrc.endsWith(t));
+      if (!matchesAny) {
+        bgmTrackIdx = 0;
+        bgmAudio.src = tracks[0];
+        bgmAudio.load();
+      }
     }
+    updateBgmSelectorUI();
+    startMusicMatrix();
   };
 
   const bgmPlay = () => {
@@ -380,26 +449,60 @@ document.addEventListener("DOMContentLoaded", () => {
   const bgmSetVolume = (v) => {
     bgmAudio.volume = Math.max(0, Math.min(1, v));
     localStorage.setItem("ap_bgm_volume", bgmAudio.volume);
-    // Update slider UI if it exists
-    const slider = document.getElementById("bgm-volume-slider");
-    if (slider) slider.value = bgmAudio.volume;
-    const label = document.getElementById("bgm-volume-label");
-    if (label) label.textContent = Math.round(bgmAudio.volume * 100) + "%";
+    
+    // Update all sliders
+    const sliderIds = ["bgm-volume-slider", "film-bgm-volume-slider", "snd-volume-slider"];
+    sliderIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = bgmAudio.volume;
+    });
+    
+    // Update all labels
+    const labelIds = ["bgm-volume-label", "film-bgm-volume-label", "snd-volume-label"];
+    labelIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = Math.round(bgmAudio.volume * 100) + "%";
+    });
   };
 
   // Restore saved volume
   const savedBgmVol = localStorage.getItem("ap_bgm_volume");
   if (savedBgmVol !== null) bgmAudio.volume = parseFloat(savedBgmVol);
 
-  // Init BGM slider once DOM is ready
+  // Sync volume change event globally on bgmAudio (covers programmatic changes)
+  bgmAudio.addEventListener("volumechange", () => {
+    const vol = bgmAudio.volume;
+    const sliderIds = ["bgm-volume-slider", "film-bgm-volume-slider", "snd-volume-slider"];
+    sliderIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = vol;
+    });
+    const labelIds = ["bgm-volume-label", "film-bgm-volume-label", "snd-volume-label"];
+    labelIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = Math.round(vol * 100) + "%";
+    });
+  });
+
+  // Init BGM sliders once DOM is ready
   setTimeout(() => {
-    const slider = document.getElementById("bgm-volume-slider");
-    const label = document.getElementById("bgm-volume-label");
-    if (slider) {
-      slider.value = bgmAudio.volume;
-      slider.addEventListener("input", (e) => bgmSetVolume(parseFloat(e.target.value)));
-    }
-    if (label) label.textContent = Math.round(bgmAudio.volume * 100) + "%";
+    const sliderIds = ["bgm-volume-slider", "film-bgm-volume-slider", "snd-volume-slider"];
+    sliderIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.value = bgmAudio.volume;
+        el.addEventListener("input", (e) => bgmSetVolume(parseFloat(e.target.value)));
+      }
+    });
+    
+    const labelIds = ["bgm-volume-label", "film-bgm-volume-label", "snd-volume-label"];
+    labelIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = Math.round(bgmAudio.volume * 100) + "%";
+    });
+    
+    updateBgmSelectorUI();
+    startMusicMatrix();
   }, 0);
 
   // Sync BGM with narration audio play/pause events
@@ -929,7 +1032,164 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const stopAudioMatrix = () => { if (audioMatrixStop) { audioMatrixStop(); audioMatrixStop = null; } };
 
-  const showAudioStage = (show) => {
+
+  let musicMatrixRaf = null;
+  const startMusicMatrix = () => {
+    if (musicMatrixRaf) { cancelAnimationFrame(musicMatrixRaf); musicMatrixRaf = null; }
+    const wrap = document.getElementById("snd-visualizer");
+    const cv = wrap ? wrap.querySelector(".snd-matrix") : null;
+    if (!cv || !wrap) return;
+    const ctx = cv.getContext("2d");
+    
+    const CORE = 4, FADE_RINGS = 2, RINGS = CORE + FADE_RINGS;
+    const S = 0.62, HEXR = S * 0.88, MAXH = 6.2;
+    let dpr = 1, t = 0, angle = 0, focal = 1, cx = 0, cy = 0;
+    
+    const hexes = [];
+    let maxRad = 0.0001;
+    for (let q = -RINGS; q <= RINGS; q++) {
+      const rr1 = Math.max(-RINGS, -q - RINGS), rr2 = Math.min(RINGS, -q + RINGS);
+      for (let r = rr1; r <= rr2; r++) {
+        const x = 1.5 * S * q;
+        const z = Math.sqrt(3) * S * (r + q / 2);
+        const rad = Math.sqrt(x * x + z * z);
+        const ring = (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+        const over = Math.max(0, ring - CORE);
+        const scale = Math.pow(0.8, over);
+        const fade = over === 0 ? 1 : Math.pow(0.74, over);
+        if (ring <= CORE && rad > maxRad) maxRad = rad;
+        hexes.push({ x, z, rad, ang: Math.atan2(z, x), scale, fade });
+      }
+    }
+    const HN = hexes.length;
+    const field = new Float32Array(HN), tgt = new Float32Array(HN);
+    const order = new Array(HN);
+    for (let k = 0; k < HN; k++) order[k] = k;
+    const CORN = [];
+    for (let c = 0; c < 6; c++) { const a = (Math.PI / 3) * c; CORN.push([Math.cos(a) * HEXR, Math.sin(a) * HEXR]); }
+
+    const fit = () => {
+      const W = Math.max(60, wrap.clientWidth), H = Math.max(60, wrap.clientHeight);
+      dpr = window.devicePixelRatio || 1;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      focal = cv.height * 0.8; cx = cv.width / 2; cy = cv.height * 0.5;
+    };
+    fit();
+    const ro = new ResizeObserver(fit); ro.observe(wrap);
+
+    const draw = () => {
+      const play = !bgmAudio.paused;
+      angle += play ? 0.0042 : 0.0011;
+      t += play ? 0.03 : 0.014;
+      
+      const maxR = maxRad;
+      for (let k = 0; k < HN; k++) {
+        const hx = hexes[k], rad = hx.rad;
+        let v;
+        if (play) {
+          v = 0.55 + 0.45 * Math.sin(t * 2.2 - rad * 0.85) + 0.38 * Math.sin(t * 1.3 + hx.x * 0.45) + 0.38 * Math.sin(t * 1.7 + hx.z * 0.45);
+          v = v / 1.75;
+          v *= 1 - (rad / (maxR * 1.6)) * 0.65;
+          v *= 0.6 + 0.4 * Math.abs(Math.sin(t * 0.55));
+          const edgeFloor = 0.06 + 0.12 * (rad / maxR);
+          v = Math.max(edgeFloor, Math.min(1, v));
+        } else {
+          const ripple = Math.sin(rad * 1.0 - t * 1.5);
+          const cross = Math.sin(hx.x * 0.42 + t * 0.9) * Math.sin(hx.z * 0.42 - t * 0.7);
+          const swirl = Math.sin(hx.ang * 2 + rad * 0.4 - t * 1.0);
+          let w = 0.38 + 0.28 * ripple + 0.20 * cross + 0.14 * swirl;
+          w = w * (0.35 + 0.65 * (1 - rad / (maxR * 1.4)));
+          w *= 0.72 + 0.28 * Math.sin(t * 0.35);
+          const edgeFloor = 0.06 + 0.10 * (rad / maxR);
+          v = Math.max(edgeFloor, Math.min(0.75, w));
+        }
+        tgt[k] = Number.isFinite(v) ? v : 0;
+      }
+      for (let k = 0; k < HN; k++) {
+        const up = tgt[k] > field[k];
+        field[k] += (tgt[k] - field[k]) * (up ? 0.45 : 0.12);
+      }
+
+      const ca = Math.cos(angle), sa = Math.sin(angle), ct = Math.cos(1.2), st = Math.sin(1.2);
+      for (let k = 0; k < HN; k++) {
+        const hx = hexes[k];
+        const nx = hx.x * ca - hx.z * sa;
+        const nz = hx.x * sa + hx.z * ca;
+        order[k] = k;
+      }
+      order.sort((a, b) => {
+        const ha = hexes[a], hb = hexes[b];
+        const za = ha.x * sa + ha.z * ca, zb = hb.x * sa + hb.z * ca;
+        return zb - za;
+      });
+
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.globalCompositeOperation = "screen";
+
+      const proj = (x, y, z) => {
+        const ry = y * ct - z * st, rz = y * st + z * ct;
+        const f = focal / (focal + rz * focal * 0.08);
+        return [cx + x * f * focal * 0.15 * dpr, cy - ry * f * focal * 0.15 * dpr, f];
+      };
+
+      for (let i = 0; i < HN; i++) {
+        const k = order[i];
+        const hx = hexes[k], hr = field[k], fd = hx.fade * hx.scale;
+        const cxw = hx.x * ca - hx.z * sa, czw = hx.x * sa + hx.z * ca;
+        const h = hr * MAXH;
+        
+        const cn = [];
+        for (let c=0; c<6; c++) {
+          const vx = CORN[c][0]*hx.scale, vz = CORN[c][1]*hx.scale;
+          cn.push([vx*ca - vz*sa, vx*sa + vz*ca]);
+        }
+
+        const hue = 186;
+        if (hr < 0.02) {
+          ctx.strokeStyle = "hsla(" + hue + " 80% 50% / " + (0.3 * fd).toFixed(3) + ")";
+          ctx.lineWidth = Math.max(1, dpr * 0.5);
+          ctx.beginPath();
+          for (let c = 0; c < 6; c++) { const p = proj(cxw + cn[c][0], 0, czw + cn[c][1]); c ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+          ctx.closePath(); ctx.stroke();
+          continue;
+        }
+
+        const aWall = (0.10 + 0.26 * hr) * fd;
+        for (let c = 0; c < 6; c++) {
+          const c2 = (c + 1) % 6;
+          const b0 = proj(cxw + cn[c][0], 0, czw + cn[c][1]);
+          const b1 = proj(cxw + cn[c2][0], 0, czw + cn[c2][1]);
+          const t1 = proj(cxw + cn[c2][0], h, czw + cn[c2][1]);
+          const t0 = proj(cxw + cn[c][0], h, czw + cn[c][1]);
+          const shade = 0.55 + 0.45 * Math.abs(Math.cos((Math.PI / 3) * c + angle));
+          ctx.fillStyle = "hsla(" + hue + " 95% 56% / " + (aWall * shade).toFixed(3) + ")";
+          ctx.beginPath();
+          ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]);
+          ctx.lineTo(t1[0], t1[1]); ctx.lineTo(t0[0], t0[1]); ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.fillStyle = "hsla(" + hue + " 100% " + (58 + 14 * hr) + "% / " + ((0.22 + 0.42 * hr) * fd).toFixed(3) + ")";
+        ctx.beginPath();
+        for (let c = 0; c < 6; c++) { const p = proj(cxw + cn[c][0], h, czw + cn[c][1]); c ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "hsla(" + hue + " 100% 82% / " + ((0.5 + 0.4 * hr) * fd).toFixed(3) + ")";
+        ctx.lineWidth = Math.max(1, dpr * 0.9);
+        ctx.stroke();
+      }
+
+      ctx.globalCompositeOperation = "source-over";
+      const scan = 3 * dpr;
+      ctx.fillStyle = "rgba(2,8,14,0.16)";
+      for (let y = (t * 22 * dpr) % (scan * 2); y < cv.height; y += scan * 2) {
+        ctx.fillRect(0, y, cv.width, scan);
+      }
+      musicMatrixRaf = requestAnimationFrame(draw);
+    };
+    musicMatrixRaf = requestAnimationFrame(draw);
+  };
+
+\  const showAudioStage = (show) => {
     const el = buildAudioStage();
     el.style.display = show ? "block" : "none";
     if (show) {
@@ -1896,22 +2156,34 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     audio.addEventListener("ended", () => {
-      // Automatic progression to next part
-      if (state.activePart === 1) {
-        console.log("Díl I ended, decrypting/switching to Díl II");
-        state.decryptedPart2 = true;
-        localStorage.setItem("decrypted_part2", "true");
-        setPart(2, true);
-      } else if (state.activePart === 2) {
-        console.log("Díl II ended, transitioning to Díl III (will login if locked)");
-        setPart(3, true);
+      const handlePartTransition = () => {
+        // Automatic progression to next part
+        if (state.activePart === 1) {
+          console.log("Díl I ended, decrypting/switching to Díl II");
+          state.decryptedPart2 = true;
+          localStorage.setItem("decrypted_part2", "true");
+          setPart(2, true);
+        } else if (state.activePart === 2) {
+          console.log("Díl II ended, transitioning to Díl III (will login if locked)");
+          setPart(3, true);
+        } else {
+          // Last part finished, reset to standby
+          state.playing = false;
+          playIcon.textContent = "▶";
+          if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
+          audio.currentTime = 0;
+          updateStatus();
+        }
+      };
+
+      if (state.fullscreenMode && typeof currentFsEl !== "undefined" && currentFsEl && !currentFsEl.paused && !currentFsEl.ended) {
+        currentFsEl.loop = false; // Turn off looping so it finishes naturally
+        currentFsEl.addEventListener("ended", function onFsEnded() {
+          currentFsEl.removeEventListener("ended", onFsEnded);
+          handlePartTransition();
+        });
       } else {
-        // Last part finished, reset to standby
-        state.playing = false;
-        playIcon.textContent = "▶";
-        if (playBtnWrapper) playBtnWrapper.classList.remove("playing");
-        audio.currentTime = 0;
-        updateStatus();
+        handlePartTransition();
       }
     });
 
@@ -2999,12 +3271,92 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
+    // --- SOUNDTRACK SYSTEM (samostatný view) ---
+    const btnSoundtrack = document.getElementById("btn-mode-soundtrack");
+    const soundtrackView = document.getElementById("soundtrack-view");
+    const soundtrackCloseBtn = document.getElementById("soundtrack-close-btn");
+    const soundtrackList = document.getElementById("soundtrack-list");
+    
+    const btnSndPrev = document.getElementById("snd-btn-prev");
+    const btnSndPlay = document.getElementById("snd-btn-play");
+    const btnSndStop = document.getElementById("snd-btn-stop");
+    const btnSndNext = document.getElementById("snd-btn-next");
+    const sndPlayIcon = document.getElementById("snd-play-icon");
+    
+    const sndScrub = document.getElementById("snd-scrub");
+    const sndFill = document.getElementById("snd-fill");
+    const sndKnob = document.getElementById("snd-knob");
+    
+    const sndTimeCur = document.getElementById("snd-time-cur");
+    const sndTimeDur = document.getElementById("snd-time-dur");
+    const sndVolumeSlider = document.getElementById("snd-volume-slider");
+    const sndVolumeLabel = document.getElementById("snd-volume-label");
+    const sndActiveTitle = document.getElementById("snd-active-title");
+    const sndActivePart = document.getElementById("snd-active-part");
+    const sndPlayerCard = document.querySelector(".snd-player-card");
+    const soundtrackFilters = document.querySelectorAll(".soundtrack-filter-btn");
+
+    if (soundtrackView && soundtrackView.parentElement !== document.body) document.body.appendChild(soundtrackView);
+
+    const SOUNDTRACK_LIST = [
+      { part: 1, title: "Honeycomb Shutdown 1", file: "music/Honeycomb Shutdown_1.mp3", duration: "3:57" },
+      { part: 1, title: "Honeycomb Shutdown 11", file: "music/Honeycomb Shutdown_11.mp3", duration: "4:00" },
+      { part: 1, title: "Shutdown Grid 1", file: "music/Shutdown Grid 1.mp3", duration: "3:45" },
+      { part: 2, title: "Brass Lens Exodus 2", file: "music/Brass Lens Exodus 2.mp3", duration: "3:47" },
+      { part: 2, title: "The Hive Collapse 2", file: "music/The Hive Collapse 2.mp3", duration: "4:41" },
+      { part: 2, title: "The Hive Collapse 22", file: "music/The Hive Collapse 22.mp3", duration: "4:47" },
+      { part: 3, title: "Gold Hive Dawn 3", file: "music/Gold Hive Dawn 3.mp3", duration: "5:18" }
+    ];
+
+    let activeSoundtrackFilter = "all";
+
+    const getPlayingTrackIndex = () => {
+      if (!bgmAudio.src) return -1;
+      const srcPath = decodeURIComponent(bgmAudio.src);
+      return SOUNDTRACK_LIST.findIndex(t => srcPath.endsWith(t.file));
+    };
+
+    const openSoundtrack = () => {
+      document.body.classList.add("soundtrack-open");
+      if (btnSoundtrack) btnSoundtrack.classList.add("active");
+      try { audio.pause(); } catch (e) {}                 // zastav příběh
+      if (state.fullscreenMode) closeFullscreenOverlay(); // zavři film
+      closeGallery();                                     // zavři galerii
+      pauseAllVideos();                                   // pauzni videa
+      updateStatus();
+      
+      // Sync volume UI
+      if (sndVolumeSlider) sndVolumeSlider.value = bgmAudio.volume;
+      if (sndVolumeLabel) sndVolumeLabel.textContent = Math.round(bgmAudio.volume * 100) + "%";
+      
+      if (bgmAudio.src && bgmAudio.paused) bgmAudio.play().catch(() => {});
+      
+      if (soundtrackView) soundtrackView.scrollTop = 0;
+      renderSoundtrackList();
+      syncSoundtrackPlayerUI();
+    };
+
+    const closeSoundtrack = () => {
+      document.body.classList.remove("soundtrack-open");
+      if (btnSoundtrack) btnSoundtrack.classList.remove("active");
+      resumeBackgroundVideos();
+    };
+
+    if (btnSoundtrack) {
+      btnSoundtrack.addEventListener("click", () => {
+        if (document.body.classList.contains("soundtrack-open")) closeSoundtrack();
+        else openSoundtrack();
+      });
+    }
+    if (soundtrackCloseBtn) soundtrackCloseBtn.addEventListener("click", closeSoundtrack);
+
     const openGallery = () => {
       document.body.classList.add("gallery-open");
       state.galleryMode = true;
       if (btnGallery) btnGallery.classList.add("active");
       try { audio.pause(); } catch (e) {}                 // zastav audio (master clock)
       if (state.fullscreenMode) closeFullscreenOverlay(); // vypni filmový overlay
+      closeSoundtrack();                                  // zavři soundtrack!
       pauseAllVideos();                                   // zastav VŠECHNA videa (pozadí/hero/film/preview)
       updateStatus();
       if (galleryView) galleryView.scrollTop = 0;
@@ -3024,11 +3376,228 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const btnGalleryClose = document.getElementById("gallery-close-btn");
     if (btnGalleryClose) btnGalleryClose.addEventListener("click", closeGallery);
-    // přepnutí verze zavře galerii (dotaz přes ID — mode tlačítka se vážou až v init() po tomto callu)
-    ["btn-mode-text", "btn-mode-comic", "btn-mode-movie", "btn-mode-audio"].forEach(id => {
+
+    // přepnutí verze zavře galerii i soundtrack
+    ["btn-mode-text", "btn-mode-comic", "btn-mode-movie", "btn-mode-audio", "btn-mode-gallery", "btn-mode-soundtrack"].forEach(id => {
       const b = document.getElementById(id);
-      if (b) b.addEventListener("click", closeGallery);
+      if (b && id !== "btn-mode-gallery") b.addEventListener("click", closeGallery);
+      if (b && id !== "btn-mode-soundtrack") b.addEventListener("click", closeSoundtrack);
     });
+
+    const renderSoundtrackList = () => {
+      if (!soundtrackList) return;
+      soundtrackList.innerHTML = "";
+      
+      const playingIdx = getPlayingTrackIndex();
+
+      SOUNDTRACK_LIST.forEach((track, index) => {
+        if (activeSoundtrackFilter !== "all" && track.part !== parseInt(activeSoundtrackFilter)) {
+          return;
+        }
+
+        const isActive = (playingIdx === index);
+
+        const row = document.createElement("div");
+        row.className = "snd-track-row" + (isActive ? " active" : "");
+        row.dataset.index = index;
+
+        row.innerHTML = `
+          <div class="snd-row-icon">🎵</div>
+          <div class="snd-row-info">
+            <div class="snd-row-title">${track.title}</div>
+            <div class="snd-row-subtitle">Díl ${track.part} · MP3 audio</div>
+          </div>
+          <div class="snd-row-meta">
+            <div class="snd-row-part">DÍL ${track.part === 1 ? 'I' : track.part === 2 ? 'II' : 'III'}</div>
+            <button class="snd-row-play-btn" title="Přehrát">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                ${isActive && !bgmAudio.paused 
+                  ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' 
+                  : '<path d="M8 5v14l11-7z"/>'}
+              </svg>
+            </button>
+            <a href="${track.file}" download class="snd-row-dl-btn" title="Stáhnout">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+              </svg>
+            </a>
+          </div>
+        `;
+
+        const playRowBtn = row.querySelector(".snd-row-play-btn");
+        playRowBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          playTrackByIndex(index);
+        });
+
+        row.addEventListener("click", () => {
+          playTrackByIndex(index);
+        });
+
+        soundtrackList.appendChild(row);
+      });
+    };
+
+    const playTrackByIndex = (index) => {
+      const track = SOUNDTRACK_LIST[index];
+      if (!track) return;
+
+      const currentIdx = getPlayingTrackIndex();
+      if (currentIdx === index) {
+        // Toggle play/pause
+        if (bgmAudio.paused) {
+          bgmAudio.play().catch(() => {});
+        } else {
+          bgmAudio.pause();
+        }
+      } else {
+        // Set state paths for rotation
+        bgmPart = track.part;
+        const tracks = BGM_TRACKS[bgmPart] || [];
+        const trackInRotationIdx = tracks.indexOf(track.file);
+        if (trackInRotationIdx !== -1) {
+          bgmTrackIdx = trackInRotationIdx;
+        }
+        
+        bgmAudio.src = track.file;
+        bgmAudio.play().catch(() => {});
+      }
+      renderSoundtrackList();
+      syncSoundtrackPlayerUI();
+      updateBgmSelectorUI();
+    startMusicMatrix(); // update dynamic dots in top-bar BGM slider!
+    };
+
+    const syncSoundtrackPlayerUI = () => {
+      const playingIdx = getPlayingTrackIndex();
+      if (playingIdx !== -1) {
+        const track = SOUNDTRACK_LIST[playingIdx];
+        if (sndActiveTitle) sndActiveTitle.textContent = track.title;
+        if (sndActivePart) sndActivePart.textContent = `Díl ${track.part === 1 ? 'I' : track.part === 2 ? 'II' : 'III'} - BGM`;
+        
+        if (bgmAudio.paused) {
+          if (sndPlayIcon) sndPlayIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+          if (sndPlayerCard) sndPlayerCard.classList.remove("playing");
+        } else {
+          if (sndPlayIcon) sndPlayIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+          if (sndPlayerCard) sndPlayerCard.classList.add("playing");
+        }
+      } else {
+        if (sndActiveTitle) sndActiveTitle.textContent = "ŽÁDNÁ SKLADBA";
+        if (sndActivePart) sndActivePart.textContent = "-";
+        if (sndPlayIcon) sndPlayIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+        if (sndPlayerCard) sndPlayerCard.classList.remove("playing");
+      }
+    };
+
+    const nextTrack = () => {
+      let idx = getPlayingTrackIndex();
+      if (idx === -1) idx = 0;
+      else idx = (idx + 1) % SOUNDTRACK_LIST.length;
+      playTrackByIndex(idx);
+    };
+
+    const prevTrack = () => {
+      let idx = getPlayingTrackIndex();
+      if (idx === -1) idx = SOUNDTRACK_LIST.length - 1;
+      else idx = (idx - 1 + SOUNDTRACK_LIST.length) % SOUNDTRACK_LIST.length;
+      playTrackByIndex(idx);
+    };
+
+    if (btnSndPlay) {
+      btnSndPlay.addEventListener("click", () => {
+        let idx = getPlayingTrackIndex();
+        if (idx === -1) playTrackByIndex(0);
+        else playTrackByIndex(idx);
+      });
+    }
+    if (btnSndStop) {
+      btnSndStop.addEventListener("click", () => {
+        bgmAudio.pause();
+        bgmAudio.currentTime = 0;
+        syncSoundtrackPlayerUI();
+        renderSoundtrackList();
+      });
+    }
+    if (btnSndNext) btnSndNext.addEventListener("click", nextTrack);
+    if (btnSndPrev) btnSndPrev.addEventListener("click", prevTrack);
+
+    // Seeking progress in Soundtrack player
+    if (sndScrub) {
+      const getFrac = (e) => {
+        const rect = sndScrub.getBoundingClientRect();
+        const cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+        return (cx - rect.left) / rect.width;
+      };
+      
+      let isSeeking = false;
+      
+      sndScrub.addEventListener("pointerdown", (e) => {
+        isSeeking = true;
+        bgmAudio.currentTime = getFrac(e) * bgmAudio.duration;
+        updateSoundtrackTime();
+      });
+      
+      document.addEventListener("pointermove", (e) => {
+        if (!isSeeking) return;
+        bgmAudio.currentTime = getFrac(e) * bgmAudio.duration;
+        updateSoundtrackTime();
+      });
+      
+      document.addEventListener("pointerup", () => {
+        isSeeking = false;
+      });
+    }
+
+    // Volume controls
+    if (sndVolumeSlider) {
+      sndVolumeSlider.addEventListener("input", (e) => {
+        const vol = parseFloat(e.target.value);
+        bgmSetVolume(vol);
+      });
+    }
+
+    const updateSoundtrackVolumeUI = () => {
+      if (sndVolumeSlider) sndVolumeSlider.value = bgmAudio.volume;
+      if (sndVolumeLabel) sndVolumeLabel.textContent = Math.round(bgmAudio.volume * 100) + "%";
+    };
+
+    const updateSoundtrackTime = () => {
+      if (!document.body.classList.contains("soundtrack-open")) return;
+      const cur = bgmAudio.currentTime || 0;
+      const dur = bgmAudio.duration || 0;
+      
+      if (sndTimeCur) sndTimeCur.textContent = formatTime(cur);
+      if (sndTimeDur && !isNaN(dur) && dur > 0) sndTimeDur.textContent = formatTime(dur);
+      
+      if (sndFill) {
+        const pct = dur > 0 ? (cur / dur) * 100 : 0;
+        sndFill.style.width = pct + "%";
+        if (sndKnob) sndKnob.style.left = pct + "%";
+      }
+    };
+
+    // Filter Buttons
+    soundtrackFilters.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        soundtrackFilters.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeSoundtrackFilter = btn.dataset.filter;
+        renderSoundtrackList();
+      });
+    });
+
+    // Listen to original bgmAudio events to keep Soundtrack UI in sync
+    bgmAudio.addEventListener("play", () => {
+      syncSoundtrackPlayerUI();
+      renderSoundtrackList();
+    });
+    bgmAudio.addEventListener("pause", () => {
+      syncSoundtrackPlayerUI();
+      renderSoundtrackList();
+    });
+    bgmAudio.addEventListener("timeupdate", updateSoundtrackTime);
+    bgmAudio.addEventListener("volumechange", updateSoundtrackVolumeUI);
     // Play/Pause Click
     if (playBtn) playBtn.addEventListener("click", togglePlay);
 
