@@ -711,7 +711,7 @@ body.comic-fs .comic-grid { height: 100% !important; }
     padding: 8px 12px !important; border-radius: 0 !important;
     border: 0 !important; box-shadow: none !important;
     font-family: 'Chakra Petch', 'Share Tech Mono', sans-serif !important; font-weight: 500 !important;
-    font-size: 30px !important; line-height: 1.28 !important; letter-spacing: 1.8px !important; text-align: center !important; text-transform: uppercase !important;
+    font-size: 15px !important; line-height: 1.28 !important; letter-spacing: 1.8px !important; text-align: center !important; text-transform: uppercase !important;
     text-shadow: 0 2px 7px rgba(0,0,0,.95), 0 0 18px rgba(0,0,0,.82), 0 0 22px rgba(45,226,255,.32) !important; text-wrap: balance;
   }
 .fullscreen-subtitles .cin-word { opacity: .42; color: #cfeef6; }
@@ -767,7 +767,7 @@ body.mode-movie #preview-subtitles { display: none !important; }
 #fullscreen-overlay:fullscreen .fullscreen-screen {
   width: min(99vw, 178vh) !important; max-width: min(99vw, 178vh) !important;
   height: 100vh !important; max-height: 100vh !important; }
-#fullscreen-overlay:fullscreen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(26px, 3.2vw, 44px) !important; }
+#fullscreen-overlay:fullscreen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(13px, 1.6vw, 22px) !important; }
 /* V kino módu schovej spodní HUD popisky (necháme jen video + titulky) */
 body.cinema-on .ap-filmtop,
 #fullscreen-overlay:fullscreen .ap-filmtop,
@@ -776,7 +776,7 @@ body.cinema-on .ap-filmtop,
 #fullscreen-overlay:-webkit-full-screen .fullscreen-screen {
   width: min(99vw, 178vh) !important; max-width: min(99vw, 178vh) !important;
   height: 100vh !important; max-height: 100vh !important; }
-#fullscreen-overlay:-webkit-full-screen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(26px, 3.2vw, 44px) !important; }
+#fullscreen-overlay:-webkit-full-screen .fullscreen-subtitles { bottom: 6vh !important; font-size: clamp(13px, 1.6vw, 22px) !important; }
 
 /* FILM: titulky zůstávají klasicky dole PŘES video, ale vždy NAD ním
    (dřív se schovávaly pod video — chyba vrstvení). Stačí zvednout z-index. */
@@ -1018,7 +1018,7 @@ body.comic-fs .footer { display: none !important; }
   .fullscreen-subtitles {
     width: 92% !important;
     max-width: 92% !important;
-    font-size: 23px !important;
+    font-size: 11.5px !important;
     line-height: 1.28 !important;
     bottom: 60px !important;
     padding: 0 8px !important;
