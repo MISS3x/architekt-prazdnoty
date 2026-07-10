@@ -1754,7 +1754,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // setActiveModeUI je const definovaný níž → odlož aplikaci režimu za konec
     // synchronního initu (jinak TDZ ReferenceError → pád celého initu).
-    queueMicrotask(() => { setActiveModeUI("text"); });
+    queueMicrotask(() => { setActiveModeUI("movie"); });
 
     if (savedTime && audio) {
       const timeVal = parseFloat(savedTime);
