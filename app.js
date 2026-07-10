@@ -339,20 +339,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const audio = document.getElementById("audio-element"); // Audio element still exists
 
   // --- BACKGROUND MUSIC (BGM) SYSTEM ---
-  const GLOBAL_BGM_TRACKS = [
-    "music/Honeycomb Shutdown_1.mp3",
-    "music/Shutdown Grid 1.mp3"
+  const PART1_BGM_TRACKS = [
+    "music/Neon Rain_1a.mp3",
+    "music/Neon Rain_1b.mp3",
+    "music/Brass Lens Exodus 1c.mp3"
   ];
   const PART2_BGM_TRACKS = [
-    "music/Brass Lens Exodus 2.mp3",
-    "music/The Hive Collapse 22.mp3",
-    "music/The Hive Collapse 2.mp3"
+    "music/The Monolith in Rain 2a.mp3",
+    "music/The Monolith in Rain 2b.mp3",
+    "music/Brass Lens Exodus 2c.mp3"
   ];
   const PART3_BGM_TRACKS = [
-    "music/Gold Hive Dawn 3.mp3"
+    "music/The Hive Mind 3a.mp3",
+    "music/The Hive Mind 3b.mp3",
+    "music/Gold Hive Dawn 3c.mp3"
   ];
   const BGM_TRACKS = {
-    1: GLOBAL_BGM_TRACKS,
+    1: PART1_BGM_TRACKS,
     2: PART2_BGM_TRACKS,
     3: PART3_BGM_TRACKS
   };
@@ -3296,13 +3299,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (soundtrackView && soundtrackView.parentElement !== document.body) document.body.appendChild(soundtrackView);
 
     const SOUNDTRACK_LIST = [
-      { part: 1, title: "Honeycomb Shutdown 1", file: "music/Honeycomb Shutdown_1.mp3", duration: "3:57" },
-      { part: 1, title: "Honeycomb Shutdown 11", file: "music/Honeycomb Shutdown_11.mp3", duration: "4:00" },
-      { part: 1, title: "Shutdown Grid 1", file: "music/Shutdown Grid 1.mp3", duration: "3:45" },
-      { part: 2, title: "Brass Lens Exodus 2", file: "music/Brass Lens Exodus 2.mp3", duration: "3:47" },
-      { part: 2, title: "The Hive Collapse 2", file: "music/The Hive Collapse 2.mp3", duration: "4:41" },
-      { part: 2, title: "The Hive Collapse 22", file: "music/The Hive Collapse 22.mp3", duration: "4:47" },
-      { part: 3, title: "Gold Hive Dawn 3", file: "music/Gold Hive Dawn 3.mp3", duration: "5:18" }
+      { part: 1, title: "Neon Rain 1a", file: "music/Neon Rain_1a.mp3", duration: "3:20" },
+      { part: 1, title: "Neon Rain 1b", file: "music/Neon Rain_1b.mp3", duration: "3:59" },
+      { part: 1, title: "Brass Lens Exodus 1c", file: "music/Brass Lens Exodus 1c.mp3", duration: "3:24" },
+      { part: 2, title: "The Monolith in Rain 2a", file: "music/The Monolith in Rain 2a.mp3", duration: "2:53" },
+      { part: 2, title: "The Monolith in Rain 2b", file: "music/The Monolith in Rain 2b.mp3", duration: "3:10" },
+      { part: 2, title: "Brass Lens Exodus 2c", file: "music/Brass Lens Exodus 2c.mp3", duration: "3:51" },
+      { part: 3, title: "The Hive Mind 3a", file: "music/The Hive Mind 3a.mp3", duration: "1:18" },
+      { part: 3, title: "The Hive Mind 3b", file: "music/The Hive Mind 3b.mp3", duration: "4:00" },
+      { part: 3, title: "Gold Hive Dawn 3c", file: "music/Gold Hive Dawn 3c.mp3", duration: "5:36" }
     ];
 
     let activeSoundtrackFilter = "all";

@@ -293,17 +293,23 @@ def main():
         
     # --- BGM (Background Music) ---
     # Track order matches app.js BGM_TRACKS
-    GLOBAL_BGM_TRACKS = ["music/Honeycomb Shutdown_1.mp3", "music/Shutdown Grid 1.mp3"]
+    PART1_BGM_TRACKS = [
+        "music/Neon Rain_1a.mp3",
+        "music/Neon Rain_1b.mp3",
+        "music/Brass Lens Exodus 1c.mp3"
+    ]
     PART2_BGM_TRACKS = [
-        "music/Brass Lens Exodus 2.mp3",
-        "music/The Hive Collapse 22.mp3",
-        "music/The Hive Collapse 2.mp3"
+        "music/The Monolith in Rain 2a.mp3",
+        "music/The Monolith in Rain 2b.mp3",
+        "music/Brass Lens Exodus 2c.mp3"
     ]
     PART3_BGM_TRACKS = [
-        "music/Gold Hive Dawn 3.mp3"
+        "music/The Hive Mind 3a.mp3",
+        "music/The Hive Mind 3b.mp3",
+        "music/Gold Hive Dawn 3c.mp3"
     ]
     BGM_TRACKS = {
-        1: GLOBAL_BGM_TRACKS,
+        1: PART1_BGM_TRACKS,
         2: PART2_BGM_TRACKS,
         3: PART3_BGM_TRACKS
     }

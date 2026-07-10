@@ -26,17 +26,23 @@ PART_PANEL_TIMES = {
     3: [10.46, 16.68, 21.68, 30.62, 38.98, 47.38, 54.10, 57.78, 62.72, 66.96, 68.68, 85.92, 89.92, 92.40, 95.20, 103.70, 112.88, 119.30, 121.12, 125.92, 131.46, 135.24, 145.94, 149.40, 157.30, 167.54, 175.98, 182.38, 188.04, 196.44, 201.26, 203.60, 209.08, 217.38, 220.76, 226.70, 228.88, 241.92, 247.98, 253.60, 259.54, 261.14, 265.28, 269.22, 273.50, 284.44, 290.16, 298.68, 302.38, 306.10, 311.66, 318.42, 325.86, 332.46, 336.16, 342.54, 346.62, 349.72, 358.16, 366.92, 374.04, 376.61, 379.18, 389.12, 393.66, 396.90, 402.42, 406.50, 410.54]
 }
 
-GLOBAL_BGM_TRACKS = ["music/Honeycomb Shutdown_1.mp3", "music/Shutdown Grid 1.mp3"]
+PART1_BGM_TRACKS = [
+    "music/Neon Rain_1a.mp3",
+    "music/Neon Rain_1b.mp3",
+    "music/Brass Lens Exodus 1c.mp3"
+]
 PART2_BGM_TRACKS = [
-    "music/Brass Lens Exodus 2.mp3",
-    "music/The Hive Collapse 22.mp3",
-    "music/The Hive Collapse 2.mp3"
+    "music/The Monolith in Rain 2a.mp3",
+    "music/The Monolith in Rain 2b.mp3",
+    "music/Brass Lens Exodus 2c.mp3"
 ]
 PART3_BGM_TRACKS = [
-    "music/Gold Hive Dawn 3.mp3"
+    "music/The Hive Mind 3a.mp3",
+    "music/The Hive Mind 3b.mp3",
+    "music/Gold Hive Dawn 3c.mp3"
 ]
 BGM_TRACKS = {
-    1: GLOBAL_BGM_TRACKS,
+    1: PART1_BGM_TRACKS,
     2: PART2_BGM_TRACKS,
     3: PART3_BGM_TRACKS
 }
