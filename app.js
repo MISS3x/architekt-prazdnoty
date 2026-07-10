@@ -361,9 +361,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const bgmAudio = new Audio();
   bgmAudio.loop = false;
-  bgmAudio.volume = 0.30; // default 30%
+  bgmAudio.volume = 0.20; // default 20% (will be overridden by mix slider)
   let bgmTrackIdx = 0; // index of active track
   let bgmPart = 1;
+  let _bgmMix = 0.20; // 0 = voice only, 1 = bg music only, 0.20 = 80% voice / 20% bg
 
   const updateBgmSelectorUI = () => {
     const selectors = [
@@ -446,59 +447,75 @@ document.addEventListener("DOMContentLoaded", () => {
     bgmAudio.pause();
   };
 
-  const bgmSetVolume = (v) => {
-    bgmAudio.volume = Math.max(0, Math.min(1, v));
-    localStorage.setItem("ap_bgm_volume", bgmAudio.volume);
-    
-    // Update all sliders
-    const sliderIds = ["bgm-volume-slider", "film-bgm-volume-slider", "snd-volume-slider"];
+  // --- MIX SLIDER (Voice ↔ BG Music crossfader) ---
+  // mix = 0 → voice 100%, bg 0%
+  // mix = 1 → voice 0%, bg 100%
+  // mix = 0.2 → voice 80%, bg 20%  (default)
+  const applyMix = (mix) => {
+    _bgmMix = Math.max(0, Math.min(1, mix));
+    bgmAudio.volume = _bgmMix;
+    if (audio) audio.volume = 1 - _bgmMix;
+    localStorage.setItem("ap_bgm_mix", _bgmMix);
+    // Update all mix sliders
+    const sliderIds = ["bgm-mix-slider", "film-bgm-mix-slider", "snd-mix-slider"];
     sliderIds.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.value = bgmAudio.volume;
+      if (el) el.value = _bgmMix;
     });
-    
-    // Update all labels
-    const labelIds = ["bgm-volume-label", "film-bgm-volume-label", "snd-volume-label"];
+    // Update labels
+    const voicePct = Math.round((1 - _bgmMix) * 100);
+    const bgPct = Math.round(_bgmMix * 100);
+    const labelIds = ["bgm-mix-label", "film-bgm-mix-label", "snd-mix-label"];
     labelIds.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.textContent = Math.round(bgmAudio.volume * 100) + "%";
+      if (el) el.textContent = voicePct + "/" + bgPct;
     });
   };
 
-  // Restore saved volume
-  const savedBgmVol = localStorage.getItem("ap_bgm_volume");
-  if (savedBgmVol !== null) bgmAudio.volume = parseFloat(savedBgmVol);
+  // Keep old bgmSetVolume as alias for backwards compat (track selector etc)
+  const bgmSetVolume = (v) => applyMix(v);
 
-  // Sync volume change event globally on bgmAudio (covers programmatic changes)
+  // Restore saved mix
+  const savedMix = localStorage.getItem("ap_bgm_mix");
+  if (savedMix !== null) {
+    applyMix(parseFloat(savedMix));
+  } else {
+    applyMix(0.20); // default 80/20
+  }
+
+  // Sync volume change event globally on bgmAudio
   bgmAudio.addEventListener("volumechange", () => {
-    const vol = bgmAudio.volume;
-    const sliderIds = ["bgm-volume-slider", "film-bgm-volume-slider", "snd-volume-slider"];
+    const mix = bgmAudio.volume;
+    const sliderIds = ["bgm-mix-slider", "film-bgm-mix-slider", "snd-mix-slider"];
     sliderIds.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.value = vol;
+      if (el) el.value = mix;
     });
-    const labelIds = ["bgm-volume-label", "film-bgm-volume-label", "snd-volume-label"];
+    const voicePct = Math.round((1 - mix) * 100);
+    const bgPct = Math.round(mix * 100);
+    const labelIds = ["bgm-mix-label", "film-bgm-mix-label", "snd-mix-label"];
     labelIds.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.textContent = Math.round(vol * 100) + "%";
+      if (el) el.textContent = voicePct + "/" + bgPct;
     });
   });
 
-  // Init BGM sliders once DOM is ready
+  // Init mix sliders once DOM is ready
   setTimeout(() => {
-    const sliderIds = ["bgm-volume-slider", "film-bgm-volume-slider", "snd-volume-slider"];
+    const sliderIds = ["bgm-mix-slider", "film-bgm-mix-slider", "snd-mix-slider"];
     sliderIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.value = bgmAudio.volume;
-        el.addEventListener("input", (e) => bgmSetVolume(parseFloat(e.target.value)));
+        el.value = _bgmMix;
+        el.addEventListener("input", (e) => applyMix(parseFloat(e.target.value)));
       }
     });
-    
-    const labelIds = ["bgm-volume-label", "film-bgm-volume-label", "snd-volume-label"];
+    const voicePct = Math.round((1 - _bgmMix) * 100);
+    const bgPct = Math.round(_bgmMix * 100);
+    const labelIds = ["bgm-mix-label", "film-bgm-mix-label", "snd-mix-label"];
     labelIds.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.textContent = Math.round(bgmAudio.volume * 100) + "%";
+      if (el) el.textContent = voicePct + "/" + bgPct;
     });
     
     updateBgmSelectorUI();
@@ -3289,8 +3306,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const sndTimeCur = document.getElementById("snd-time-cur");
     const sndTimeDur = document.getElementById("snd-time-dur");
-    const sndVolumeSlider = document.getElementById("snd-volume-slider");
-    const sndVolumeLabel = document.getElementById("snd-volume-label");
+    const sndVolumeSlider = document.getElementById("snd-mix-slider");
+    const sndVolumeLabel = document.getElementById("snd-mix-label");
     const sndActiveTitle = document.getElementById("snd-active-title");
     const sndActivePart = document.getElementById("snd-active-part");
     const sndPlayerCard = document.querySelector(".snd-player-card");
@@ -3327,9 +3344,11 @@ document.addEventListener("DOMContentLoaded", () => {
       pauseAllVideos();                                   // pauzni videa
       updateStatus();
       
-      // Sync volume UI
-      if (sndVolumeSlider) sndVolumeSlider.value = bgmAudio.volume;
-      if (sndVolumeLabel) sndVolumeLabel.textContent = Math.round(bgmAudio.volume * 100) + "%";
+      // Sync mix UI
+      if (sndVolumeSlider) sndVolumeSlider.value = _bgmMix;
+      const voicePct = Math.round((1 - _bgmMix) * 100);
+      const bgPct = Math.round(_bgmMix * 100);
+      if (sndVolumeLabel) sndVolumeLabel.textContent = voicePct + "/" + bgPct;
       
       if (bgmAudio.src && bgmAudio.paused) bgmAudio.play().catch(() => {});
       
@@ -3560,8 +3579,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const updateSoundtrackVolumeUI = () => {
-      if (sndVolumeSlider) sndVolumeSlider.value = bgmAudio.volume;
-      if (sndVolumeLabel) sndVolumeLabel.textContent = Math.round(bgmAudio.volume * 100) + "%";
+      if (sndVolumeSlider) sndVolumeSlider.value = _bgmMix;
+      const voicePct = Math.round((1 - _bgmMix) * 100);
+      const bgPct = Math.round(_bgmMix * 100);
+      if (sndVolumeLabel) sndVolumeLabel.textContent = voicePct + "/" + bgPct;
     };
 
     const updateSoundtrackTime = () => {
