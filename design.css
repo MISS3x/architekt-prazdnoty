@@ -1016,36 +1016,65 @@ body.comic-fs .footer { display: none !important; }
   .story-container { padding-top: calc(var(--ap-barH) + 16px) !important; }
   .story-content { padding: 10px 18px 72px !important; }
   .story-img.img-circle, .story-img.img-circle-amber { width: min(78vw, 300px); height: min(78vw, 300px); }
-  /* Mobile film: overlay covers entire screen, video fills available space */
+  /* Mobile film: overlay covers entire screen */
   .fullscreen-overlay {
     top: var(--ap-barH) !important;
     bottom: 0 !important;
     padding: 0 !important;
   }
+  /* Square video (1:1): container sizes to fit the larger dimension */
   .fullscreen-screen {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: calc(100% - 90px) !important;
-    max-height: calc(100% - 90px) !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: 0 auto !important;
+    position: relative !important;
   }
   .fs-video {
     object-fit: contain !important;
     width: 100% !important;
     height: 100% !important;
   }
-  /* Subtitles: readable on mobile, positioned inside overlay */
+  /* Subtitles: match video width, sit below video */
+  .fullscreen-subtitles {
+    font-size: 11px !important;
+    line-height: 1.28 !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+  }
+  .fullscreen-shot-id { bottom: 8px !important; font-size: 9px !important; }
+  .ap-filmtop { padding: 8px 70px 8px 12px !important; font-size: 10px !important; }
+}
+
+/* Portrait: video fits full width, height = width (square) */
+@media (max-width: 1040px) and (orientation: portrait) {
+  .fullscreen-screen {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: calc(100% - 80px) !important;
+  }
   .fullscreen-subtitles {
     width: 100% !important;
     max-width: 100% !important;
-    font-size: 11.5px !important;
-    line-height: 1.28 !important;
-    bottom: 50px !important;
-    padding: 0 16px !important;
-    box-sizing: border-box !important;
+    bottom: 40px !important;
   }
-  .fullscreen-shot-id { bottom: 14px !important; font-size: 9px !important; }
-  /* HUD strip: tighter padding so SCÉNA X / Y fits on one line */
-  .ap-filmtop { padding: 10px 80px 10px 14px !important; font-size: 10px !important; }
+}
+
+/* Landscape: video fits available height, width = height (square) */
+@media (max-width: 1040px) and (orientation: landscape) {
+  .fullscreen-screen {
+    height: calc(100vh - var(--ap-barH) - 20px) !important;
+    max-height: calc(100vh - var(--ap-barH) - 20px) !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+  .fullscreen-subtitles {
+    width: calc(100vh - var(--ap-barH) - 20px) !important;
+    max-width: 100% !important;
+    bottom: 6px !important;
+    font-size: 10px !important;
+  }
+  .fullscreen-shot-id { display: none !important; }
+  .ap-filmtop { font-size: 9px !important; padding: 6px 60px 6px 10px !important; }
 }
 @media (max-width: 430px) {
   .ap-seg .ap-vbtn { font-size: 11px; letter-spacing: .02em; padding: 11px 3px; gap: 4px; }
