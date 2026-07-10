@@ -1530,6 +1530,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (state.comicMode) scrollComicToStart(partNum);
       beginPlayback();
     }
+
+    // Auto-switch to film mode when switching parts from gallery/soundtrack
+    if (state.galleryMode || state.audioMode) {
+      // Close gallery / soundtrack first, then switch to movie
+      if (state.galleryMode) closeGallery();
+      if (document.body.classList.contains("soundtrack-open")) {
+        document.body.classList.remove("soundtrack-open");
+        const btnSnd = document.getElementById("btn-soundtrack");
+        if (btnSnd) btnSnd.classList.remove("active");
+      }
+      queueMicrotask(() => setActiveModeUI("movie"));
+    }
+
     saveState();
   };
 
