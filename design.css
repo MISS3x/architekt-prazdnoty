@@ -711,14 +711,15 @@ body.comic-fs .comic-grid { height: 100% !important; }
 /* Klasické filmové titulky: BÍLÉ písmo BEZ pozadí (jen stín pro čitelnost) */
 .fullscreen-subtitles {
     position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
-    bottom: 84px !important; z-index: 20 !important; width: 92% !important; max-width: min(880px, 92vw) !important;
+    bottom: 84px !important; z-index: 20 !important; width: min(100%, 900px) !important; max-width: 900px !important;
     margin: 0 !important; min-height: 0 !important;
     background: none !important; color: #ffffff !important;
-    padding: 8px 12px !important; border-radius: 0 !important;
+    padding: 8px 24px !important; border-radius: 0 !important;
     border: 0 !important; box-shadow: none !important;
     font-family: 'Chakra Petch', 'Share Tech Mono', sans-serif !important; font-weight: 500 !important;
     font-size: 15px !important; line-height: 1.28 !important; letter-spacing: 1.8px !important; text-align: center !important; text-transform: uppercase !important;
     text-shadow: 0 2px 7px rgba(0,0,0,.95), 0 0 18px rgba(0,0,0,.82), 0 0 22px rgba(45,226,255,.32) !important; text-wrap: balance;
+    box-sizing: border-box !important;
   }
 .fullscreen-subtitles .cin-word { opacity: .42; color: #cfeef6; }
 .fullscreen-subtitles .cin-word.read { opacity: 1; color: #eafcff; text-shadow: 0 2px 7px rgba(0,0,0,.95), 0 0 12px rgba(45,226,255,.55), 0 0 22px rgba(45,226,255,.3); }
@@ -1022,12 +1023,13 @@ body.comic-fs .footer { display: none !important; }
   }
   /* Subtitles: cyber styl, čitelná velikost i na užších oknech (≤1040) */
   .fullscreen-subtitles {
-    width: 92% !important;
-    max-width: 92% !important;
+    width: 100% !important;
+    max-width: 100% !important;
     font-size: 11.5px !important;
     line-height: 1.28 !important;
     bottom: 60px !important;
-    padding: 0 8px !important;
+    padding: 0 16px !important;
+    box-sizing: border-box !important;
   }
   .fullscreen-shot-id { bottom: 14px !important; font-size: 9px !important; }
   /* HUD strip: tighter padding so SCÉNA X / Y fits on one line */
