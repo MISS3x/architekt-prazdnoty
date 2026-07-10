@@ -1948,21 +1948,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (playerPreview) playerPreview.style.display = "flex";
         if (playerWrapperEl) playerWrapperEl.style.display = "flex"; // Show player dashboard panel during movie mode
         openFullscreenOverlay();
-        // Request browser fullscreen synchronously (must be in user gesture call stack)
-        const ov = document.getElementById("fullscreen-overlay");
-        if (ov) {
-          const req = ov.requestFullscreen || ov.webkitRequestFullscreen || ov.msRequestFullscreen;
-          if (req) {
-            try { Promise.resolve(req.call(ov)).catch(() => {
-              const vid = document.getElementById("fs-video-1") || document.getElementById("fs-video-2");
-              if (vid && vid.webkitEnterFullscreen) try { vid.webkitEnterFullscreen(); } catch(e){}
-            }); } catch(e) {
-              const vid = document.getElementById("fs-video-1") || document.getElementById("fs-video-2");
-              if (vid && vid.webkitEnterFullscreen) try { vid.webkitEnterFullscreen(); } catch(e2){}
+        // Request browser fullscreen on DESKTOP only.
+        // On mobile (touch), native fullscreen / webkitEnterFullscreen hijacks the video
+        // into a native player where subtitles, mix slider, and HUD are invisible.
+        // CSS pseudo-fullscreen (overlay covers viewport) is used instead on mobile.
+        const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (!isMobile) {
+          const ov = document.getElementById("fullscreen-overlay");
+          if (ov) {
+            const req = ov.requestFullscreen || ov.webkitRequestFullscreen || ov.msRequestFullscreen;
+            if (req) {
+              try { Promise.resolve(req.call(ov)).catch(() => {}); } catch(e) {}
             }
-          } else {
-            const vid = document.getElementById("fs-video-1") || document.getElementById("fs-video-2");
-            if (vid && vid.webkitEnterFullscreen) try { vid.webkitEnterFullscreen(); } catch(e){}
           }
         }
       } else if (mode === "audio") {
@@ -4042,6 +4039,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const partStr = String(state.activePart).padStart(2, '0');
       activeSrc = getVideoPath(`video/dil_${state.activePart}/${partStr}_intro.mp4`);
     }
+
+    // On mobile, ensure poster stays visible until video actually has data
+    // (prevents showing black screen while video buffers)
+    const poster = document.getElementById("fullscreen-poster");
+    if (poster && (!nextFsEl || nextFsEl.readyState < 2)) {
+      poster.classList.add("active");
+      const teaserVid = document.getElementById("fullscreen-teaser-video");
+      if (teaserVid) {
+        if (!teaserVid.src || teaserVid.src === location.href) {
+          teaserVid.src = getVideoPath(`video/dil_${state.activePart}/${String(state.activePart).padStart(2,'0')}_intro.mp4`);
+        }
+        teaserVid.play().catch(() => {});
+      }
+    }
+
     syncFullscreenSource(activeSrc);
     saveState();
   };
