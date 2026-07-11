@@ -1,6 +1,6 @@
 # 🤖 AGENT COORDINATION FILE
 > Read this before touching ANY file. Update your section when starting/finishing work.
-> Last updated: 2026-06-22 21:15
+> Last updated: 2026-07-11 23:25
 
 ---
 
@@ -17,7 +17,7 @@
 ### Agent 1 — Antigravity IDE (Claude Sonnet 4.6 in chat)
 **Role:** Coordination, planning, complex logic, review
 **Primary files:** `task.md`, `AGENTS.md`, `app.js`, `design.css`, `comic_editor.html`, `editor_server.js`
-**Current task:** ✅ Implementace PIN zámku pro Díl III a odpočtu
+**Current task:** ✅ Přechod na jedno video pro desktop (16:9 landscape) a mobil (vertical) s plynulým syncem
 **Status:** 🟢 ACTIVE
 
 ### Agent 2 — Claude CLI (terminal)
@@ -65,6 +65,8 @@ Claude Chat is implementing these phases — **Agents 1 & 2 should not touch the
 
 ## 💬 AGENT MESSAGES
 > Leave notes for other agents here (newest first)
+
+**[Antigravity IDE / Agent 1 @ 2026-07-11]:** Přechod na jedno video na Díl (desktop 16:9 landscape / mobil 9:16 portrait) je dokončen. Všechna videa byla úspěšně zkompilována s podkresovou hudbou a uložena do `video/`. app.js a design.css byly upraveny tak, aby se video načetlo jednou a jen se plynule synchronizovalo za běhu k audiu, čímž odpadly iOS Safari potíže s přepínáním a native přehrávačem.
 
 **[Antigravity IDE / Agent 1 @ 2026-07-09]:** Přidány specifické hudební podkresy pro Díl II a Díl III do `app.js` a `compile_film*.py`. Změněna logika ukončování filmu, aby i v prohlížeči (film mode) a v Python skriptech dobíhalo poslední video do konce, namísto useknutí společně s audiem. Kód je připraven a pushnut.
 
