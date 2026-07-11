@@ -28,7 +28,7 @@ generate_video_styles.py
 *_orig.mp4
 
 # Zkompilované dlouhé filmy (přesahují limit 100MB na GitHubu)
-*full_movie.mp4
+*full_movie*.mp4
 
 
 video/*_extended_movie.mp4

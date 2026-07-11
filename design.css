@@ -759,14 +759,15 @@ body.mode-movie #preview-subtitles { display: none !important; }
 .fullscreen-close-btn {
   font-family: 'Share Tech Mono', monospace !important; color: var(--cyan-hi) !important;
   border: 1px solid rgba(45, 226, 255, .3) !important; background: rgba(45, 226, 255, .06) !important; z-index: 11;
+  top: 24px !important; right: 32px !important;
 }
 
 /* KINO / cinema mode tlačítko (pravý horní roh film overlaye) */
 .fullscreen-cinema-btn {
-  position: absolute; top: 16px; right: 24px; z-index: 30; cursor: pointer; -webkit-user-select: none; user-select: none;
+  position: absolute; top: 24px !important; right: 215px !important; z-index: 30; cursor: pointer; -webkit-user-select: none; user-select: none;
   font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--cyan-hi); border: 1px solid rgba(45, 226, 255, .35); background: rgba(45, 226, 255, .07);
-  padding: 7px 13px; border-radius: 6px; transition: .15s; white-space: nowrap;
+  padding: 8px 16px; border-radius: 8px; transition: .15s; white-space: nowrap;
 }
 .fullscreen-cinema-btn:hover { background: rgba(45, 226, 255, .16);
   box-shadow: 0 0 16px -4px var(--cyan); color: #fff; }

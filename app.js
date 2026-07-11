@@ -3050,6 +3050,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = audio.currentTime;
     const isPaused = audio.paused;
 
+    const introDuration = (cues && cues.length > 0) ? cues[0] : 0;
+    const isIntro = t < introDuration;
+
+    if (fsVideo1) {
+      if (!isIntro && state.fullscreenMode) {
+        fsVideo1.classList.add("active");
+      } else {
+        fsVideo1.classList.remove("active");
+      }
+    }
+    if (prevVideo1) {
+      prevVideo1.classList.add("active");
+    }
+
     const videos = [fsVideo1, prevVideo1];
 
     videos.forEach(v => {
@@ -3864,6 +3878,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     syncFullscreenSource(activeSrc);
+    syncVideosToAudio();
     saveState();
   };
 
