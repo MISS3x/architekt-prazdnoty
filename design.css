@@ -667,8 +667,10 @@ body.comic-fs .comic-panel[data-aspect="1-1"]::after {
 .fullscreen-screen {
   max-width: min(100%, 900px) !important; width: min(100%, 900px) !important; margin: 0 auto !important;
   /* Reserve 110px at bottom for subtitles + shot-id — screen ends above them */
-  height: calc(100vh - var(--ap-barH) - 110px) !important;
-  aspect-ratio: auto !important; max-height: none !important; border: 0 !important; border-radius: 0 !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  max-height: calc(100vh - var(--ap-barH) - 110px) !important;
+  border: 0 !important; border-radius: 0 !important;
   box-shadow: none !important; background: #000 !important;
   /* Extend bottom gradient into the subtitle zone so text stays legible */
   overflow: visible !important;
@@ -1022,14 +1024,16 @@ body.comic-fs .footer { display: none !important; }
     bottom: 0 !important;
     padding: 0 !important;
   }
-  /* Square video (1:1): container sizes to fit the larger dimension */
+  /* Mobile portrait video (9:16) */
   .fullscreen-screen {
-    aspect-ratio: 1 / 1 !important;
+    aspect-ratio: 9 / 16 !important;
     margin: 0 auto !important;
     position: relative !important;
+    height: auto !important;
+    width: min(100%, calc((100vh - var(--ap-barH) - 120px) * 9 / 16)) !important;
   }
   .fs-video {
-    object-fit: contain !important;
+    object-fit: cover !important;
     width: 100% !important;
     height: 100% !important;
   }
@@ -1044,13 +1048,13 @@ body.comic-fs .footer { display: none !important; }
   .ap-filmtop { padding: 8px 70px 8px 12px !important; font-size: 10px !important; }
 }
 
-/* Portrait: video fits full width, height = width (square) */
+/* Portrait: video fits vertical layout (9:16) */
 @media (max-width: 1040px) and (orientation: portrait) {
   .fullscreen-screen {
-    width: 100% !important;
+    width: min(100%, calc((100vh - var(--ap-barH) - 120px) * 9 / 16)) !important;
     max-width: 100% !important;
     height: auto !important;
-    max-height: calc(100% - 80px) !important;
+    aspect-ratio: 9 / 16 !important;
   }
   .fullscreen-subtitles {
     width: 100% !important;
@@ -1059,16 +1063,17 @@ body.comic-fs .footer { display: none !important; }
   }
 }
 
-/* Landscape: video fits available height, width = height (square) */
+/* Landscape: video fits horizontal layout (16:9) */
 @media (max-width: 1040px) and (orientation: landscape) {
   .fullscreen-screen {
-    height: calc(100vh - var(--ap-barH) - 20px) !important;
-    max-height: calc(100vh - var(--ap-barH) - 20px) !important;
+    height: calc(100vh - var(--ap-barH) - 110px) !important;
+    max-height: calc(100vh - var(--ap-barH) - 110px) !important;
     width: auto !important;
     max-width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
   }
   .fullscreen-subtitles {
-    width: calc(100vh - var(--ap-barH) - 20px) !important;
+    width: calc((100vh - var(--ap-barH) - 110px) * 16 / 9) !important;
     max-width: 100% !important;
     bottom: 6px !important;
     font-size: 10px !important;

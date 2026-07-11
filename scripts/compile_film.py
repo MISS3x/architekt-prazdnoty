@@ -162,8 +162,8 @@ def main():
     args = parser.parse_args()
 
     part = args.part
-    width = 720 if args.mobile else 1440
-    height = 1280 if args.mobile else 1440
+    width = 720 if args.mobile else 1280
+    height = 1280 if args.mobile else 720
     suffix = "_mobile" if args.mobile else ""
     output_filename = f"video/dil_{part}_full_movie{suffix}.mp4"
     audio_path = f"audio/dil_{part}.mp3"

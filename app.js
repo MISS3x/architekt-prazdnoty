@@ -529,30 +529,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Init BGM for part 1
   bgmSetPart(1);
 
-  const playBtn = document.getElementById("play-btn") || _dummy;
-  const playBtnWrapper = document.getElementById("play-btn-wrapper") || _dummy;
-  const playIcon = document.getElementById("play-icon") || _dummy;
-  const progressBar = document.getElementById("progress-bar") || _dummy;
-  const progressFill = document.getElementById("progress-fill") || _dummy;
-  const timeCurrent = document.getElementById("time-current") || _dummy;
-  const timeDuration = document.getElementById("time-total") || _dummy;
-  const playbackOverlay = document.getElementById("playback-overlay");
-  let playbackOverlayTimeout = null;
-
-  const showPlaybackOverlay = (text, autoHide) => {
-    if (!playbackOverlay) return;
-    playbackOverlay.textContent = text;
-    playbackOverlay.classList.add("visible");
-    
-    if (playbackOverlayTimeout) clearTimeout(playbackOverlayTimeout);
-    
-    if (autoHide) {
-      playbackOverlayTimeout = setTimeout(() => {
-        playbackOverlay.classList.remove("visible");
-      }, 1500);
-    }
-  };
-
   // --- TOP BAR TRANSPORT (TRON design) ---
   const barPlay = document.getElementById("bar-play");
   const barStop = document.getElementById("bar-stop");
@@ -1283,13 +1259,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const fullscreenShotId = document.getElementById("fullscreen-shot-id");
 
   let currentVideoEl = bgVideo1;
-  let nextVideoEl = bgVideo2 || bgVideo1;
+  let nextVideoEl = bgVideo1;
 
   let currentPrevEl = prevVideo1;
-  let nextPrevEl = prevVideo2 || prevVideo1;
+  let nextPrevEl = prevVideo1;
 
   let currentFsEl = fsVideo1;
-  let nextFsEl = fsVideo2 || fsVideo1;
+  let nextFsEl = fsVideo1;
 
   let allParas = [];
   const tabPart1 = document.getElementById("tab-part1");
@@ -1493,6 +1469,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Panel→time timeline depends on this part's cues; rebuild lazily.
     invalidateComicTimelines();
+
+    // Load compiled movie sources for the new part
+    loadMovieVideos(partNum);
 
     if (startPlaying && audio.src) {
       // Remove any pending play handler from a previous (rapid) part switch
@@ -2398,26 +2377,23 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const changeSentenceVideo = (part, paraIdx, sIdx) => {
-    isPlayingCustom = true;
     activeParaIdx = paraIdx;
     subVideoIdx = sIdx + 1;
 
     const paraNum = parseInt(paraIdx) + 1;
     const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
-    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
+    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .ap-panel[data-i="${di}"]`);
     const panel = matchingPanels[sIdx];
 
-    let src;
     let shotId;
     if (panel && panel.dataset.video) {
-      src = panel.dataset.video;
+      const src = panel.dataset.video;
       const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
       shotId = `[${base}]`;
     } else {
       const partStr = String(part).padStart(2, '0');
       const paraStr = String(paraNum).padStart(2, '0');
       const subStr = String(sIdx + 1).padStart(2, '0');
-      src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
       shotId = `[${partStr}_${paraStr}_${subStr}]`;
     }
 
@@ -2428,39 +2404,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fullscreenShotId) {
       fullscreenShotId.textContent = shotId;
     }
-
-    nextPrevEl.loop = true; // ZAJIŠTĚNÍ NATIVNÍHO LOOPU PRO VĚTU
-    nextPrevEl.src = getVideoPath(src);
-    nextPrevEl.load();
-    nextPrevEl.play()
-      .then(() => {
-        nextPrevEl.classList.add("active");
-        if (currentPrevEl && currentPrevEl !== nextPrevEl) {
-          currentPrevEl.classList.remove("active");
-          const oldPrev = currentPrevEl;
-          setTimeout(() => { oldPrev.pause(); }, 2200);
-        }
-        // Swap roles
-        const tempPrev = currentPrevEl;
-        currentPrevEl = nextPrevEl;
-        nextPrevEl = tempPrev;
-      })
-      .catch(e => {
-        if (e && e.name !== "AbortError") console.warn("Film video preview play error:", e.message);
-      });
-
-    if (state.fullscreenMode) {
-      syncFullscreenSource(src);
-    }
   };
+
 
   const onTimeUpdate = () => {
     // 1. Update progress bar
     if (state.duration) {
       const pct = (state.currentTime / state.duration) * 100;
-      progressFill.style.width = `${pct}%`;
-      timeCurrent.textContent = formatTime(state.currentTime);
-      timeDuration.textContent = formatTime(state.duration);
       // TRON top-bar transport
       if (barFill) barFill.style.width = `${pct}%`;
       if (barKnob) barKnob.style.left = `${pct}%`;
@@ -2494,17 +2444,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const sIdx = getActiveSentenceIndex(activeIdx, displayTime);
       if (sIdx !== -1) {
         if (activeIdx !== activeParaIdxForVideo || sIdx !== activeSentIdxForVideo) {
-          // Check if this sentence (panel) has a custom video or default video
-          const di = paras[activeIdx] ? paras[activeIdx].dataset.i : activeIdx;
-          const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .comic-panel[data-i="${di}"]`);
-          const panel = matchingPanels[sIdx];
-          const hasCustomVideo = !!(panel && panel.dataset.video);
-          const count = getParaVideoCount(state.activePart, activeIdx);
-          const hasDefaultVideo = count !== null && (sIdx + 1) <= count;
-
-          if (hasCustomVideo || hasDefaultVideo) {
-            changeSentenceVideo(state.activePart, activeIdx, sIdx);
-          }
+          changeSentenceVideo(state.activePart, activeIdx, sIdx);
           // Update tracking variables regardless of whether a new video started or we kept the previous one running
           activeParaIdxForVideo = activeIdx;
           activeSentIdxForVideo = sIdx;
@@ -2523,6 +2463,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 3. Karaoke highlight inside the active paragraph
     highlightWords(activeIdx, displayTime);
+
+    // Sync compiled videos to audio
+    syncVideosToAudio();
   };
 
   const getActiveIndex = (t) => {
@@ -3063,213 +3006,85 @@ document.addEventListener("DOMContentLoaded", () => {
     return Math.max(0, Math.min(count - 1, Math.floor(progress * count)));
   };
 
-  const handlePreviewVideoEnded = (videoEl) => {
-    if (!isPlayingCustom) return;
-
-    // Specifické pravidlo: 1. díl (activePart === 1), 13. odstavec (activeParaIdx === 13)
-    // Přehrávat pouze video 01_14_01 ve smyčce
-    if (state.activePart === 1 && parseInt(activeParaIdx) === 13) {
-      subVideoIdx = 1;
-      loadAndPlayPreview(videoEl, state.activePart, activeParaIdx, subVideoIdx);
-      return;
-    }
-
-    // V rámci jednoho odstavce drž videa za sebou a po posledním se vrať na
-    // první — čistý loop, dokud přepnutí odstavce nespustí nový řetězec.
-    const count = getParaVideoCount(state.activePart, activeParaIdx);
-    if (count) {
-      subVideoIdx = (subVideoIdx % count) + 1; // 1→2→…→count→1
-    } else {
-      subVideoIdx++; // neznámý počet → loop zajistí error handler
-    }
-    loadAndPlayPreview(videoEl, state.activePart, activeParaIdx, subVideoIdx);
+  const getMovieSrc = (part) => {
+    const isMobile = window.innerWidth <= 768;
+    const suffix = isMobile ? "_mobile" : "";
+    return `video/dil_${part}_full_movie${suffix}.mp4`;
   };
 
-  const handlePreviewVideoError = (videoEl) => {
-    // If a sentence video doesn't exist (e.g. 02_01_04.mp4), silently ignore.
-    // The previous looping video will remain on screen automatically.
-  };
-
-  const loadAndPlayPreview = (videoEl, part, paraIdx, subIdx) => {
-    // paraIdx je LOKÁLNÍ index odstavce (0-based) — stejně jako startParagraphVideoChain.
-    const paraNum = parseInt(paraIdx) + 1; // 1-based číslo odstavce v názvu souboru
-    const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
-    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
-    const panel = matchingPanels[subIdx - 1];
-
-    let src;
-    let shotId;
-    if (panel && panel.dataset.video) {
-      src = panel.dataset.video;
-      const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
-      shotId = `[${base}]`;
-    } else {
-      const partStr = String(part).padStart(2, '0');
-      const paraStr = String(paraNum).padStart(2, '0');
-      const subStr = String(subIdx).padStart(2, '0');
-      src = `video/dil_${part}/${partStr}_${paraStr}_${subStr}.mp4`;
-      shotId = `[${partStr}_${paraStr}_${subStr}]`;
+  const loadMovieVideos = (partNum) => {
+    const src = getMovieSrc(partNum);
+    const resolved = getVideoPath(src);
+    
+    if (fsVideo1 && fsVideo1.getAttribute("data-loaded-src") !== resolved) {
+      fsVideo1.src = resolved;
+      fsVideo1.setAttribute("data-loaded-src", resolved);
+      fsVideo1.load();
+      fsVideo1.classList.add("active");
+    }
+    if (prevVideo1 && prevVideo1.getAttribute("data-loaded-src") !== resolved) {
+      prevVideo1.src = resolved;
+      prevVideo1.setAttribute("data-loaded-src", resolved);
+      prevVideo1.load();
+      prevVideo1.classList.add("active");
     }
     
-    if (previewShotId) {
-      previewShotId.textContent = shotId;
-      previewShotId.style.color = "var(--cyan)";
+    if (fsVideo2) {
+      fsVideo2.classList.remove("active");
+      fsVideo2.src = "";
+      fsVideo2.style.display = "none";
     }
-    if (fullscreenShotId) {
-      fullscreenShotId.textContent = shotId;
-    }
-
-    // Play in preview video
-    videoEl.loop = true;
-    videoEl.src = getVideoPath(src);
-    videoEl.load();
-    videoEl.play().catch(e => {
-      // AbortError = play() přerušeno novým load() při rychlém přepnutí — benigní, neloguj.
-      if (e && e.name !== "AbortError") console.warn(`Video ${src}:`, e.message);
-    });
-
-    // Mirror to fullscreen if overlay is active
-    if (state.fullscreenMode) {
-      syncFullscreenSource(src);
+    if (prevVideo2) {
+      prevVideo2.classList.remove("active");
+      prevVideo2.src = "";
+      prevVideo2.style.display = "none";
     }
   };
 
   const syncFullscreenSource = (src) => {
-    nextFsEl.loop = true;
-    nextFsEl.src = getVideoPath(src);
-    nextFsEl.load();
-    nextFsEl.play()
-      .then(() => {
-        nextFsEl.classList.add("active");
-        if (currentFsEl && currentFsEl !== nextFsEl) {
-          currentFsEl.classList.remove("active");
-          const oldFs = currentFsEl;
-          setTimeout(() => { oldFs.pause(); }, 1200);
-        }
-        const temp = currentFsEl;
-        currentFsEl = nextFsEl;
-        nextFsEl = temp;
-      })
-      .catch(err => {}); // Ignored intentionally to prevent console spam from browser power-saving
+    // Pre-loaded in loadMovieVideos, no action needed on sentence boundaries
+  };
+
+  const syncVideosToAudio = () => {
+    if (!audio) return;
+    const t = audio.currentTime;
+    const isPaused = audio.paused;
+
+    const videos = [fsVideo1, prevVideo1];
+
+    videos.forEach(v => {
+      if (!v) return;
+      if (isPaused && !v.paused) {
+        v.pause();
+      } else if (!isPaused && v.paused) {
+        v.play().catch(() => {});
+      }
+      
+      const diff = v.currentTime - t;
+      if (Math.abs(diff) > 0.25) {
+        v.currentTime = t;
+      }
+    });
+  };
+
+  const handlePreviewVideoEnded = (videoEl) => {
+    // No-op for single video
+  };
+
+  const handlePreviewVideoError = (videoEl) => {
+    // No-op
   };
 
   const startParagraphVideoChain = (part, paraIdx) => {
-    activeParaIdx = paraIdx;
-    subVideoIdx = 1;
-    isPlayingCustom = true;
-
-    // Use nextPrevEl to load and transition
-    const paraNum = parseInt(paraIdx) + 1;
-    const di = paras[paraIdx] ? paras[paraIdx].dataset.i : paraIdx;
-    const matchingPanels = document.querySelectorAll(`#comic-content-part${part} .comic-panel[data-i="${di}"]`);
-    const firstPanel = matchingPanels[0];
-
-    let src;
-    let shotId;
-    if (firstPanel && firstPanel.dataset.video) {
-      src = firstPanel.dataset.video;
-      const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
-      shotId = `[${base}]`;
-    } else {
-      const partStr = String(part).padStart(2, '0');
-      const paraStr = String(paraNum).padStart(2, '0');
-      src = `video/dil_${part}/${partStr}_${paraStr}_01.mp4`;
-      shotId = `[${partStr}_${paraStr}_01]`;
-    }
-
-    if (previewShotId) {
-      previewShotId.textContent = shotId;
-      previewShotId.style.color = "var(--cyan)";
-    }
-    if (fullscreenShotId) {
-      fullscreenShotId.textContent = shotId;
-    }
-
-    nextPrevEl.loop = true;
-    nextPrevEl.src = getVideoPath(src);
-    nextPrevEl.load();
-    nextPrevEl.play()
-      .then(() => {
-        nextPrevEl.classList.add("active");
-        if (currentPrevEl && currentPrevEl !== nextPrevEl) {
-          currentPrevEl.classList.remove("active");
-          const oldPrev = currentPrevEl;
-          setTimeout(() => { oldPrev.pause(); }, 2200);
-        }
-        // Swap roles
-        const tempPrev = currentPrevEl;
-        currentPrevEl = nextPrevEl;
-        nextPrevEl = tempPrev;
-      })
-      .catch(e => {
-        // Běžné přerušení play() při výměně src (AbortError) — ticho.
-        if (e && e.name !== "AbortError") console.warn("Film video:", e.message);
-      });
-
-    if (state.fullscreenMode) {
-      syncFullscreenSource(src);
-    }
+    // No-op
   };
 
   const startVideoRotation = () => {
-    videoBgContainer.classList.add("active");
-    if (videoTimer) clearInterval(videoTimer);
-    
-    // Play intro video on loop in preview player, but hero in background
-    const partStr = String(state.activePart).padStart(2, '0');
-    const introSrc = `video/dil_${state.activePart}/${partStr}_intro.mp4`;
-    playNextVideo("video/hero.mp4", introSrc, true);
+    loadMovieVideos(state.activePart);
   };
 
   const playNextVideo = (bgSrc, prevSrc = bgSrc, loop = true) => {
-    nextVideoEl.loop = loop;
-    nextVideoEl.src = getVideoPath(bgSrc);
-    nextVideoEl.load();
-    nextVideoEl.play().catch(e => console.error("BG video play failed:", e));
-
-    if (!isPlayingCustom && state.activePart !== 3) {
-      if (previewShotId) {
-        previewShotId.textContent = "[INTRO_STANDBY]";
-        previewShotId.style.color = "var(--muted)";
-      }
-      if (nextPrevEl) {
-        nextPrevEl.loop = loop;
-        nextPrevEl.src = getVideoPath(prevSrc);
-        nextPrevEl.load();
-        nextPrevEl.play().catch(e => console.error("Prev video play failed:", e));
-      }
-      
-      if (nextPrevEl) nextPrevEl.classList.add("active");
-
-      
-      const oldPrevEl = currentPrevEl;
-      if (oldPrevEl && oldPrevEl !== nextPrevEl) {
-        oldPrevEl.classList.remove("active");
-        setTimeout(() => {
-          if (!isPlayingCustom && oldPrevEl) oldPrevEl.pause();
-        }, 2200);
-      }
-      
-      const tempPrev = currentPrevEl;
-      currentPrevEl = nextPrevEl;
-      nextPrevEl = tempPrev;
-    }
-
-    nextVideoEl.classList.add("active");
-    
-    const oldVideoEl = currentVideoEl;
-
-    if (oldVideoEl !== nextVideoEl) {
-      oldVideoEl.classList.remove("active");
-      setTimeout(() => {
-        oldVideoEl.pause();
-      }, 2200); // Wait for the 2.2s CSS opacity transition
-    }
-    
-    // Swap roles
-    const temp = currentVideoEl;
-    currentVideoEl = nextVideoEl;
-    nextVideoEl = temp;
+    // No-op since background rotation is deprecated
   };
 
 
@@ -3631,12 +3446,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     bgmAudio.addEventListener("timeupdate", updateSoundtrackTime);
     bgmAudio.addEventListener("volumechange", updateSoundtrackVolumeUI);
-    // Play/Pause Click
-    if (playBtn) playBtn.addEventListener("click", togglePlay);
-
-    // Seek Click
-    if (progressBar) progressBar.addEventListener("click", seek);
-
     // TRON top-bar transport
     if (barPlay) barPlay.addEventListener("click", togglePlay);
     if (barStop) barStop.addEventListener("click", () => {
@@ -4201,12 +4010,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showPlaybackOverlay("POZASTAVENO // KLIKNI PRO PLAY", false);
       updateStatus();
     }
-  };
-
-  const seek = (e) => {
-    if (!audio || !state.duration) return;
-    const rect = progressBar.getBoundingClientRect();
-    seekToFraction((e.clientX - rect.left) / rect.width); // seek + dorovnání obsahu
   };
 
   const toggleCalibration = () => {

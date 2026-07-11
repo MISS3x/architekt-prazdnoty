@@ -156,12 +156,15 @@ def generate_segment(ffmpeg_path, source_video, source_img, duration, width, hei
 def main():
     parser = argparse.ArgumentParser(description="Extended Film Compilation — full video clips, narration pauses when needed.")
     parser.add_argument('--part', type=int, default=1, choices=[1, 2, 3])
+    parser.add_argument('--mobile', action='store_true', help="Compile mobile vertical version (720x1280)")
     parser.add_argument('--ffmpeg', type=str, default='./bin/ffmpeg')
     args = parser.parse_args()
 
     part = args.part
-    width, height = 1440, 1440
-    output_filename = f"video/dil_{part}_extended_movie.mp4"
+    width = 720 if args.mobile else 1280
+    height = 1280 if args.mobile else 720
+    suffix = "_mobile" if args.mobile else ""
+    output_filename = f"video/dil_{part}_extended_movie{suffix}.mp4"
     audio_path = f"audio/dil_{part}.mp3"
     
     print(f"🎬 Extended Film Compilation — Part {part} ({width}x{height})")
@@ -221,6 +224,10 @@ def main():
         
         panel = panels[i]
         src_video = panel['video_path']
+        if args.mobile:
+            src_mobile = src_video.replace('.mp4', '_mobile.mp4')
+            if os.path.exists(src_mobile):
+                src_video = src_mobile
         src_img = resolve_image_path(panel['video_path'])
         
         # Get actual video duration
@@ -253,7 +260,7 @@ def main():
     print(f"\n📊 Original: {audio_dur:.1f}s → Extended: {total_extended:.1f}s (+{total_extra:.1f}s from full videos)")
     
     # --- TEMP DIR ---
-    temp_dir = f"scratch/temp_extended_part_{part}"
+    temp_dir = f"scratch/temp_extended_part_{part}{suffix}"
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
