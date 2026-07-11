@@ -98,7 +98,7 @@ def resolve_image_path(video_path):
         
     return None
 
-def generate_segment(ffmpeg_path, source_video, source_img, duration, width, height, output_path):
+def generate_segment(ffmpeg_path, source_video, source_img, duration, width, height, output_path, crf='32'):
     vf_chain = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}"
     
     if source_video and os.path.exists(source_video):
@@ -111,7 +111,7 @@ def generate_segment(ffmpeg_path, source_video, source_img, duration, width, hei
             '-pix_fmt', 'yuv420p',
             '-r', '24',
             '-g', '48',
-            '-crf', '23',
+            '-crf', crf,
             '-preset', 'superfast',
             '-vf', vf_chain,
             '-an',
@@ -127,7 +127,7 @@ def generate_segment(ffmpeg_path, source_video, source_img, duration, width, hei
             '-pix_fmt', 'yuv420p',
             '-r', '24',
             '-g', '48',
-            '-crf', '23',
+            '-crf', crf,
             '-preset', 'superfast',
             '-vf', vf_chain,
             '-an',
@@ -144,7 +144,7 @@ def generate_segment(ffmpeg_path, source_video, source_img, duration, width, hei
             '-pix_fmt', 'yuv420p',
             '-r', '24',
             '-g', '48',
-            '-crf', '23',
+            '-crf', crf,
             '-preset', 'superfast',
             '-an',
             output_path
@@ -159,6 +159,7 @@ def main():
     parser.add_argument('--part', type=int, default=1, choices=[1, 2, 3], help="Part number (Díl)")
     parser.add_argument('--mobile', action='store_true', help="Compile mobile vertical version (720x1280)")
     parser.add_argument('--ffmpeg', type=str, default='./bin/ffmpeg', help="Path to ffmpeg binary")
+    parser.add_argument('--crf', type=str, default='32', help="FFmpeg CRF encoding quality (default: 32)")
     args = parser.parse_args()
 
     part = args.part
@@ -265,7 +266,8 @@ def main():
                 seg['duration'],
                 width,
                 height,
-                seg_path
+                seg_path,
+                crf=args.crf
             )
             if not success:
                 print(f"Error compiling segment {seg['name']}")
