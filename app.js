@@ -3060,7 +3060,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const getMovieSrc = (part) => {
     const isMobile = window.innerWidth <= 768;
     const suffix = isMobile ? "_mobile" : "";
-    return `video/dil_${part}_full_movie${suffix}.mp4`;
+    return `video/dil_${part}_full_movie${suffix}.mp4?v=2.29`;
   };
 
   const loadMovieVideos = (partNum) => {
@@ -4281,7 +4281,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const part = queue[currentQueueIdx];
-      const videoSrc = `video/dil_${part}_full_movie${suffix}.mp4`;
+      const videoSrc = `video/dil_${part}_full_movie${suffix}.mp4?v=2.29`;
       
       console.log(`[Preloader] Preloading Part ${part} in background: ${videoSrc}`);
       
