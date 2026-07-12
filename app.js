@@ -744,13 +744,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const a = document.getElementById("audio-element");
     const playing = a ? !a.paused : state.playing; // skutečný stav přehrávače
     if (playing) {
-      main.textContent = `${tap} pro pauzu`;
+      main.textContent = "";
       sub.textContent = "";
     } else {
       const started = a && a.currentTime > 0.3 && (!state.duration || a.currentTime < state.duration - 0.3);
       main.textContent = started ? "Pozastaveno" : `${tap} pro přehrávání`;
       sub.textContent = started ? `${tap} pro přehrávání` : "";
     }
+  };
+
+  const showPlaybackOverlay = (text, autoHide) => {
+    // Deprecated overlay element - no-op
   };
 
   let gppUiTimer = null;
