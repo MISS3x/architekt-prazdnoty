@@ -387,7 +387,7 @@ def main():
                 args.ffmpeg, '-y',
                 '-i', extended_narr, '-i', bgm_concat,
                 '-filter_complex',
-                '[0:a]volume=1.0[narr];[1:a]volume=0.30[bgm];[narr][bgm]amix=inputs=2:duration=first:dropout_transition=3[out]',
+                '[0:a]volume=1.0[narr];[1:a]volume=0.30[bgm];[narr][bgm]amix=inputs=2:duration=longest:dropout_transition=3[out]',
                 '-map', '[out]', '-c:a', 'aac', '-b:a', '192k', mixed
             ])
             if ok:

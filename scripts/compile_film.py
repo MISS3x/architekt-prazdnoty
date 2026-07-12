@@ -226,13 +226,8 @@ def main():
             if os.path.exists(src_mobile):
                 src_video = src_mobile
                 
-        if i + 1 == len(panels) and src_video and os.path.exists(src_video):
-            try:
-                actual_dur = get_media_duration(args.ffmpeg, src_video)
-                if actual_dur > duration:
-                    duration = actual_dur
-            except Exception:
-                pass
+        if i + 1 == len(panels):
+            duration = duration + 5.0
                 
         src_img = resolve_image_path(panel['video_path'])
         
@@ -326,7 +321,8 @@ def main():
         total_bgm_dur = 0
         for t in bgm_tracks:
             total_bgm_dur += get_media_duration(args.ffmpeg, t)
-        loops_needed = max(1, int(audio_dur / total_bgm_dur) + 1)
+        total_video_duration = sum(seg['duration'] for seg in segments)
+        loops_needed = max(1, int(total_video_duration / total_bgm_dur) + 1)
         
         with open(bgm_list_path, 'w') as bf:
             for _ in range(loops_needed):
@@ -339,7 +335,7 @@ def main():
             args.ffmpeg, '-y',
             '-f', 'concat', '-safe', '0',
             '-i', bgm_list_path,
-            '-t', f"{audio_dur:.3f}",
+            '-t', f"{total_video_duration:.3f}",
             '-c:a', 'libmp3lame', '-b:a', '192k',
             bgm_concat_path
         ]
@@ -364,7 +360,7 @@ def main():
             '-i', audio_path,
             '-i', bgm_concat_path,
             '-filter_complex',
-            '[0:a]volume=1.0[narr];[1:a]volume=0.30[bgm];[narr][bgm]amix=inputs=2:duration=first:dropout_transition=3[out]',
+            '[0:a]volume=1.0[narr];[1:a]volume=0.30[bgm];[narr][bgm]amix=inputs=2:duration=longest:dropout_transition=3[out]',
             '-map', '[out]',
             '-c:a', 'aac', '-b:a', '192k',
             mixed_audio_path
