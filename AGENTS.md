@@ -39,7 +39,7 @@
 
 | File | Locked by | Since | Note |
 |------|-----------|-------|------|
-| `app.js` | — | — | Custom video attribute support |
+| `app.js` | — | — | — |
 | `index.html` | — | — | — |
 | `style.css` | — | — | — |
 | `design.css` | — | — | — |

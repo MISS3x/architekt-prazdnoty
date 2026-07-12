@@ -3800,11 +3800,21 @@
           <div class="ch-title poster-ch-title" id="poster-ch-title">ARCHITEKT<br><span class="ch-title-em">PRÁZDNOTY</span></div>
           <div class="ch-meta" id="poster-ch-meta">Čte: Ruda Müller &nbsp;&middot;&nbsp; New Berlin &nbsp;&middot;&nbsp; MMXXVI</div>
           <div class="ch-line"></div>
+          <!-- Cyberpunk loading progress bar -->
+          <div id="film-preloader-container" class="film-preloader-container hidden">
+            <div class="film-preloader-header">
+              <span class="film-preloader-label">// SYSTEM BUFFERING: <span id="film-preloader-pct">0%</span></span>
+              <span class="film-preloader-status" id="film-preloader-status">ACQUIRING FEED...</span>
+            </div>
+            <div class="film-preloader-track">
+              <div id="film-preloader-bar" class="film-preloader-bar" style="width: 0%;"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="preview-scanlines"></div>
+      <div id="fullscreen-subtitles" class="fullscreen-subtitles">// SYSTEM STANDBY</div>
     </div>
-    <div id="fullscreen-subtitles" class="fullscreen-subtitles">// SYSTEM STANDBY</div>
   </div>
 
   <!-- Secure Access PIN Modal -->

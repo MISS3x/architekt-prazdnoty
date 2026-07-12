@@ -386,7 +386,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const filename = parts[parts.length - 1].replace(".mp3", "");
         dot.title = `Soundtrack: ${filename}`;
         
-        dot.addEventListener("click", () => {
+        dot.addEventListener("click", (e) => {
+          e.stopPropagation();
           if (bgmTrackIdx === idx && !bgmAudio.paused) return; // already playing
           bgmTrackIdx = idx;
           bgmAudio.src = track;
@@ -570,7 +571,38 @@ document.addEventListener("DOMContentLoaded", () => {
       scene += Math.min(Math.max(1, parseInt(subVideoIdx) || 1), counts[p] || 1);
     }
     scene = Math.max(1, Math.min(scene, total));
-    if (sc) sc.textContent = `SCÉNA ${scene} / ${total}`;
+    
+    // Compute current shotId/filename
+    let shotId = "";
+    if (p === -1 || isNaN(p)) {
+      const partStr = String(state.activePart).padStart(2, '0');
+      shotId = `[${partStr}_intro]`;
+    } else {
+      const paraNum = p + 1;
+      const sIdx = (parseInt(subVideoIdx) || 1) - 1;
+      const di = paras[p] ? paras[p].dataset.i : p;
+      const matchingPanels = document.querySelectorAll(`#comic-content-part${state.activePart} .ap-panel[data-i="${di}"]`);
+      const panel = matchingPanels[sIdx];
+      if (panel && panel.dataset.video) {
+        const src = panel.dataset.video;
+        const base = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
+        shotId = `[${base}]`;
+      } else {
+        const partStr = String(state.activePart).padStart(2, '0');
+        const paraStr = String(paraNum).padStart(2, '0');
+        const subStr = String(sIdx + 1).padStart(2, '0');
+        shotId = `[${partStr}_${paraStr}_${subStr}]`;
+      }
+    }
+
+    if (sc) {
+      if (p === -1 || isNaN(p)) {
+        sc.textContent = `INTRO · ${shotId}`;
+      } else {
+        sc.textContent = `SCÉNA ${scene} / ${total} · ${shotId}`;
+      }
+    }
+    
     const e = EP_TITLES[state.activePart];
     if (ti && e) ti.textContent = `// ${e.t}`;
     const pa = document.getElementById("film-hud-part");
@@ -752,7 +784,8 @@ document.addEventListener("DOMContentLoaded", () => {
           e.target.closest(".speech-bubble") || e.target.closest(".player-wrapper") ||
           e.target.closest(".sticky-mode-switcher") || e.target.closest(".drag-grip") ||
           e.target.closest(".ap-actrls") || e.target.closest(".ap-words") ||
-          e.target.closest(".fullscreen-cinema-btn") || e.target.closest(".fullscreen-close-btn")) {
+          e.target.closest(".fullscreen-cinema-btn") || e.target.closest(".fullscreen-close-btn") ||
+          e.target.closest(".ap-bgm-vol")) {
         return;
       }
       togglePlay();
@@ -2055,6 +2088,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 9. Initialize Draggable player panel
     initDraggablePlayer();
+    
+    // Start background video preloading queue
+    startBackgroundPreloadQueue();
   };
 
   // --- DOM WORD WRAPPING ---
@@ -2121,6 +2157,17 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.addEventListener("loadedmetadata", onMeta);
     audio.addEventListener("durationchange", onMeta);
     audio.addEventListener("canplay", onMeta);
+    
+    audio.addEventListener("seeking", () => {
+      const t = audio.currentTime;
+      [currentVideoEl, nextVideoEl, currentPrevEl, nextPrevEl, currentFsEl, nextFsEl, fsVideo1, prevVideo1]
+        .forEach(v => { try { if (v) v.currentTime = t; } catch (e) {} });
+    });
+    audio.addEventListener("seeked", () => {
+      const t = audio.currentTime;
+      [currentVideoEl, nextVideoEl, currentPrevEl, nextPrevEl, currentFsEl, nextFsEl, fsVideo1, prevVideo1]
+        .forEach(v => { try { if (v) v.currentTime = t; } catch (e) {} });
+    });
     
     audio.addEventListener("timeupdate", () => {
       state.currentTime = audio.currentTime;
@@ -3075,7 +3122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       const diff = v.currentTime - t;
-      if (Math.abs(diff) > 0.25) {
+      if (Math.abs(diff) > 1.5) {
         v.currentTime = t;
       }
     });
@@ -3180,7 +3227,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try { audio.pause(); } catch (e) {}                 // zastav příběh
       if (state.fullscreenMode) closeFullscreenOverlay(); // zavři film
       closeGallery();                                     // zavři galerii
-      pauseAllVideos();                                   // pauzni videa
       updateStatus();
       
       // Sync mix UI
@@ -3630,6 +3676,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fsVideo1) {
       fsVideo1.addEventListener("ended", () => handleFullscreenVideoEnded(fsVideo1));
       fsVideo1.addEventListener("error", () => handleFullscreenVideoError(fsVideo1));
+      fsVideo1.addEventListener("progress", updateVideoPreloader);
+      fsVideo1.addEventListener("canplay", updateVideoPreloader);
+      fsVideo1.addEventListener("canplaythrough", updateVideoPreloader);
+      fsVideo1.addEventListener("loadedmetadata", updateVideoPreloader);
     }
     if (fsVideo2) {
       fsVideo2.addEventListener("ended", () => handleFullscreenVideoEnded(fsVideo2));
@@ -3879,6 +3929,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     syncFullscreenSource(activeSrc);
     syncVideosToAudio();
+    updateVideoPreloader();
     saveState();
   };
 
@@ -4153,6 +4204,122 @@ document.addEventListener("DOMContentLoaded", () => {
   const setHint = (msg) => {
     state.msg = msg;
     hintText.textContent = msg;
+  };
+
+  // --- Cyberpunk Video Preloader progress update ---
+  const updateVideoPreloader = () => {
+    const v = fsVideo1;
+    if (!v) return;
+    
+    const container = document.getElementById("film-preloader-container");
+    const bar = document.getElementById("film-preloader-bar");
+    const pctSpan = document.getElementById("film-preloader-pct");
+    const statusSpan = document.getElementById("film-preloader-status");
+    
+    if (!container || !bar || !pctSpan) return;
+    
+    if (!v.src || v.src === "" || v.src === location.href) {
+      container.classList.add("hidden");
+      return;
+    }
+
+    if (v.readyState >= 3) { // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
+      bar.style.width = "100%";
+      pctSpan.textContent = "100%";
+      if (statusSpan) statusSpan.textContent = "DECRYPT COMPLETE";
+      setTimeout(() => {
+        container.classList.add("fade-out");
+      }, 500);
+      return;
+    }
+
+    container.classList.remove("hidden", "fade-out");
+
+    let bufferedEnd = 0;
+    if (v.buffered && v.buffered.length > 0) {
+      for (let i = 0; i < v.buffered.length; i++) {
+        const start = v.buffered.start(i);
+        const end = v.buffered.end(i);
+        if (start <= v.currentTime) {
+          bufferedEnd = Math.max(bufferedEnd, end);
+        }
+      }
+    }
+
+    const duration = v.duration || 380;
+    const pct = duration > 0 ? Math.min(100, Math.round((bufferedEnd / duration) * 100)) : 0;
+    
+    bar.style.width = pct + "%";
+    pctSpan.textContent = pct + "%";
+    
+    if (pct >= 5) {
+      if (statusSpan) statusSpan.textContent = "DECRYPTING STREAMS...";
+    } else {
+      if (statusSpan) statusSpan.textContent = "ACQUIRING FEED...";
+    }
+  };
+
+  // --- Background preloading queue ---
+  const startBackgroundPreloadQueue = () => {
+    const isMobile = window.innerWidth <= 768;
+    const suffix = isMobile ? "_mobile" : "";
+    const active = state.activePart || 1;
+    const queue = [active];
+    [1, 2, 3].forEach(p => {
+      if (p !== active) queue.push(p);
+    });
+
+    let currentQueueIdx = 0;
+
+    const preloadNext = () => {
+      if (currentQueueIdx >= queue.length) {
+        console.log("[Preloader] All video parts preloaded successfully in background.");
+        return;
+      }
+      const part = queue[currentQueueIdx];
+      const videoSrc = `video/dil_${part}_full_movie${suffix}.mp4`;
+      
+      console.log(`[Preloader] Preloading Part ${part} in background: ${videoSrc}`);
+      
+      const v = document.createElement("video");
+      v.muted = true;
+      v.preload = "auto";
+      v.src = videoSrc;
+
+      const checkProgress = () => {
+        if (v.duration && v.buffered.length > 0) {
+          let totalBuffered = 0;
+          for (let i = 0; i < v.buffered.length; i++) {
+            totalBuffered += v.buffered.end(i) - v.buffered.start(i);
+          }
+          const pct = totalBuffered / v.duration;
+          if (pct >= 0.15) {
+            cleanup();
+            console.log(`[Preloader] Part ${part} cached enough (>=15%). Starting next.`);
+            currentQueueIdx++;
+            preloadNext();
+          }
+        }
+      };
+
+      const onCanPlayThrough = () => {
+        cleanup();
+        console.log(`[Preloader] Part ${part} can play through. Starting next.`);
+        currentQueueIdx++;
+        preloadNext();
+      };
+
+      const cleanup = () => {
+        v.removeEventListener("progress", checkProgress);
+        v.removeEventListener("canplaythrough", onCanPlayThrough);
+      };
+
+      v.addEventListener("progress", checkProgress);
+      v.addEventListener("canplaythrough", onCanPlayThrough);
+      v.load();
+    };
+
+    setTimeout(preloadNext, 2000);
   };
 
   // --- BOOT ---

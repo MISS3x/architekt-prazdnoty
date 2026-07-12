@@ -666,6 +666,7 @@ body.comic-fs .comic-panel[data-aspect="1-1"]::after {
 .fullscreen-overlay { top: var(--ap-barH) !important; }
 .fullscreen-screen {
   max-width: min(100%, 900px) !important; width: min(100%, 900px) !important; margin: 0 auto !important;
+  position: relative !important;
   /* Reserve 110px at bottom for subtitles + shot-id — screen ends above them */
   height: auto !important;
   aspect-ratio: 16 / 9 !important;
@@ -713,7 +714,7 @@ body.comic-fs .comic-grid { height: 100% !important; }
 /* Klasické filmové titulky: BÍLÉ písmo BEZ pozadí (jen stín pro čitelnost) */
 .fullscreen-subtitles {
     position: absolute !important; left: 50% !important; transform: translateX(-50%) !important;
-    bottom: 84px !important; z-index: 20 !important; width: min(100%, 900px) !important; max-width: 900px !important;
+    bottom: 20px !important; z-index: 20 !important; width: min(100%, 900px) !important; max-width: 900px !important;
     margin: 0 !important; min-height: 0 !important;
     background: none !important; color: #ffffff !important;
     padding: 8px 24px !important; border-radius: 0 !important;
@@ -723,6 +724,54 @@ body.comic-fs .comic-grid { height: 100% !important; }
     text-shadow: 0 2px 7px rgba(0,0,0,.95), 0 0 18px rgba(0,0,0,.82), 0 0 22px rgba(45,226,255,.32) !important; text-wrap: balance;
     box-sizing: border-box !important;
   }
+
+/* Film preloader progress bar inside cyberpunk poster */
+.film-preloader-container {
+  width: min(85%, 450px);
+  margin: 30px auto 0 auto;
+  font-family: 'Share Tech Mono', monospace;
+  text-align: left;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.film-preloader-container.hidden {
+  display: none !important;
+}
+.film-preloader-container.fade-out {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+.film-preloader-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: clamp(10px, 1.2vw, 12px);
+  color: var(--cyan);
+  margin-bottom: 6px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.film-preloader-label {
+  color: var(--cyan-hi);
+  font-weight: bold;
+}
+.film-preloader-status {
+  opacity: 0.85;
+}
+.film-preloader-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(45, 226, 255, 0.15);
+  border: 1px solid rgba(45, 226, 255, 0.3);
+  position: relative;
+  box-shadow: 0 0 8px rgba(45, 226, 255, 0.1);
+}
+.film-preloader-bar {
+  height: 100%;
+  background: var(--cyan-hi);
+  box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan);
+  transition: width 0.2s ease;
+  width: 0%;
+}
 .fullscreen-subtitles .cin-word { opacity: .42; color: #cfeef6; }
 .fullscreen-subtitles .cin-word.read { opacity: 1; color: #eafcff; text-shadow: 0 2px 7px rgba(0,0,0,.95), 0 0 12px rgba(45,226,255,.55), 0 0 22px rgba(45,226,255,.3); }
 /* Ve FILMU schovej bledě modrý titulek z náhledového monitoru (preview) — duplicita */
@@ -826,7 +875,7 @@ body.cinema-on .ap-filmtop,
 /* viditelnost: při pauze trvale, při přehrávání jen na pohyb/dotyk (ui-active) */
 body:not(.is-playing) .gpp { opacity:1; pointer-events:auto; }
 body.is-playing .gpp { opacity:0; pointer-events:none; }
-body.is-playing.ui-active .gpp { opacity:1; pointer-events:auto; }
+/* body.is-playing.ui-active .gpp { opacity:1; pointer-events:auto; } */
 /* skryj v galerii */
 body.gallery-open .gpp{ display:none; }
 /* Tlačítko stavu přehrávání (Pozastaveno / Klikni) → HORNÍ ČTVRTINA okna,
@@ -1753,5 +1802,31 @@ body.soundtrack-open .ap-row2 { opacity: .25; pointer-events: none; filter: gray
 .snd-row-dl-btn:hover {
   background: rgba(255,178,46,0.15); border-color: var(--amber-hi);
   box-shadow: 0 0 8px rgba(255,178,46,0.3);
+}
+
+/* Mobile responsive enhancements for BGM slider sizes and touch targets */
+@media (max-width: 768px) {
+  .film-bgm-vol {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    top: 10px !important;
+    left: 10px !important;
+  }
+  .film-bgm-vol .ap-bgm-slider {
+    width: 90px !important;
+    height: 8px !important;
+  }
+  .film-bgm-vol .ap-bgm-slider::-webkit-slider-thumb {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .film-bgm-vol .ap-bgm-slider::-moz-range-thumb {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .film-bgm-vol .ap-bgm-dot {
+    width: 9px !important;
+    height: 9px !important;
+  }
 }
 
